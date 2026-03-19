@@ -1,0 +1,7 @@
+# 告诉 Git 哪些文件是二进制的且需要“可锁定”
+*.unity binary lockable
+*.prefab binary lockable
+*.asset binary lockable
+*.mat binary lockable
+*.png filter=lfs diff=lfs merge=lfs -text
+*.fbx filter=lfs diff=lfs merge=lfs -text
