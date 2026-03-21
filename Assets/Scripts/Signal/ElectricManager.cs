@@ -16,7 +16,7 @@ public class ElectricManager : MonoBehaviour {
 
     }
 
-    [ContextMenu("¿ªÊ¼Ä£Äâ")]
+    [ContextMenu("Begin Simulate")]
     public void BeginSimulate() {
         if (powerSource == null) {
             Debug.Log("PowerSource Not Selected!");
