@@ -6,9 +6,9 @@ using UnityEngine;
 public abstract class ElectricElementBase : MonoBehaviour {
     public int intensity;
     public int workIntensity;
-    public ElectricElementBase[] neighborElements;
+    public List<ElectricElementBase> neighborElements = new();
     public GridCell bindGrid;
-    [SerializeField] protected Sprite[] sprites;
+    [SerializeField] protected List<Sprite> sprites;
     [SerializeField] protected Sprite showSprite;
     [SerializeField] protected SpriteRenderer spriteRenderer;
 
@@ -25,9 +25,16 @@ public abstract class ElectricElementBase : MonoBehaviour {
     }
 
 
-    //public void BindToGrid(TileGrid grid) {
-
-    //}
+    public void BindToGrid(GridCell grid) {
+        bindGrid = grid;
+        IGridEntity[] gridEntities = bindGrid.GetAllNeighbors();
+        foreach (IGridEntity gridEntity in gridEntities) {
+            if (gridEntity.HoldObject.TryGetComponent(out ElectricElementBase electricElement)) {
+                electricElement.neighborElements.Add(this);
+                this.neighborElements.Add(electricElement);
+            }
+        }
+    }
 
     public virtual void Remove() {
         ElectricManager.Instance.RemoveElement(this);

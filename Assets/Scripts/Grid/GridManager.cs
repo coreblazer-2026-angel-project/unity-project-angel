@@ -1,9 +1,8 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class GridManager : MonoBehaviour
+public class GridManager : ManagerBase<GridManager>
 {
-    public static GridManager Instance { get; private set; }
 
     [Header("基础设置")] 
     public float cellSize = 0.32f;
@@ -14,16 +13,6 @@ public class GridManager : MonoBehaviour
     private GridNode[,] _grid;
     public int Width { get; private set; }
     public int Height { get; private set; }
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-    }
 
     /// <summary>
     /// 初始化纯净的网格地图
