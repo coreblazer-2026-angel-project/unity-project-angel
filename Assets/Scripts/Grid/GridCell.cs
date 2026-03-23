@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // 具体的元器件类（不再管网格是怎么生成的，只管自己）
-public class CircuitElement : MonoBehaviour, IGridEntity
+public class GridCell : MonoBehaviour, IGridEntity
 {
     // 实现接口要求
     public Vector2Int GridPosition { get; set; }

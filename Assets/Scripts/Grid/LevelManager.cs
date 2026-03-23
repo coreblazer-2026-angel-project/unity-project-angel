@@ -31,7 +31,7 @@ public class LevelManager : MonoBehaviour
         if (entity != null)
         {
             // 将自己初始化特定的数据
-            var circuitElement = entity as CircuitElement;
+            var circuitElement = entity as GridCell;
             if (circuitElement != null)
             {
                 circuitElement.type = item.type;
