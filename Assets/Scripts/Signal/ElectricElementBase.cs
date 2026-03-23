@@ -7,7 +7,7 @@ public abstract class ElectricElementBase : MonoBehaviour {
     public int intensity;
     public int workIntensity;
     public ElectricElementBase[] neighborElements;
-    //public GridCell bindGrid;
+    public GridCell bindGrid;
     [SerializeField] protected Sprite[] sprites;
     [SerializeField] protected Sprite showSprite;
     [SerializeField] protected SpriteRenderer spriteRenderer;
@@ -16,6 +16,7 @@ public abstract class ElectricElementBase : MonoBehaviour {
 
     void Start() {
         ElectricManager.Instance.AddElement(this);
+
     }
 
     // Update is called once per frame

@@ -1,24 +1,20 @@
 ﻿using UnityEngine;
 
-public class LevelManager : MonoBehaviour
-{
+public class LevelManager : MonoBehaviour {
     [Header("预制体配置")]
     public GameObject[] cellPrefabs; // 按照 CellType 的 int 值对应
 
-    public void LoadLevel(LevelData levelData)
-    {
+    public void LoadLevel(LevelData levelData) {
         // 让 GridManager 初始化地图尺寸
         GridManager.Instance.InitializeGrid(levelData.width, levelData.height);
 
         // 根据数据生成实体并注册进 GridManager
-        foreach (var item in levelData.items)
-        {
+        foreach (var item in levelData.items) {
             SpawnAndRegisterEntity(item);
         }
     }
 
-    private void SpawnAndRegisterEntity(LevelItem item)
-    {
+    private void SpawnAndRegisterEntity(LevelItem item) {
         int prefabIndex = (int)item.type;
         if (prefabIndex < 0 || prefabIndex >= cellPrefabs.Length || cellPrefabs[prefabIndex] == null) return;
 
@@ -28,14 +24,11 @@ public class LevelManager : MonoBehaviour
 
         // 获取实体组件
         IGridEntity entity = go.GetComponent<IGridEntity>();
-        if (entity != null)
-        {
+        if (entity != null) {
             // 将自己初始化特定的数据
-            var circuitElement = entity as GridCell;
-            if (circuitElement != null)
-            {
-                circuitElement.type = item.type;
-                circuitElement.signalStrength = item.signalStrength;
+            var gridCell = entity as GridCell;
+            if (gridCell != null) {
+                gridCell.InitByLevelItem(item);
             }
 
             // 让 GridManager 接管它的定位

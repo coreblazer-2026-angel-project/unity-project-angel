@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -6,7 +7,21 @@ using UnityEngine;
 public class ElectricManager : ManagerBase<ElectricManager> {
     public PowerSource powerSource;
     public int curId = 0;
-    public Dictionary<int, ElectricElementBase> ElectricElements;
+    [Serializable]
+    public struct ElectricPrefabEntry {
+        public CellType type;
+        public GameObject prefab;
+    }
+    public List<ElectricPrefabEntry> prefabEntries;
+    public Dictionary<CellType, GameObject> prefabDict = new();
+    public Dictionary<int, ElectricElementBase> ElectricElements = new();
+
+    protected override void Awake() {
+        base.Awake();
+        foreach (ElectricPrefabEntry electricPrefabEntry in prefabEntries) {
+            prefabDict.Add(electricPrefabEntry.type, electricPrefabEntry.prefab);
+        }
+    }
 
     void Start() {
 
