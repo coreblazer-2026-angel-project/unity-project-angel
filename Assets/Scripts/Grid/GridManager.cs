@@ -101,22 +101,6 @@ public class GridManager : MonoBehaviour
         }
     }
     
-    public IGridEntity GetNeighbor(Vector2Int currentPos, Vector2Int direction)
-    {
-        Vector2Int neighborPos = currentPos + direction;
-        return GetEntity(neighborPos); 
-    }
-    
-    // 查一圈房（
-    public IGridEntity[] GetAllNeighbors(Vector2Int pos)
-    {
-        return new IGridEntity[]
-        {
-            GetEntity(pos + Vector2Int.up),
-            GetEntity(pos + Vector2Int.down),
-            GetEntity(pos + Vector2Int.left),
-            GetEntity(pos + Vector2Int.right)
-        };
-    }
+
     #endregion
 }
