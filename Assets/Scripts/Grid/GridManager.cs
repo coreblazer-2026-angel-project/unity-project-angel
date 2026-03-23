@@ -1,32 +1,19 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class GridManager : MonoBehaviour
 {
-    public static GridManager Instance{get; private set;}
-
-    
+    public static GridManager Instance { get; private set; }
 
     [Header("基础设置")] 
     public float cellSize = 0.32f;
     
     [Header("Tilemap 引用")]
-    public Tilemap wiremap;  //画电线的tilemap
-    
-    public Tilemap gridmap;  //画背景的tilemap
-    
-    [Header("单元格预制体")]   //这里放单元格类型，wall什么的
-    public GameObject[] cellPrefabs;
-    
-    
-    private GridCell[,] _gridCells;   //逻辑网格数组
-    private Dictionary<Vector2Int, GridCell> _gridObjects;   //坐标到物体的映射
-    private int _width;   //当前关卡宽
-    private int _height;  //当前关卡高
+    public Tilemap gridmap;  
 
+    private GridNode[,] _grid;
+    public int Width { get; private set; }
+    public int Height { get; private set; }
 
     private void Awake()
     {
@@ -35,139 +22,101 @@ public class GridManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
         Instance = this;
-        
-        _gridObjects = new Dictionary<Vector2Int, GridCell>();
     }
-    
+
     /// <summary>
-    /// 网格坐标转世界坐标（让单元格中心对齐坐标）
+    /// 初始化纯净的网格地图
     /// </summary>
-    /// <param name="gridPos">网格坐标（x/y整数）</param>
-    /// <returns>世界坐标（带0.32f尺寸偏移）</returns>
-    public Vector3 GridToWorld(Vector2Int gridPos)    //网格坐标->世界坐标
+    public void InitializeGrid(int width, int height)
+    {
+        Width = width;
+        Height = height;
+        _grid = new GridNode[width, height];
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                _grid[x, y] = new GridNode(new Vector2Int(x, y));
+            }
+        }
+    }
+
+    #region 坐标转换
+    public Vector3 GridToWorld(Vector2Int gridPos)
     {
         float centerOffset = cellSize / 2f;
         return new Vector3(
              cellSize * gridPos.x + centerOffset,
              cellSize * gridPos.y + centerOffset,
             0);
-        
     }
 
-    /// <summary>
-    /// 世界坐标转网格坐标（取整）
-    /// </summary>
-    /// <param name="worldPos">世界坐标</param>
-    /// <returns>网格坐标（Vector2Int，整数）</returns>
-    public Vector2Int WorldToGrid(Vector3 worldPos)    //世界坐标->网格坐标
+    public Vector2Int WorldToGrid(Vector3 worldPos)
     {
         return new Vector2Int(
             Mathf.FloorToInt(worldPos.x / cellSize),
             Mathf.FloorToInt(worldPos.y / cellSize));
     }
+    #endregion
 
-    public Vector3 WorldToTileCell(Vector3 worldPos)
+    #region 实体管理
+    // 检查坐标是否越界
+    public bool IsValidPosition(Vector2Int pos)
     {
-        return gridmap.WorldToCell(worldPos);
-    }
-    
-    
-
-    private void ClearGrid()   //清理网格
-    {
-        if (_gridObjects == null) return;
-        foreach (var obj in _gridObjects.Values)
-        {
-            if (obj != null)
-            {
-                Destroy(obj.gameObject);
-            }
-        }
-        _gridObjects.Clear();
-        _gridCells = null;
-        _width = 0;
-        _height = 0;
+        return pos.x >= 0 && pos.x < Width && pos.y >= 0 && pos.y < Height;
     }
 
-
-    private void InitGrid(int width, int height)
+    // 在网格中放置实体
+    public bool PlaceEntity(Vector2Int pos, IGridEntity entity)
     {
-        _width = width;
-        _height = height;
-        _gridCells = new GridCell[_width, _height];
+        if (!IsValidPosition(pos)) return false;
         
-        
+        GridNode node = _grid[pos.x, pos.y];
+        if (!node.IsEmpty)
+        {
+            Debug.LogWarning($"坐标 {pos} 已经有物体了！");
+            return false;
+        }
+
+        node.SetEntity(entity);
+        entity.gameObject.transform.position = GridToWorld(pos); // 自动对齐世界坐标
+        return true;
     }
 
-    private void SpawnCell(LevelItem item)
+    // 获取网格中的实体
+    public IGridEntity GetEntity(Vector2Int pos)
     {
-        if (item.position.x < 0 || item.position.y < 0 ||
-            item.position.x >= _width || item.position.y >= _height
-            )
-        {
-            Debug.Log($"坐标{item.position}超出范围！");
-        }
-
-        int prefabIndex = (int)item.type;
-        if (prefabIndex < 0 || prefabIndex >= cellPrefabs.Length || cellPrefabs[prefabIndex] == null)
-        {
-            Debug.Log($"未配置{item.type}的单元格预制体");
-            return;
-        }
-
-        Vector3 worldPos = GridToWorld(item.position);
-        GameObject go = Instantiate(cellPrefabs[prefabIndex], 
-                                    worldPos, 
-                                    Quaternion.identity,  
-                                    transform);
-        go.name = $"{item.type}_{item.position.x}_{item.position.y}";   //一个勉强好认的名字
-        
-        GridCell cell = go.GetComponent<GridCell>();
-
-        if (cell == null)
-        {
-            Debug.Log($"{go.name}缺少组件！");
-            Destroy(go);
-            return;
-        }
-        
-        cell.position = item.position;
-        cell.type = item.type;
-        cell.signalStrength = item.signalStrength;
-        
-        
-        _gridCells[item.position.x, item.position.y] = cell;
-
-        if (_gridObjects.ContainsKey(item.position))
-        {
-            _gridObjects.Remove(item.position);
-        }
-        _gridObjects.Add(item.position, cell);
+        if (!IsValidPosition(pos)) return null;
+        return _grid[pos.x, pos.y].Entity;
     }
-    /// <summary>
-    /// 加载指定关卡数据
-    /// </summary>
-    /// <param name="levelData">关卡数据（ScriptableObject实例）</param>
-    public void LoadLevel(LevelData levelData)
-    {
-        if (levelData == null)
-        {
-            Debug.LogError("关卡数据不能为空！");
-            return;
-        }
-        ClearGrid();
-        InitGrid(levelData.width, levelData.height);
-        foreach (var item in levelData.items)
-        {
-            SpawnCell(item);
-        }
-        Debug.Log($"关卡加载完成！宽：{_width}，高：{_height}，单元格数量：{_gridObjects.Count}");
 
+    // 移除网格中的实体
+    public void RemoveEntity(Vector2Int pos)
+    {
+        if (IsValidPosition(pos))
+        {
+            _grid[pos.x, pos.y].ClearEntity();
+        }
     }
     
+    public IGridEntity GetNeighbor(Vector2Int currentPos, Vector2Int direction)
+    {
+        Vector2Int neighborPos = currentPos + direction;
+        return GetEntity(neighborPos); 
+    }
     
-    
-
+    // 查一圈房（
+    public IGridEntity[] GetAllNeighbors(Vector2Int pos)
+    {
+        return new IGridEntity[]
+        {
+            GetEntity(pos + Vector2Int.up),
+            GetEntity(pos + Vector2Int.down),
+            GetEntity(pos + Vector2Int.left),
+            GetEntity(pos + Vector2Int.right)
+        };
+    }
+    #endregion
 }
