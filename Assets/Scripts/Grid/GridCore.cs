@@ -29,8 +29,7 @@ public class GridNode
         }
     }
 
-    public void ClearEntity()
-    {
+    public void ClearEntity(){
         Entity = null;
     }
 }
