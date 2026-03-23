@@ -37,6 +37,13 @@ public abstract class ElectricElementBase : MonoBehaviour {
     }
 
     public virtual void Remove() {
+        IGridEntity[] gridEntities = bindGrid.GetAllNeighbors();
+        foreach (IGridEntity gridEntity in gridEntities) {
+            if (gridEntity.HoldObject.TryGetComponent(out ElectricElementBase electricElement)) {
+                electricElement.neighborElements.Remove(this);
+                this.neighborElements.Add(electricElement);
+            }
+        }
         ElectricManager.Instance.RemoveElement(this);
     }
 
