@@ -14,5 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 5
   height: 5
+  spawnRuntimeFloor: 1
+  floorPrefab: {fileID: 6174486589834613836, guid: c833f1fd98f692b47b7a95b8e9adc59c, type: 3}
   wireLimit: 0
-  items: []
+  items:
+  - position: {x: 2, y: 2}
+    type: 3
+    signalStrength: 0
+    requiredStrength: 0
+    amplifyValue: 0
+    activateThreshold: 0
+    phaseColor: {r: 0, g: 0, b: 0, a: 0}
