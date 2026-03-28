@@ -7,7 +7,7 @@ public abstract class ElectricElementBase : MonoBehaviour {
     public int intensity;
     public int workIntensity;
     public List<ElectricElementBase> neighborElements = new();
-    public GridCell bindGrid;
+    public GridV2 bindGrid;
     [SerializeField] protected List<Sprite> sprites;
     [SerializeField] protected Sprite showSprite;
     [SerializeField] protected SpriteRenderer spriteRenderer;
@@ -25,25 +25,29 @@ public abstract class ElectricElementBase : MonoBehaviour {
     }
 
 
-    public void BindToGrid(GridCell grid) {
+    public void BindToGrid(GridV2 grid) {
         bindGrid = grid;
-        IGridEntity[] gridEntities = bindGrid.GetAllNeighbors();
-        foreach (IGridEntity gridEntity in gridEntities) {
-            if (gridEntity.HoldObject.TryGetComponent(out ElectricElementBase electricElement)) {
+        GridV2[] neighborGrids = bindGrid.GetAllNeighbors();
+        foreach (GridV2 neighborGrid in neighborGrids) {
+            if (!neighborGrid || !neighborGrid.holdObject) continue;
+            if (neighborGrid.holdObject.TryGetComponent(out ElectricElementBase electricElement)) {
                 electricElement.neighborElements.Add(this);
                 this.neighborElements.Add(electricElement);
             }
         }
     }
 
+    [ContextMenu("Remove")]
     public virtual void Remove() {
-        IGridEntity[] gridEntities = bindGrid.GetAllNeighbors();
-        foreach (IGridEntity gridEntity in gridEntities) {
-            if (gridEntity.HoldObject.TryGetComponent(out ElectricElementBase electricElement)) {
+        GridV2[] neighborGrids = bindGrid.GetAllNeighbors();
+        foreach (GridV2 neighborGrid in neighborGrids) {
+            if (!neighborGrid || !neighborGrid.holdObject) continue;
+            if (neighborGrid.holdObject.TryGetComponent(out ElectricElementBase electricElement)) {
                 electricElement.neighborElements.Remove(this);
                 this.neighborElements.Add(electricElement);
             }
         }
+        bindGrid.holdObject = null;
         ElectricManager.Instance.RemoveElement(this);
     }
 

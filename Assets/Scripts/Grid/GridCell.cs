@@ -12,22 +12,10 @@ public class GridCell : MonoBehaviour, IGridEntity {
     /// <summary>元件指向其所在定位槽（仅当本对象为占用物且已注册到 GridNode 时有效）。</summary>
     public GridCell OccupyingSlot { get; set; }
 
-    public void PutElement(CellType cellType) {
-        ElectricManager.Instance.prefabDict.TryGetValue(cellType, out GameObject prefab);
-        GameObject spawnGameObject = Instantiate(prefab, this.gameObject.transform.position, this.gameObject.transform.rotation);
-        this.HoldObject = spawnGameObject;
-        if (spawnGameObject.TryGetComponent<ElectricElementBase>(out var electricElement)) {
-            electricElement.BindToGrid(this);
-        }
-    }
+
 
     public void InitByLevelItem(LevelItem levelItem) {
 
-    }
-
-    [ContextMenu("Debug PutElement")]
-    public void DebugPutElement() {
-        PutElement(CellType.Wire);
     }
 
 

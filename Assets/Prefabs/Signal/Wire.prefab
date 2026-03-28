@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 3359336287815227746}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.7208934, y: -2.308, z: 0.016821023}
+  m_LocalPosition: {x: 0, y: 0, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -48,9 +48,11 @@ MonoBehaviour:
   intensity: 0
   workIntensity: 1
   neighborElements: []
+  bindGrid: {fileID: 0}
   sprites: []
   showSprite: {fileID: 0}
   spriteRenderer: {fileID: 885213054597783610}
+  ID: 0
 --- !u!1 &8943645598391738104
 GameObject:
   m_ObjectHideFlags: 0
