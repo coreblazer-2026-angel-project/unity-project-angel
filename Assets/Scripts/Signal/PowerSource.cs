@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PowerSource : ElectricElementBase {
-    // Start is called before the first frame update
     void Start() {
-
+        intensity = workIntensity;
+        Activate();
     }
 
-    // Update is called once per frame
-    void Update() {
-
+    public override void Activate() {
+        base.Activate();
+        foreach (var neighbor in neighborElements) {
+            neighbor.intensity = workIntensity;
+            neighbor.Activate();
+        }
     }
 }

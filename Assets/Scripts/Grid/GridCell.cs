@@ -81,7 +81,7 @@ public class GridCell : MonoBehaviour, IGridEntity {
 
     Vector2Int ResolveNeighborQueryPosition() {
         var gm = GridManager.Instance;
-        if (gm != null && gm.IsValidPosition(GridPosition) && gm.GetEntity(GridPosition) == this) {
+        if (gm != null && gm.IsValidPosition(GridPosition) && ReferenceEquals(gm.GetEntity(GridPosition), this)) {
             return GridPosition;
         }
         if (gm != null) {
