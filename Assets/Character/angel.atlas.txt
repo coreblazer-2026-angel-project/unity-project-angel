@@ -1,0 +1,111 @@
+
+angel.png
+size: 1967,1039
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+body
+  rotate: true
+  xy: 1307, 550
+  size: 487, 544
+  orig: 487, 544
+  offset: 0, 0
+  index: -1
+clothes1
+  rotate: false
+  xy: 220, 283
+  size: 164, 54
+  orig: 164, 54
+  offset: 0, 0
+  index: -1
+eye
+  rotate: true
+  xy: 2, 10
+  size: 232, 77
+  orig: 232, 77
+  offset: 0, 0
+  index: -1
+eyelashes
+  rotate: true
+  xy: 1853, 760
+  size: 277, 107
+  orig: 281, 114
+  offset: 0, 7
+  index: -1
+face
+  rotate: true
+  xy: 584, 3
+  size: 334, 291
+  orig: 334, 291
+  offset: 0, 0
+  index: -1
+hair1
+  rotate: true
+  xy: 877, 4
+  size: 333, 428
+  orig: 333, 451
+  offset: 0, 23
+  index: -1
+hair2
+  rotate: false
+  xy: 81, 20
+  size: 78, 222
+  orig: 78, 222
+  offset: 0, 0
+  index: -1
+hair3
+  rotate: true
+  xy: 220, 339
+  size: 698, 1061
+  orig: 698, 1061
+  offset: 0, 0
+  index: -1
+halo
+  rotate: false
+  xy: 1614, 423
+  size: 351, 125
+  orig: 351, 125
+  offset: 0, 0
+  index: -1
+l_arm
+  rotate: false
+  xy: 1614, 27
+  size: 211, 394
+  orig: 211, 394
+  offset: 0, 0
+  index: -1
+l_leg
+  rotate: false
+  xy: 1463, 31
+  size: 149, 517
+  orig: 149, 757
+  offset: 0, 0
+  index: -1
+mouth
+  rotate: true
+  xy: 161, 2
+  size: 25, 37
+  orig: 25, 37
+  offset: 0, 0
+  index: -1
+r_arm
+  rotate: true
+  xy: 161, 29
+  size: 213, 421
+  orig: 213, 421
+  offset: 0, 0
+  index: -1
+r_leg
+  rotate: false
+  xy: 1307, 6
+  size: 154, 542
+  orig: 154, 702
+  offset: 0, 0
+  index: -1
+wings
+  rotate: true
+  xy: 2, 244
+  size: 793, 216
+  orig: 793, 216
+  offset: 0, 0
+  index: -1
