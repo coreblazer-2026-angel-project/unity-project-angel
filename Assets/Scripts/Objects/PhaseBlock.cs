@@ -33,13 +33,15 @@ public class PhaseBlock : ElectricElementBase {
     }
 
     public static void SetPhasedByColor(Color color, bool phased) {
-        Color32 color32 = (Color32)color;
         foreach (var block in AllBlocks) {
             if (block == null) {
                 continue;
             }
 
-            if ((Color32)block.phaseColor == color32) {
+            // 比较 RGB 分量，忽略 Alpha 消除浮点转换误差
+            if (Mathf.Approximately(block.phaseColor.r, color.r) &&
+                Mathf.Approximately(block.phaseColor.g, color.g) &&
+                Mathf.Approximately(block.phaseColor.b, color.b)) {
                 block.SetPhased(phased);
             }
         }
