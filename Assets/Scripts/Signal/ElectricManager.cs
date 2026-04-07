@@ -5,6 +5,8 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 public class ElectricManager : ManagerBase<ElectricManager> {
+    public static event Action OnSignalPropagated;
+
     public PowerSource powerSource;
     public int curId = 0;
     [Serializable]
@@ -44,6 +46,7 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         queue.Enqueue(powerSource);
         visited.Add(powerSource);
         powerSource.intensity = powerSource.workIntensity;
+        NotifySignalPropagated();
 
         while (queue.Count > 0) {
             var cur = queue.Dequeue();
@@ -60,8 +63,40 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 visited.Add(next);
                 next.intensity = Mathf.Max(0, cur.intensity - 1);
                 queue.Enqueue(next);
+                NotifySignalPropagated();
             }
         }
+    }
+
+    public void NotifySignalPropagated() {
+        OnSignalPropagated?.Invoke();
+    }
+
+    public int GetCurrentPathMaxOutput() {
+        if (powerSource != null) {
+            return Mathf.Max(0, powerSource.workIntensity);
+        }
+
+        int maxOutput = 0;
+        foreach (var kv in ElectricElements) {
+            ElectricElementBase element = kv.Value;
+            if (element is PowerSource || element is ActivatablePowerSource || element is PressSource) {
+                maxOutput = Mathf.Max(maxOutput, element.workIntensity);
+            }
+        }
+
+        return maxOutput;
+    }
+
+    public int GetPlacedWireCount() {
+        int wireCount = 0;
+        foreach (var kv in ElectricElements) {
+            if (kv.Value is Wire) {
+                wireCount++;
+            }
+        }
+
+        return wireCount;
     }
 
     public void AddElement(ElectricElementBase electricElement) {

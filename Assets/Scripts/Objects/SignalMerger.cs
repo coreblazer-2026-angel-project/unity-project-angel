@@ -88,6 +88,9 @@ public class SignalMerger : ElectricElementBase, ISignalReceiver {
 
         if (outputTarget is ISignalReceiver receiver) {
             receiver.ReceiveSignal(intensity);
+            if (ElectricManager.Instance != null) {
+                ElectricManager.Instance.NotifySignalPropagated();
+            }
             return;
         }
 
@@ -96,6 +99,10 @@ public class SignalMerger : ElectricElementBase, ISignalReceiver {
         }
         else {
             outputTarget.Deactive();
+        }
+
+        if (ElectricManager.Instance != null) {
+            ElectricManager.Instance.NotifySignalPropagated();
         }
     }
 
