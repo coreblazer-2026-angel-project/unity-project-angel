@@ -7,6 +7,8 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class ElectricManager : ManagerBase<ElectricManager> {
+    public static event Action OnSignalPropagated;
+
     public PowerSource powerSource;
     public int curId = 0;
     [Serializable]
@@ -212,9 +214,10 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         List<ElectricElementBase> toActivate = new();
         bool allValid = true;
 
-        // 追踪 CrossConnector 各轴向是否已处理，防止循环
-        Dictionary<CrossConnector, bool> ccHorizontalProcessed = new();
-        Dictionary<CrossConnector, bool> ccVerticalProcessed = new();
+        queue.Enqueue(powerSource);
+        visited.Add(powerSource);
+        powerSource.intensity = powerSource.workIntensity;
+        NotifySignalPropagated();
 
         // 从所有电源开始 BFS
         foreach (var ps in powerSources) {
@@ -283,176 +286,43 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 if (visited.Contains(next)) continue;
 
                 visited.Add(next);
-                int outgoingIntensity = Mathf.Max(0, cur.intensity - 1);
-                if (cur is SignalAmplifier amp && cur.intensity >= cur.workIntensity) {
-                    outgoingIntensity += amp.boostValue;
-                }
-                next.intensity = outgoingIntensity;
-                Debug.Log($"{next.GetType().Name} Intensity = {next.intensity} CalcIntensity = {outgoingIntensity} CurIntensity = {cur.intensity} Grid = {next.bindGrid.x},{next.bindGrid.y}");
-                queue.Enqueue((next, cur));
-            }
-        }
-
-        // 如果所有元件都有效（没有 intensity <= 0），则统一激活
-        if (allValid) {
-            foreach (var elem in toActivate) {
-                elem.Activate();
-            }
-        }
-        // 否则所有元件保持 Deactive 状态（已在开头重置）
-
-        // 处理 SignalMerger：左右输入相加，从上方输出
-        var gmv2 = GridManagerV2.Instance;
-        foreach (var element in ElectricElements.Values) {
-            if (element is not SignalMerger merger || merger.bindGrid == null) continue;
-
-            int leftIntensity = GetMaxIntensityAt(gmv2, merger.bindGrid.x - 1, merger.bindGrid.y);
-            int rightIntensity = GetMaxIntensityAt(gmv2, merger.bindGrid.x + 1, merger.bindGrid.y);
-            int sum = leftIntensity + rightIntensity;
-
-            if (sum <= 0) continue;
-
-            GridV2 upCell = gmv2?.GetGrid(merger.bindGrid.x, merger.bindGrid.y - 1);
-            if (upCell == null) continue;
-
-            foreach (var obj in upCell.holdObjects) {
-                if (obj == null) continue;
-                if (obj.TryGetComponent(out ElectricElementBase upElem)) {
-                    if (upElem.intensity < sum) {
-                        upElem.intensity = sum;
-                        PropagateFrom(upElem, sum);
-                    }
-                }
-            }
-        }
-
-        // 处理 SignalBooster：上方有激活电线时，永久增强电源并销毁自身
-        bool anyBoosterTriggered = false;
-        foreach (var element in ElectricElements.Values.ToList()) {
-            if (element is not SignalBooster booster || booster.bindGrid == null) continue;
-
-            GridV2 up = gmv2?.GetGrid(booster.bindGrid.x, booster.bindGrid.y - 1);
-            if (up == null) continue;
-
-            bool hasActiveWire = false;
-            foreach (var obj in up.holdObjects) {
-                if (obj != null && obj.TryGetComponent(out Wire upWire) && upWire.intensity > 0) {
-                    hasActiveWire = true;
-                    break;
-                }
-            }
-
-            if (hasActiveWire) {
-                // 永久增强所有电源
-                foreach (var elem in ElectricElements.Values) {
-                    if (elem is PowerSource ps) {
-                        ps.workIntensity += booster.boostValue;
-                    }
-                }
-                Debug.Log($"SignalBooster 触发：所有电源 workIntensity +{booster.boostValue}，booster 销毁");
-                // 销毁自身
-                booster.Remove();
-                anyBoosterTriggered = true;
-            }
-        }
-
-        // 如果有 booster 被触发，电源变强了，重新计算电路
-        if (anyBoosterTriggered) {
-            BeginSimulate();
-            return;
-        }
-
-        // 检查所有灯：相邻有激活电线则点亮，否则熄灭
-        foreach (var element in ElectricElements.Values) {
-            if (element is Light light) {
-                bool hasActiveWire = false;
-                foreach (var neighbor in light.neighborElements) {
-                    if (neighbor is Wire && neighbor.intensity > 0) {
-                        hasActiveWire = true;
-                        break;
-                    }
-                }
-                if (hasActiveWire) {
-                    light.Activate();
-                } else {
-                    light.Deactive();
-                }
+                next.intensity = Mathf.Max(0, cur.intensity - 1);
+                queue.Enqueue(next);
+                NotifySignalPropagated();
             }
         }
     }
 
-    void RefreshAllWireTiles() {
-        if (wireTilemap == null) return;
-        var gmv2 = GridManagerV2.Instance;
-        if (gmv2 == null) return;
-
-        for (int y = 0; y < gmv2.row; y++) {
-            for (int x = 0; x < gmv2.column; x++) {
-                GridV2 cell = gmv2.GetGrid(x, y);
-                if (cell == null || cell.holdObject == null) continue;
-
-                var wire = cell.holdObject.GetComponent<Wire>();
-                if (wire == null) continue;
-
-                RefreshWireTile(x, y, wire.intensity > 0);
-            }
-        }
+    public void NotifySignalPropagated() {
+        OnSignalPropagated?.Invoke();
     }
 
-    // ---------- SignalMerger 辅助方法 ----------
+    public int GetCurrentPathMaxOutput() {
+        if (powerSource != null) {
+            return Mathf.Max(0, powerSource.workIntensity);
+        }
 
-    /// <summary>获取指定格子中所有元件的最大 intensity</summary>
-    static int GetMaxIntensityAt(GridManagerV2 gmv2, int x, int y) {
-        if (gmv2 == null) return 0;
-        GridV2 cell = gmv2.GetGrid(x, y);
-        if (cell == null) return 0;
-
-        int max = 0;
-        foreach (var obj in cell.holdObjects) {
-            if (obj != null && obj.TryGetComponent(out ElectricElementBase e)) {
-                max = Mathf.Max(max, e.intensity);
+        int maxOutput = 0;
+        foreach (var kv in ElectricElements) {
+            ElectricElementBase element = kv.Value;
+            if (element is PowerSource || element is ActivatablePowerSource || element is PressSource) {
+                maxOutput = Mathf.Max(maxOutput, element.workIntensity);
             }
         }
-        return max;
+
+        return maxOutput;
     }
 
-    /// <summary>从指定元件开始，向四周传播信号（SignalMerger 除外）</summary>
-    static void PropagateFrom(ElectricElementBase start, int initialIntensity) {
-        Queue<(ElectricElementBase elem, int intensity)> queue = new();
-        HashSet<ElectricElementBase> visited = new();
-
-        queue.Enqueue((start, initialIntensity));
-
-        while (queue.Count > 0) {
-            var (cur, intensity) = queue.Dequeue();
-            if (visited.Contains(cur)) continue;
-            visited.Add(cur);
-
-            cur.intensity = intensity;
-            if (intensity >= cur.workIntensity) {
-                cur.Activate();
-            }
-
-            if (cur is not Wire && cur is not SignalAmplifier) continue;
-
-            foreach (var next in cur.neighborElements) {
-                if (next is SignalMerger) continue;
-                if (visited.Contains(next)) continue;
-
-                int outgoing = Mathf.Max(0, intensity - 1);
-                if (cur is SignalAmplifier amp && intensity >= cur.workIntensity) {
-                    outgoing += amp.boostValue;
-                }
-
-                if (next.intensity < outgoing) {
-                    next.intensity = outgoing;
-                    queue.Enqueue((next, outgoing));
-                }
+    public int GetPlacedWireCount() {
+        int wireCount = 0;
+        foreach (var kv in ElectricElements) {
+            if (kv.Value is Wire) {
+                wireCount++;
             }
         }
-    }
 
-    // ----------
+        return wireCount;
+    }
 
     public void AddElement(ElectricElementBase electricElement) {
         electricElement.ID = curId;
