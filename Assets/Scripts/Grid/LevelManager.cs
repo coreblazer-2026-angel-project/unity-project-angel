@@ -11,19 +11,6 @@ public class LevelManager : MonoBehaviour {
             return;
         }
 
-        // 若配置了 CSV 且未勾选 useInlineItems，从 CSV 解析 items
-        levelData.ParseCSV();
-
-        if (levelData.items == null || levelData.items.Count == 0) {
-            Debug.LogWarning("LevelManager: 关卡没有元件数据");
-            return;
-        }
-
-        gmv2.OnLevelLoaded();
-
-        // elementId -> 运行时元件映射，用于建立显式连接
-        Dictionary<int, ElectricElementBase> idToElement = new();
-
         foreach (var item in levelData.items) {
             if (item.type == CellType.Empty || item.type == CellType.Wall)
                 continue;
@@ -34,26 +21,19 @@ public class LevelManager : MonoBehaviour {
                 continue;
             }
 
+            if (cell.holdObject != null) {
+                Debug.LogWarning($"LevelManager: 坐标 {item.position} 已有元件，跳过");
+                continue;
+            }
+
             cell.PutElement(item.type);
 
-            // 遍历所有物体找到刚放置的元件（holdObject 只保留第一个，可能不是本次放置的）
-            foreach (var obj in cell.holdObjects) {
-                if (obj == null) continue;
-                if (obj.TryGetComponent(out ElectricElementBase elem)) {
+            if (cell.holdObject != null) {
+                var elem = cell.holdObject.GetComponent<ElectricElementBase>();
+                if (elem != null) {
                     elem.workIntensity = item.signalStrength;
-                    if (item.elementId >= 0) {
-                        elem.levelElementId = item.elementId;
-                        idToElement[item.elementId] = elem;
-                    }
-                    if (elem is PowerSource ps) {
-                        // signalStrength 为 0 时给默认强度，避免整路不激活
-                        int strength = item.signalStrength > 0 ? item.signalStrength : 3;
-                        elem.intensity = strength;
-                        elem.workIntensity = strength;
-                        // 将运行时创建的电源注册给 ElectricManager，BeginSimulate 才能找到它
-                        if (ElectricManager.Instance != null)
-                            ElectricManager.Instance.powerSource = ps;
-                    }
+                    if (elem is PowerSource)
+                        elem.intensity = item.signalStrength;
                 }
             }
         }

@@ -35,6 +35,19 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
         }
     }
 
+    protected override void Awake() {
+        base.Awake();
+        CollectExistingGrids();
+    }
+
+    void CollectExistingGrids() {
+        grids = new GridV2[row, column];
+        foreach (var cell in GetComponentsInChildren<GridV2>()) {
+            if (cell.x >= 0 && cell.x < column && cell.y >= 0 && cell.y < row)
+                grids[cell.y, cell.x] = cell;
+        }
+    }
+
     [ContextMenu("Generate Grids")]
     void GenerateGrids() {
         grids = new GridV2[row, column];
