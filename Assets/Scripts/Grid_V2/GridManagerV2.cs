@@ -3,12 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class GridManagerV2 : ManagerBase<GridManagerV2> {
-    public float gridSize = 1;
+    public float gridSize = 0.32f;
     public int row = 5;
     public int column = 5;
     [SerializeField] GridV2 gridPrefab;
 
     private GridV2[,] grids;
+
+    protected override void Awake() {
+        base.Awake();
+        CollectExistingGrids();
+    }
+
+    void CollectExistingGrids() {
+        grids = new GridV2[row, column];
+        foreach (var cell in GetComponentsInChildren<GridV2>()) {
+            if (cell.x >= 0 && cell.x < column && cell.y >= 0 && cell.y < row)
+                grids[cell.y, cell.x] = cell;
+        }
+    }
 
     [ContextMenu("Generate Grids")]
     void GenerateGrids() {
