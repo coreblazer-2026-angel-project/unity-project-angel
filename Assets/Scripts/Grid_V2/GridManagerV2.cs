@@ -9,10 +9,22 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
     [SerializeField] GridV2 gridPrefab;
 
     private GridV2[,] grids;
+    bool _levelLoaded;
 
     protected override void Awake() {
         base.Awake();
         CollectExistingGrids();
+        SetGridVisible(false);
+    }
+
+    public void SetGridVisible(bool visible) {
+        foreach (Transform child in transform)
+            child.gameObject.SetActive(visible);
+    }
+
+    public void OnLevelLoaded() {
+        _levelLoaded = true;
+        SetGridVisible(true);
     }
 
     void CollectExistingGrids() {

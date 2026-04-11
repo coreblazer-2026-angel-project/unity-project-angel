@@ -1,30 +1,46 @@
 using UnityEngine;
 
 public class TestStart : MonoBehaviour {
-    [Tooltip("要加载的关卡资源；必须在 Inspector 里拖入 LevelData")]
-    public LevelData level;
+    [Header("测试开关")]
+    [Tooltip("勾选后进入 Play 立即加载下方的测试关卡")]
+    public bool autoLoadTestLevel;
+
+    [Tooltip("测试用关卡；仅在 autoLoadTestLevel 勾选时自动加载")]
+    public LevelData testLevel;
 
     [Tooltip("若为空，会先在本物体上找 LevelManager，再在场景里查找")]
     public LevelManager levelManager;
 
-    void Start() {
-        if (level == null) {
-            Debug.LogError("TestStart: 请在 Inspector 中为 LevelData 赋值。");
-            return;
-        }
+    LevelManager _lm;
 
-        LevelManager lm = levelManager != null
+    void Awake() {
+        _lm = levelManager != null
             ? levelManager
             : GetComponent<LevelManager>();
 
-        if (lm == null)
-            lm = FindObjectOfType<LevelManager>();
+        if (_lm == null)
+            _lm = FindObjectOfType<LevelManager>();
+    }
 
-        if (lm == null) {
-            Debug.LogError("TestStart: 未找到 LevelManager。请把 LevelManager 挂在同物体上，或拖到 levelManager 字段。");
+    void Start() {
+        if (autoLoadTestLevel && testLevel != null)
+            StartLevel(testLevel);
+    }
+
+    /// <summary>
+    /// 由外部（如选关 UI 按钮）调用，传入选中的关卡数据。
+    /// </summary>
+    public void StartLevel(LevelData levelData) {
+        if (levelData == null) {
+            Debug.LogError("TestStart: LevelData 为空，无法加载关卡");
             return;
         }
 
-        lm.LoadLevel(level);
+        if (_lm == null) {
+            Debug.LogError("TestStart: 未找到 LevelManager");
+            return;
+        }
+
+        _lm.LoadLevel(levelData);
     }
 }
