@@ -878,7 +878,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   wireTilemap: {fileID: 1439603997}
-  wireTile: {fileID: 11400000, guid: 4bd222c54692f5149890de472f505461, type: 2}
+  wireTilePowered: {fileID: 11400000, guid: 4bd222c54692f5149890de472f505461, type: 2}
+  wireTileUnpowered: {fileID: 11400000, guid: c0f1ec38b48d8dd40b815689ff556cd5, type: 2}
   cam: {fileID: 0}
 --- !u!4 &480520030
 Transform:

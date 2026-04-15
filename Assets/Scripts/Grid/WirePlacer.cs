@@ -10,8 +10,10 @@ public class WirePlacer : MonoBehaviour
     [Header("Tilemap")]
     [Tooltip("专门用于电线的 Tilemap 层；RuleTile 自动渲染四邻连接图形")]
     public Tilemap wireTilemap;
-    [Tooltip("电线 RuleTile 资源")]
-    public TileBase wireTile;
+    [Tooltip("通电状态的 RuleTile")]
+    public TileBase wireTilePowered;
+    [Tooltip("不通电状态的 RuleTile")]
+    public TileBase wireTileUnpowered;
 
     [Header("相机（留空则自动取 Camera.main）")]
     public Camera cam;
@@ -31,9 +33,12 @@ public class WirePlacer : MonoBehaviour
     /// 使 RuleTile 能感知它们的存在并正确渲染连接方向。
     /// 应在关卡加载完成后调用。
     /// </summary>
+    /// <summary>占位用的 Tile（取通电版，透明不渲染，仅供 RuleTile 感知邻居）。</summary>
+    TileBase PlaceholderTile => wireTilePowered != null ? wireTilePowered : wireTileUnpowered;
+
     public void SyncElementTiles()
     {
-        if (wireTilemap == null || wireTile == null) return;
+        if (wireTilemap == null || PlaceholderTile == null) return;
         var gmv2 = GridManagerV2.Instance;
         if (gmv2 == null) return;
 
@@ -45,9 +50,8 @@ public class WirePlacer : MonoBehaviour
                 if (cell == null || cell.holdObject == null) continue;
                 if (cell.holdObject.GetComponent<Wire>() != null) continue;
 
-                // 非 Wire 元件（电源等）：在 Tilemap 上占位让 RuleTile 感知，但设为透明不渲染
                 Vector3Int cellPos = new Vector3Int(x, -y, 0);
-                wireTilemap.SetTile(cellPos, wireTile);
+                wireTilemap.SetTile(cellPos, PlaceholderTile);
                 wireTilemap.SetTileFlags(cellPos, TileFlags.None);
                 wireTilemap.SetColor(cellPos, Color.clear);
             }
@@ -112,7 +116,7 @@ public class WirePlacer : MonoBehaviour
                 sr.enabled = false;
         }
 
-        SetWireTile(cell, wireTile);
+        SetWireTile(cell, wireTileUnpowered);
         Propagate();
     }
 
@@ -136,6 +140,35 @@ public class WirePlacer : MonoBehaviour
     void Propagate()
     {
         ElectricManager.Instance?.BeginSimulate();
+        RefreshWireTiles();
+    }
+
+    /// <summary>
+    /// 遍历所有格子，根据 Wire 的 intensity 切换 Tile：
+    /// intensity &gt; 0 → wireTilePowered，否则 → wireTileUnpowered。
+    /// </summary>
+    void RefreshWireTiles()
+    {
+        if (wireTilemap == null) return;
+        var gmv2 = GridManagerV2.Instance;
+        if (gmv2 == null) return;
+
+        for (int y = 0; y < gmv2.row; y++)
+        {
+            for (int x = 0; x < gmv2.column; x++)
+            {
+                GridV2 cell = gmv2.GetGrid(x, y);
+                if (cell == null || cell.holdObject == null) continue;
+
+                var wire = cell.holdObject.GetComponent<Wire>();
+                if (wire == null) continue;
+
+                Vector3Int cellPos = new Vector3Int(x, -y, 0);
+                TileBase target = wire.intensity > 0 ? wireTilePowered : wireTileUnpowered;
+                if (wireTilemap.GetTile(cellPos) != target)
+                    wireTilemap.SetTile(cellPos, target);
+            }
+        }
     }
 
     // ── 坐标 ─────────────────────────────────────────────────────────────────

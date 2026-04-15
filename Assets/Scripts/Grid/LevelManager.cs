@@ -32,8 +32,12 @@ public class LevelManager : MonoBehaviour {
                 var elem = cell.holdObject.GetComponent<ElectricElementBase>();
                 if (elem != null) {
                     elem.workIntensity = item.signalStrength;
-                    if (elem is PowerSource)
+                    if (elem is PowerSource ps) {
                         elem.intensity = item.signalStrength;
+                        // 将运行时创建的电源注册给 ElectricManager，BeginSimulate 才能找到它
+                        if (ElectricManager.Instance != null && ElectricManager.Instance.powerSource == null)
+                            ElectricManager.Instance.powerSource = ps;
+                    }
                 }
             }
         }
