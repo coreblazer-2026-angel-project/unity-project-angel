@@ -14,14 +14,14 @@ public abstract class ElectricElementBase : MonoBehaviour {
 
     public int ID;
 
-    void Start() {
-        ElectricManager.Instance.AddElement(this);
-
+    void Awake() {
+        if (ElectricManager.Instance != null)
+            ElectricManager.Instance.AddElement(this);
     }
 
-    // Update is called once per frame
-    void Update() {
-
+    void OnDestroy() {
+        if (ElectricManager.Instance != null)
+            ElectricManager.Instance.ElectricElements.Remove(ID);
     }
 
 
@@ -44,7 +44,7 @@ public abstract class ElectricElementBase : MonoBehaviour {
             if (!neighborGrid || !neighborGrid.holdObject) continue;
             if (neighborGrid.holdObject.TryGetComponent(out ElectricElementBase electricElement)) {
                 electricElement.neighborElements.Remove(this);
-                this.neighborElements.Add(electricElement);
+                this.neighborElements.Remove(electricElement);
             }
         }
         bindGrid.holdObject = null;

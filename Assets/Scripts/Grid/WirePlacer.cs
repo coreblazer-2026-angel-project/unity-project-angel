@@ -59,6 +59,34 @@ public class WirePlacer : MonoBehaviour
     }
 
     /// <summary>
+    /// 关卡加载完成后调用：隐藏所有已初始化 Wire 的 SpriteRenderer，
+    /// 为它们在 Tilemap 上铺设 RuleTile，并刷新一次通电状态。
+    /// </summary>
+    public void InitLevelWires()
+    {
+        var gmv2 = GridManagerV2.Instance;
+        if (gmv2 == null) return;
+
+        for (int y = 0; y < gmv2.row; y++)
+        {
+            for (int x = 0; x < gmv2.column; x++)
+            {
+                GridV2 cell = gmv2.GetGrid(x, y);
+                if (cell == null || cell.holdObject == null) continue;
+
+                var wire = cell.holdObject.GetComponent<Wire>();
+                if (wire == null) continue;
+
+                // 隐身：禁用 Wire 自身及其子物体的 SpriteRenderer
+                foreach (var sr in cell.holdObject.GetComponentsInChildren<SpriteRenderer>())
+                    sr.enabled = false;
+            }
+        }
+
+        Propagate();
+    }
+
+    /// <summary>
     /// 自动将 Tilemap 的 Grid 组件 cellSize 与 GridManagerV2.gridSize 同步，
     /// 并设置 Grid 原点偏移使 Tilemap cell 中心与 GridV2 世界位置对齐。
     /// </summary>

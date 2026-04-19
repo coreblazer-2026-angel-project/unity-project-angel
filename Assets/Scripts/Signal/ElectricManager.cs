@@ -38,6 +38,12 @@ public class ElectricManager : ManagerBase<ElectricManager> {
             return;
         }
 
+        // 先重置所有元件，保证断开后未被访问到的电线全部变为未激活
+        foreach (var element in ElectricElements.Values) {
+            element.intensity = 0;
+            element.Deactive();
+        }
+
         Queue<ElectricElementBase> queue = new();
         HashSet<ElectricElementBase> visited = new();
 
