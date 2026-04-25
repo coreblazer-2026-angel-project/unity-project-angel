@@ -5,6 +5,10 @@ using UnityEngine;
 public class PressSource : ElectricElementBase {
     private bool isPressed = false;
 
+    protected override void Start() {
+        base.Start();
+    }
+
     public void Press() {
         if (isPressed) return;
         isPressed = true;

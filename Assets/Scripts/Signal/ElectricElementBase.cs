@@ -19,9 +19,16 @@ public abstract class ElectricElementBase : MonoBehaviour {
             ElectricManager.Instance.AddElement(this);
     }
 
-    void OnDestroy() {
+    protected virtual void Start() {
+        // 元件初始化完成后触发电路模拟
+        ElectricManager.Instance?.BeginSimulate();
+    }
+
+    protected virtual void OnDestroy() {
         if (ElectricManager.Instance != null)
             ElectricManager.Instance.ElectricElements.Remove(ID);
+        // 元件销毁后触发电路模拟
+        ElectricManager.Instance?.BeginSimulate();
     }
 
 

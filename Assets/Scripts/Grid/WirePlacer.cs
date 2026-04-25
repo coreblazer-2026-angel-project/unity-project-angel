@@ -2,13 +2,11 @@ using UnityEngine;
 
 /// <summary>
 /// 鼠标左键放置 / 删除电线。
-/// 只负责交互逻辑，Tilemap 显示由 ElectricManager 和 Wire 自身管理。
+/// 电路模拟由 ElectricElementBase 在 Start/OnDestroy 中自动触发。
 /// </summary>
 public class WirePlacer : MonoBehaviour {
     [Header("相机（留空则自动取 Camera.main）")]
     public Camera cam;
-
-    int _wireCount;
 
     Camera Cam => cam != null ? cam : Camera.main;
 
@@ -38,9 +36,7 @@ public class WirePlacer : MonoBehaviour {
 
     void TryPlaceWire(GridV2 cell) {
         cell.PutElement(CellType.Wire);
-        _wireCount++;
-        var em = ElectricManager.Instance;
-        if (em != null) em.BeginSimulate();
+        // 模拟由 Wire.Start() 自动触发
     }
 
     void DeleteWire(GridV2 cell) {
@@ -48,10 +44,7 @@ public class WirePlacer : MonoBehaviour {
             var elem = cell.holdObject.GetComponent<ElectricElementBase>();
             if (elem != null) elem.Remove();
         }
-
-        _wireCount = Mathf.Max(0, _wireCount - 1);
-        var em = ElectricManager.Instance;
-        if (em != null) em.BeginSimulate();
+        // 模拟由 ElectricElementBase.OnDestroy() 自动触发
     }
 
     static Vector2Int WorldToGrid(Vector3 world, float gridSize) {
