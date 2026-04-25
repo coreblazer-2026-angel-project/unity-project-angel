@@ -38,43 +38,8 @@ public class LevelManager : MonoBehaviour {
             }
         }
 
-        // 建立显式连接（CSV 中 connections 字段定义）
-        foreach (var item in levelData.items) {
-            if (item.connections == null || item.connections.Count == 0) continue;
-            if (!idToElement.TryGetValue(item.elementId, out var fromElem)) continue;
-
-            foreach (int toId in item.connections) {
-                if (!idToElement.TryGetValue(toId, out var toElem)) {
-                    Debug.LogWarning($"LevelManager: elementId {item.elementId} 的连接目标 {toId} 不存在");
-                    continue;
-                }
-                if (!fromElem.neighborElements.Contains(toElem)) {
-                    fromElem.neighborElements.Add(toElem);
-                }
-                if (!toElem.neighborElements.Contains(fromElem)) {
-                    toElem.neighborElements.Add(fromElem);
-                }
-            }
-        }
-
-        // 为所有非电线元件在 wireTilemap 上放置隐形电线瓦片，让 RuleTile 能正确连接
-        var em = ElectricManager.Instance;
-        if (em != null && em.wireTilemap != null) {
-            foreach (var element in em.ElectricElements.Values) {
-                if (element is Wire) continue;
-                if (element.bindGrid == null) continue;
-
-                Vector3Int cellPos = em.GetTilePos(element.bindGrid.x, element.bindGrid.y);
-                if (em.wireTilemap.GetTile(cellPos) == null) {
-                    TileBase tile = element.intensity > 0 ? em.wireTilePowered : em.wireTileUnpowered;
-                    em.SetWireTile(element.bindGrid.x, element.bindGrid.y, tile);
-                    em.wireTilemap.SetColor(cellPos, Color.clear);
-                }
-            }
-        }
-
         // 关卡加载完成后，同步一次电路状态
-        if (em != null)
-            em.BeginSimulate();
+        if (ElectricManager.Instance != null)
+            ElectricManager.Instance.BeginSimulate();
     }
 }

@@ -1,10 +1,9 @@
 using UnityEngine;
 
 public class Wire : ElectricElementBase {
-    protected override void Start() {
+    void Start() {
         // 在 Tilemap 上放置未通电的电线 Tile
         SetInitialTile();
-        base.Start();
     }
 
     void SetInitialTile() {

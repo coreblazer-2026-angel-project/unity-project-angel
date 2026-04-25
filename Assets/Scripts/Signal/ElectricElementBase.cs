@@ -198,38 +198,12 @@ public abstract class ElectricElementBase : MonoBehaviour {
     /// 子类可重写以实现自定义显示逻辑
     /// </summary>
     protected virtual void RefreshTileState() {
-        var em = ElectricManager.Instance;
-        if (em == null || bindGrid == null) return;
-
-        if (this is Wire) {
-            em.RefreshWireTile(bindGrid.x, bindGrid.y, intensity > 0);
-        } else {
-            if (em.HasElementTile(cellType)) {
-                em.SetElementTile(bindGrid.x, bindGrid.y, cellType, intensity > 0);
+        // 基类默认实现：刷新 Wire 类型的 Tile 状态
+        if (this is Wire wire && bindGrid != null) {
+            var em = ElectricManager.Instance;
+            if (em != null) {
+                em.RefreshWireTile(bindGrid.x, bindGrid.y, intensity > 0);
             }
-            RefreshInvisibleWireTile();
-        }
-    }
-
-    /// <summary>
-    /// 刷新该元件下方的隐形电线 tile，根据 intensity 切换 powered/unpowered。
-    /// 如果该格子有真正的 Wire，则跳过（让 Wire 自行管理）。
-    /// </summary>
-    protected void RefreshInvisibleWireTile() {
-        var em = _electricManager;
-        if (em == null || em.wireTilemap == null || bindGrid == null) return;
-
-        // 该格子有真正的 Wire 时，让 Wire 管理 wireTilemap
-        foreach (var obj in bindGrid.holdObjects) {
-            if (obj != null && obj != gameObject && obj.GetComponent<Wire>() != null)
-                return;
-        }
-
-        Vector3Int cellPos = em.GetTilePos(bindGrid.x, bindGrid.y);
-        TileBase target = intensity > 0 ? em.wireTilePowered : em.wireTileUnpowered;
-        if (em.wireTilemap.GetTile(cellPos) != target) {
-            em.SetWireTile(bindGrid.x, bindGrid.y, target);
-            em.wireTilemap.SetColor(cellPos, Color.clear);
         }
     }
 }
