@@ -18,15 +18,8 @@ MonoBehaviour:
   floorPrefab: {fileID: 6174486589834613836, guid: c833f1fd98f692b47b7a95b8e9adc59c, type: 3}
   wireLimit: 10
   items:
-  - position: {x: 0, y: 0}
+  - position: {x: 2, y: 2}
     type: 2
-    signalStrength: 10
-    requiredStrength: 0
-    amplifyValue: 0
-    activateThreshold: 0
-    phaseColor: {r: 0, g: 0, b: 0, a: 0}
-  - position: {x: 1, y: 1}
-    type: 3
     signalStrength: 10
     requiredStrength: 0
     amplifyValue: 0

@@ -42,12 +42,8 @@ public class LevelManager : MonoBehaviour {
             }
         }
 
-        // 让 WirePlacer 在 Tilemap 上标记电源等元件，RuleTile 才能感知它们
-        var wp = FindObjectOfType<WirePlacer>();
-        if (wp != null)
-        {
-            wp.SyncElementTiles();
-            wp.InitLevelWires();
-        }
+        // 关卡加载完成后，同步一次电路状态
+        if (ElectricManager.Instance != null)
+            ElectricManager.Instance.BeginSimulate();
     }
 }

@@ -1,25 +1,23 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Wire : ElectricElementBase {
-    // Start is called before the first frame update
     void Start() {
-
+        // 在 Tilemap 上放置未通电的电线 Tile
+        SetInitialTile();
     }
 
-    // Update is called once per frame
-    void Update() {
-
+    void SetInitialTile() {
+        if (bindGrid == null) return;
+        var em = ElectricManager.Instance;
+        if (em == null) return;
+        em.SetWireTile(bindGrid.x, bindGrid.y, em.wireTileUnpowered);
     }
 
-    public override void Activate() {
-        base.Activate();
-        spriteRenderer.color = Color.red;
-    }
-
-    public override void Deactive() {
-        base.Deactive();
-        spriteRenderer.color = Color.gray;
+    public override void Remove() {
+        // 清除 Tilemap 上的 Tile
+        if (bindGrid != null) {
+            ElectricManager.Instance?.ClearTile(bindGrid.x, bindGrid.y);
+        }
+        base.Remove();
     }
 }

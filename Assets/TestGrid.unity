@@ -440,6 +440,9 @@ MonoBehaviour:
     prefab: {fileID: 5555280362105115345, guid: 8d8d67278fb4e634da7a9ab1ea7e4aed, type: 3}
   - type: 3
     prefab: {fileID: 3359336287815227746, guid: 7936ee61fe1a1514d994dacaa52f88ca, type: 3}
+  wireTilemap: {fileID: 1439603997}
+  wireTilePowered: {fileID: 11400000, guid: 4bd222c54692f5149890de472f505461, type: 2}
+  wireTileUnpowered: {fileID: 11400000, guid: c0f1ec38b48d8dd40b815689ff556cd5, type: 2}
 --- !u!4 &177546393
 Transform:
   m_ObjectHideFlags: 0
@@ -877,9 +880,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c630c174c9a7be4093b2fd5462aa8e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wireTilemap: {fileID: 1439603997}
-  wireTilePowered: {fileID: 11400000, guid: 4bd222c54692f5149890de472f505461, type: 2}
-  wireTileUnpowered: {fileID: 11400000, guid: c0f1ec38b48d8dd40b815689ff556cd5, type: 2}
   cam: {fileID: 0}
 --- !u!4 &480520030
 Transform:
