@@ -8,29 +8,47 @@ public abstract class ElectricElementBase : MonoBehaviour {
     public int workIntensity;
     public List<ElectricElementBase> neighborElements = new();
     public GridV2 bindGrid;
+    public CellType cellType;
     [SerializeField] protected List<Sprite> sprites;
     [SerializeField] protected Sprite showSprite;
     [SerializeField] protected SpriteRenderer spriteRenderer;
 
     public int ID;
+    ElectricManager _electricManager;
 
     void Awake() {
-        if (ElectricManager.Instance != null)
-            ElectricManager.Instance.AddElement(this);
+        _electricManager = ElectricManager.Instance;
+        if (_electricManager != null)
+            _electricManager.AddElement(this);
     }
 
     protected virtual void Start() {
-        // 元件初始化完成后触发电路模拟
-        ElectricManager.Instance?.BeginSimulate();
+        bool tilePlaced = PlaceElementTile();
+        if (tilePlaced && spriteRenderer != null) {
+            spriteRenderer.enabled = false;
+        }
+        _electricManager?.BeginSimulate();
+    }
+
+    protected bool PlaceElementTile() {
+        if (this is Wire) return false;
+        var em = _electricManager;
+        if (em == null || bindGrid == null) return false;
+        if (!em.HasElementTile(cellType)) return false;
+        em.SetElementTile(bindGrid.x, bindGrid.y, cellType, false);
+        return true;
     }
 
     protected virtual void OnDestroy() {
-        if (ElectricManager.Instance != null)
-            ElectricManager.Instance.ElectricElements.Remove(ID);
-        // 元件销毁后触发电路模拟
-        ElectricManager.Instance?.BeginSimulate();
+        // 使用缓存引用，避免退出播放模式时触发 Singleton 的 isQuitting 警告
+        if (_electricManager != null) {
+            _electricManager.ElectricElements.Remove(ID);
+            _electricManager.BeginSimulate();
+        }
     }
 
+
+    public virtual bool CanConnectTo(ElectricElementBase other) => true;
 
     public void BindToGrid(GridV2 grid) {
         bindGrid = grid;
@@ -38,6 +56,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
         foreach (GridV2 neighborGrid in neighborGrids) {
             if (!neighborGrid || !neighborGrid.holdObject) continue;
             if (neighborGrid.holdObject.TryGetComponent(out ElectricElementBase electricElement)) {
+                if (!this.CanConnectTo(electricElement) || !electricElement.CanConnectTo(this))
+                    continue;
                 electricElement.neighborElements.Add(this);
                 this.neighborElements.Add(electricElement);
             }
@@ -46,6 +66,10 @@ public abstract class ElectricElementBase : MonoBehaviour {
 
     [ContextMenu("Remove")]
     public virtual void Remove() {
+        if (!(this is Wire) && bindGrid != null) {
+            ElectricManager.Instance?.ClearTile(bindGrid.x, bindGrid.y);
+        }
+
         GridV2[] neighborGrids = bindGrid.GetAllNeighbors();
         foreach (GridV2 neighborGrid in neighborGrids) {
             if (!neighborGrid || !neighborGrid.holdObject) continue;
@@ -73,12 +97,13 @@ public abstract class ElectricElementBase : MonoBehaviour {
     /// 子类可重写以实现自定义显示逻辑
     /// </summary>
     protected virtual void RefreshTileState() {
-        // 基类默认实现：刷新 Wire 类型的 Tile 状态
-        if (this is Wire wire && bindGrid != null) {
-            var em = ElectricManager.Instance;
-            if (em != null) {
-                em.RefreshWireTile(bindGrid.x, bindGrid.y, intensity > 0);
-            }
+        var em = ElectricManager.Instance;
+        if (em == null || bindGrid == null) return;
+
+        if (this is Wire) {
+            em.RefreshWireTile(bindGrid.x, bindGrid.y, intensity > 0);
+        } else if (em.HasElementTile(cellType)) {
+            em.SetElementTile(bindGrid.x, bindGrid.y, cellType, intensity > 0);
         }
     }
 }

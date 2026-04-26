@@ -440,9 +440,15 @@ MonoBehaviour:
     prefab: {fileID: 5555280362105115345, guid: 8d8d67278fb4e634da7a9ab1ea7e4aed, type: 3}
   - type: 3
     prefab: {fileID: 3359336287815227746, guid: 7936ee61fe1a1514d994dacaa52f88ca, type: 3}
+  - type: 4
+    prefab: {fileID: 3004771689938507433, guid: e1f5363503d9d2d4a8852181a8864aae, type: 3}
   wireTilemap: {fileID: 1439603997}
   wireTilePowered: {fileID: 11400000, guid: 4bd222c54692f5149890de472f505461, type: 2}
   wireTileUnpowered: {fileID: 11400000, guid: c0f1ec38b48d8dd40b815689ff556cd5, type: 2}
+  elementTileEntries:
+  - type: 4
+    tile: {fileID: 11400000, guid: ae8d3b0ab033dd542a35fe2c3f46048f, type: 2}
+    poweredTile: {fileID: 11400000, guid: b80d634f8d9a9744d841cae1dbd34619, type: 2}
 --- !u!4 &177546393
 Transform:
   m_ObjectHideFlags: 0

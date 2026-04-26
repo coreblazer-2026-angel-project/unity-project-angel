@@ -25,12 +25,31 @@ public class ElectricManager : ManagerBase<ElectricManager> {
     [Tooltip("不通电状态的 RuleTile")]
     public TileBase wireTileUnpowered;
 
+    [Header("元件 Tile 配置")]
+    [Tooltip("非电线元件的 CellType → Tile 映射（未激活/激活）")]
+    public List<ElementTileEntry> elementTileEntries;
+    public Dictionary<CellType, ElementTileEntry> elementTileDict = new();
+
+    [Serializable]
+    public struct ElementTileEntry {
+        public CellType type;
+        public TileBase tile;
+        public TileBase poweredTile;
+    }
+
     Grid _tilemapGrid;
 
     protected override void Awake() {
         base.Awake();
         foreach (ElectricPrefabEntry electricPrefabEntry in prefabEntries) {
-            prefabDict.Add(electricPrefabEntry.type, electricPrefabEntry.prefab);
+            if (electricPrefabEntry.prefab == null) {
+                Debug.LogWarning($"ElectricManager: prefabEntries 中 CellType [{electricPrefabEntry.type}] 的预制体为空，已跳过。");
+                continue;
+            }
+            prefabDict[electricPrefabEntry.type] = electricPrefabEntry.prefab;
+        }
+        foreach (ElementTileEntry entry in elementTileEntries) {
+            elementTileDict[entry.type] = entry;
         }
         SyncTilemapGrid();
     }
@@ -77,6 +96,21 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         RefreshNeighborTiles(cellPos);
     }
 
+    public bool HasElementTile(CellType type) {
+        return elementTileDict.ContainsKey(type);
+    }
+
+    public void SetElementTile(int x, int y, CellType type, bool powered) {
+        if (wireTilemap == null) return;
+        if (!elementTileDict.TryGetValue(type, out var entry)) return;
+
+        TileBase tile = powered && entry.poweredTile != null ? entry.poweredTile : entry.tile;
+        if (tile == null) return;
+
+        Vector3Int cellPos = GetTilePos(x, y);
+        wireTilemap.SetTile(cellPos, tile);
+    }
+
     void Start() {
 
     }
@@ -121,6 +155,10 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 toActivate.Add(cur);
             }
 
+            // 非电线元件（如 HopeLamp）接收信号，但不继续传播给邻居
+            if (cur is not PowerSource && cur is not Wire)
+                continue;
+
             foreach (var next in cur.neighborElements) {
                 if (visited.Contains(next)) continue;
 
@@ -138,6 +176,24 @@ public class ElectricManager : ManagerBase<ElectricManager> {
             }
         }
         // 否则所有元件保持 Deactive 状态（已在开头重置）
+
+        // 检查所有灯：相邻有激活电线则点亮，否则熄灭
+        foreach (var element in ElectricElements.Values) {
+            if (element is Light light) {
+                bool hasActiveWire = false;
+                foreach (var neighbor in light.neighborElements) {
+                    if (neighbor is Wire && neighbor.intensity > 0) {
+                        hasActiveWire = true;
+                        break;
+                    }
+                }
+                if (hasActiveWire) {
+                    light.Activate();
+                } else {
+                    light.Deactive();
+                }
+            }
+        }
     }
 
     void RefreshAllWireTiles() {

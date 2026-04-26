@@ -10,4 +10,14 @@ public class PowerSource : ElectricElementBase {
     public override void Activate() {
         base.Activate();
     }
+
+    public override bool CanConnectTo(ElectricElementBase other) {
+        if (other is Wire) {
+            foreach (var neighbor in neighborElements) {
+                if (neighbor is Wire)
+                    return false;
+            }
+        }
+        return true;
+    }
 }
