@@ -21,11 +21,6 @@ public class LevelManager : MonoBehaviour {
                 continue;
             }
 
-            if (cell.holdObject != null) {
-                Debug.LogWarning($"LevelManager: 坐标 {item.position} 已有元件，跳过");
-                continue;
-            }
-
             cell.PutElement(item.type);
 
             if (cell.holdObject != null) {
@@ -42,8 +37,23 @@ public class LevelManager : MonoBehaviour {
             }
         }
 
+        // 为所有非电线元件在 wireTilemap 上放置隐形电线瓦片，让 RuleTile 能正确连接
+        var em = ElectricManager.Instance;
+        if (em != null && em.wireTilemap != null) {
+            foreach (var item in levelData.items) {
+                if (item.type == CellType.Wire || item.type == CellType.Empty || item.type == CellType.Wall)
+                    continue;
+
+                Vector3Int cellPos = em.GetTilePos(item.position.x, item.position.y);
+                if (em.wireTilemap.GetTile(cellPos) == null) {
+                    em.SetWireTile(item.position.x, item.position.y, em.wireTileUnpowered);
+                    em.wireTilemap.SetColor(cellPos, Color.clear);
+                }
+            }
+        }
+
         // 关卡加载完成后，同步一次电路状态
-        if (ElectricManager.Instance != null)
-            ElectricManager.Instance.BeginSimulate();
+        if (em != null)
+            em.BeginSimulate();
     }
 }

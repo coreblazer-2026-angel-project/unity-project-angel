@@ -169,6 +169,7 @@ MonoBehaviour:
   x: 0
   y: 1
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &24578276
 GameObject:
   m_ObjectHideFlags: 0
@@ -216,6 +217,7 @@ MonoBehaviour:
   x: 2
   y: 3
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &55749152
 GameObject:
   m_ObjectHideFlags: 0
@@ -263,6 +265,7 @@ MonoBehaviour:
   x: 4
   y: 4
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &91997702
 GameObject:
   m_ObjectHideFlags: 0
@@ -310,6 +313,7 @@ MonoBehaviour:
   x: 4
   y: 3
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &93909630
 GameObject:
   m_ObjectHideFlags: 0
@@ -357,6 +361,7 @@ MonoBehaviour:
   x: 0
   y: 3
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &140876480
 GameObject:
   m_ObjectHideFlags: 0
@@ -404,6 +409,7 @@ MonoBehaviour:
   x: 1
   y: 1
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &177546391
 GameObject:
   m_ObjectHideFlags: 0
@@ -444,6 +450,8 @@ MonoBehaviour:
     prefab: {fileID: 3004771689938507433, guid: e1f5363503d9d2d4a8852181a8864aae, type: 3}
   - type: 10
     prefab: {fileID: 6289051811210817330, guid: 9ff5354100c7ac14480ebf00da9864db, type: 3}
+  - type: 6
+    prefab: {fileID: 4081150779181068875, guid: b784fe0b3f6d64644ac2cef374beba2e, type: 3}
   wireTilemap: {fileID: 1439603997}
   wireTilePowered: {fileID: 11400000, guid: 4bd222c54692f5149890de472f505461, type: 2}
   wireTileUnpowered: {fileID: 11400000, guid: c0f1ec38b48d8dd40b815689ff556cd5, type: 2}
@@ -456,6 +464,9 @@ MonoBehaviour:
   - type: 10
     tile: {fileID: 11400000, guid: 20d5461c8bd89af40b322622bdbeddfc, type: 2}
     poweredTile: {fileID: 11400000, guid: 20d5461c8bd89af40b322622bdbeddfc, type: 2}
+  - type: 6
+    tile: {fileID: 11400000, guid: 8d40bb310a33c9e4bbd792380d4dde46, type: 2}
+    poweredTile: {fileID: 11400000, guid: 2a6cc3a30fb2cdc43b02ef7c69031164, type: 2}
 --- !u!4 &177546393
 Transform:
   m_ObjectHideFlags: 0
@@ -518,6 +529,7 @@ MonoBehaviour:
   x: 0
   y: 3
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &228908722
 GameObject:
   m_ObjectHideFlags: 0
@@ -625,6 +637,7 @@ MonoBehaviour:
   x: 3
   y: 4
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &330889210
 GameObject:
   m_ObjectHideFlags: 0
@@ -672,6 +685,7 @@ MonoBehaviour:
   x: 4
   y: 3
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &359523536
 GameObject:
   m_ObjectHideFlags: 0
@@ -719,6 +733,7 @@ MonoBehaviour:
   x: 1
   y: 4
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &428448986
 GameObject:
   m_ObjectHideFlags: 0
@@ -864,6 +879,7 @@ MonoBehaviour:
   x: 2
   y: 3
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &480520028
 GameObject:
   m_ObjectHideFlags: 0
@@ -956,6 +972,7 @@ MonoBehaviour:
   x: 0
   y: 0
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &489973876
 GameObject:
   m_ObjectHideFlags: 0
@@ -1003,6 +1020,7 @@ MonoBehaviour:
   x: 4
   y: 0
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &507512726
 GameObject:
   m_ObjectHideFlags: 0
@@ -1050,6 +1068,7 @@ MonoBehaviour:
   x: 4
   y: 1
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &533182286
 GameObject:
   m_ObjectHideFlags: 0
@@ -1097,6 +1116,7 @@ MonoBehaviour:
   x: 4
   y: 0
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &537860700
 GameObject:
   m_ObjectHideFlags: 0
@@ -1144,6 +1164,7 @@ MonoBehaviour:
   x: 1
   y: 0
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &540167760
 GameObject:
   m_ObjectHideFlags: 0
@@ -1191,6 +1212,7 @@ MonoBehaviour:
   x: 0
   y: 2
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &693383036
 GameObject:
   m_ObjectHideFlags: 0
@@ -1238,6 +1260,7 @@ MonoBehaviour:
   x: 2
   y: 0
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &750070050
 GameObject:
   m_ObjectHideFlags: 0
@@ -1285,6 +1308,7 @@ MonoBehaviour:
   x: 4
   y: 4
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &765500594
 GameObject:
   m_ObjectHideFlags: 0
@@ -1332,6 +1356,7 @@ MonoBehaviour:
   x: 3
   y: 1
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &766376982
 GameObject:
   m_ObjectHideFlags: 0
@@ -1379,6 +1404,7 @@ MonoBehaviour:
   x: 2
   y: 0
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &776790669
 GameObject:
   m_ObjectHideFlags: 0
@@ -1426,6 +1452,7 @@ MonoBehaviour:
   x: 0
   y: 4
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &807846721
 GameObject:
   m_ObjectHideFlags: 0
@@ -1473,6 +1500,7 @@ MonoBehaviour:
   x: 1
   y: 4
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &819216976
 GameObject:
   m_ObjectHideFlags: 0
@@ -1520,6 +1548,7 @@ MonoBehaviour:
   x: 3
   y: 0
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &823326872
 GameObject:
   m_ObjectHideFlags: 0
@@ -1567,6 +1596,7 @@ MonoBehaviour:
   x: 3
   y: 2
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &909935313
 GameObject:
   m_ObjectHideFlags: 0
@@ -1614,6 +1644,7 @@ MonoBehaviour:
   x: 3
   y: 0
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &929742319
 GameObject:
   m_ObjectHideFlags: 0
@@ -1661,6 +1692,7 @@ MonoBehaviour:
   x: 3
   y: 2
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1069258193
 GameObject:
   m_ObjectHideFlags: 0
@@ -1708,6 +1740,7 @@ MonoBehaviour:
   x: 0
   y: 2
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1085743189
 GameObject:
   m_ObjectHideFlags: 0
@@ -1875,6 +1908,7 @@ MonoBehaviour:
   x: 1
   y: 3
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1189510679
 GameObject:
   m_ObjectHideFlags: 0
@@ -1922,6 +1956,7 @@ MonoBehaviour:
   x: 4
   y: 2
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1250037209
 GameObject:
   m_ObjectHideFlags: 0
@@ -1969,6 +2004,7 @@ MonoBehaviour:
   x: 3
   y: 3
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1260480766
 GameObject:
   m_ObjectHideFlags: 0
@@ -2016,6 +2052,7 @@ MonoBehaviour:
   x: 1
   y: 2
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1314695726
 GameObject:
   m_ObjectHideFlags: 0
@@ -2063,6 +2100,7 @@ MonoBehaviour:
   x: 3
   y: 1
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1417190242
 GameObject:
   m_ObjectHideFlags: 0
@@ -2110,6 +2148,7 @@ MonoBehaviour:
   x: 0
   y: 1
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1433467524
 GameObject:
   m_ObjectHideFlags: 0
@@ -2157,6 +2196,7 @@ MonoBehaviour:
   x: 2
   y: 4
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1439603994
 GameObject:
   m_ObjectHideFlags: 0
@@ -2461,6 +2501,7 @@ MonoBehaviour:
   x: 2
   y: 1
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1529564657
 GameObject:
   m_ObjectHideFlags: 0
@@ -2508,6 +2549,7 @@ MonoBehaviour:
   x: 2
   y: 1
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1534703294
 GameObject:
   m_ObjectHideFlags: 0
@@ -2555,6 +2597,7 @@ MonoBehaviour:
   x: 1
   y: 3
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1665131319
 GameObject:
   m_ObjectHideFlags: 0
@@ -2602,6 +2645,7 @@ MonoBehaviour:
   x: 2
   y: 4
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1753047707
 GameObject:
   m_ObjectHideFlags: 0
@@ -2649,6 +2693,7 @@ MonoBehaviour:
   x: 2
   y: 2
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1758755241
 GameObject:
   m_ObjectHideFlags: 0
@@ -2769,6 +2814,54 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!1 &1768868153
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1768868155}
+  - component: {fileID: 1768868154}
+  m_Layer: 0
+  m_Name: DragManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1768868154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1768868153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc9a0da2cba9cfd438d0edd4db92c15e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cam: {fileID: 0}
+  draggableObjects: []
+  snapToGridOnRelease: 0
+  gridSize: 0.32
+--- !u!4 &1768868155
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1768868153}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1846313955
 GameObject:
   m_ObjectHideFlags: 0
@@ -2816,6 +2909,7 @@ MonoBehaviour:
   x: 4
   y: 2
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1873570525
 GameObject:
   m_ObjectHideFlags: 0
@@ -2863,6 +2957,7 @@ MonoBehaviour:
   x: 1
   y: 0
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1914807067
 GameObject:
   m_ObjectHideFlags: 0
@@ -2910,6 +3005,7 @@ MonoBehaviour:
   x: 3
   y: 3
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &1940193786
 GameObject:
   m_ObjectHideFlags: 0
@@ -2957,6 +3053,7 @@ MonoBehaviour:
   x: 2
   y: 2
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &2007151203
 GameObject:
   m_ObjectHideFlags: 0
@@ -3004,6 +3101,7 @@ MonoBehaviour:
   x: 3
   y: 4
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &2024101633
 GameObject:
   m_ObjectHideFlags: 0
@@ -3051,6 +3149,7 @@ MonoBehaviour:
   x: 4
   y: 1
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &2044648019
 GameObject:
   m_ObjectHideFlags: 0
@@ -3098,6 +3197,7 @@ MonoBehaviour:
   x: 1
   y: 2
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &2068698861
 GameObject:
   m_ObjectHideFlags: 0
@@ -3192,6 +3292,7 @@ MonoBehaviour:
   x: 0
   y: 4
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &2080708884
 GameObject:
   m_ObjectHideFlags: 0
@@ -3239,6 +3340,7 @@ MonoBehaviour:
   x: 1
   y: 1
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1 &2144398240
 GameObject:
   m_ObjectHideFlags: 0
@@ -3286,6 +3388,7 @@ MonoBehaviour:
   x: 0
   y: 0
   holdObject: {fileID: 0}
+  holdObjects: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -3296,3 +3399,4 @@ SceneRoots:
   - {fileID: 228908725}
   - {fileID: 428448988}
   - {fileID: 2068698863}
+  - {fileID: 1768868155}

@@ -3,33 +3,42 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class CrossConnector : ElectricElementBase {
+public class CrossConnector : ElectricElementBase, IDraggable {
+    [Header("可拖拽")]
+    public bool draggable = true;
+
+    public bool CanDrag => draggable;
+
+    DragManager _cachedDragManager;
+
     protected override void Start() {
-        // 先在 wireTilemap 放置隐形电线瓦片
-        // 让相邻 Wire 的 RuleTile 能识别并连接到此位置
-        PlaceInvisibleWireTile();
-        // 调用 base.Start() 在 elementTilemap 放置显示瓦片，隐藏 SpriteRenderer
+        // 基类 ElectricElementBase.Start() 会统一放置隐形电线瓦片
         base.Start();
+
+        // 自动注册到 DragManager
+        _cachedDragManager = FindFirstObjectByType<DragManager>();
+        _cachedDragManager?.AddDraggable(gameObject);
     }
 
-    void PlaceInvisibleWireTile() {
-        if (bindGrid == null) return;
-        var em = ElectricManager.Instance;
-        if (em == null || em.wireTilemap == null) return;
+    void OnDestroy() {
+        _cachedDragManager?.RemoveDraggable(gameObject);
+    }
 
-        em.SetWireTile(bindGrid.x, bindGrid.y, em.wireTileUnpowered);
+    public void OnDragStart(Vector3 worldPos) {
+        // 拖拽时显示 SpriteRenderer，让用户能看到被拖动的物件
+        if (spriteRenderer != null) spriteRenderer.enabled = true;
+    }
 
-        // 设置瓦片颜色为透明，使电线瓦片不可见
-        Vector3Int cellPos = em.GetTilePos(bindGrid.x, bindGrid.y);
-        em.wireTilemap.SetColor(cellPos, Color.clear);
+    public void OnDragging(Vector3 worldPos) {
+    }
+
+    public void OnDragEnd(Vector3 worldPos) {
+        if (spriteRenderer != null) spriteRenderer.enabled = false;
+        SnapToGridAndMove();
     }
 
     public override void Remove() {
-        // 先清除 wireTilemap 上的隐形电线瓦片
-        if (bindGrid != null) {
-            ElectricManager.Instance?.ClearTile(bindGrid.x, bindGrid.y);
-        }
-        // base.Remove() 会清除 elementTilemap 上的元件瓦片
+        // 基类 ElectricElementBase.Remove() 会统一处理隐形电线瓦片和元件瓦片的清除
         base.Remove();
     }
 
@@ -47,6 +56,49 @@ public class CrossConnector : ElectricElementBase {
     public override void Deactive() {
         base.Deactive();
         spriteRenderer.color = Color.gray;
+    }
+
+    // ---------- 拖拽后吸附换格子 ----------
+
+    void SnapToGridAndMove() {
+        var gmv2 = GridManagerV2.Instance;
+        if (gmv2 == null || bindGrid == null) return;
+
+        float gs = gmv2.gridSize;
+        Vector3 pos = transform.position;
+        int gx = Mathf.RoundToInt(pos.x / gs);
+        int gy = Mathf.RoundToInt(-pos.y / gs);
+
+        GridV2 targetCell = gmv2.GetGrid(gx, gy);
+
+        // 目标无效或等于原格子，直接回原位
+        if (targetCell == null || targetCell == bindGrid) {
+            transform.position = bindGrid.transform.position;
+            return;
+        }
+
+        // 检查目标格子是否可以放置（CrossConnector 独占，只能空格子）
+        if (targetCell.holdObjects.Count > 0) {
+            transform.position = bindGrid.transform.position;
+            return;
+        }
+
+        // 保存属性
+        int savedWorkIntensity = workIntensity;
+
+        // 从原格子移除（会销毁当前 gameObject）
+        Remove();
+
+        // 在目标格子重新放置
+        targetCell.PutElement(CellType.CrossConnector);
+
+        // 恢复属性到新实例
+        foreach (var obj in targetCell.holdObjects) {
+            if (obj != null && obj.TryGetComponent(out CrossConnector newCc)) {
+                newCc.workIntensity = savedWorkIntensity;
+                break;
+            }
+        }
     }
 
     /// <summary>

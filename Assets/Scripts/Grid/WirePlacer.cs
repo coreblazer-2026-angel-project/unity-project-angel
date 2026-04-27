@@ -12,9 +12,17 @@ public class WirePlacer : MonoBehaviour {
     Camera Cam => cam != null ? cam : Camera.main;
 
     bool isDragging;
+    Vector2Int dragStartGridPos;
     Vector2Int? lastGridPos;
     Dictionary<Vector2Int, GameObject> previewObjects = new();
     Sprite wireSprite;
+
+    // 右键长按擦除
+    bool isRightMouseDown;
+    float rightMouseDownTime;
+    bool isErasing;
+    Vector2Int? lastEraseGridPos;
+    const float LONG_PRESS_THRESHOLD = 0.125f;
 
     void Start() {
         var em = ElectricManager.Instance;
@@ -32,6 +40,7 @@ public class WirePlacer : MonoBehaviour {
     }
 
     void Update() {
+        // 左键：放置 / 拖动预览
         if (Input.GetMouseButtonDown(0)) {
             isDragging = true;
             HandleDragStart();
@@ -48,6 +57,32 @@ public class WirePlacer : MonoBehaviour {
                 lastGridPos = null;
             }
         }
+
+        // 右键：长按擦除
+        if (Input.GetMouseButtonDown(1)) {
+            // 如果正在左键拖动，取消拖动
+            if (isDragging) {
+                CancelDrag();
+            }
+            isRightMouseDown = true;
+            rightMouseDownTime = Time.time;
+        }
+
+        if (isRightMouseDown && Input.GetMouseButton(1)) {
+            if (!isErasing && Time.time - rightMouseDownTime >= LONG_PRESS_THRESHOLD) {
+                isErasing = true;
+            }
+
+            if (isErasing) {
+                EraseWiresUnderCursor();
+            }
+        }
+
+        if (Input.GetMouseButtonUp(1)) {
+            isRightMouseDown = false;
+            isErasing = false;
+            lastEraseGridPos = null;
+        }
     }
 
     void HandleDragStart() {
@@ -60,6 +95,7 @@ public class WirePlacer : MonoBehaviour {
         if (gmv2 == null) return;
 
         Vector2Int gridPos = WorldToGrid(world, gmv2.gridSize);
+        dragStartGridPos = gridPos;
         lastGridPos = gridPos;
 
         GridV2 cell = gmv2.GetGrid(gridPos.x, gridPos.y);
@@ -69,18 +105,15 @@ public class WirePlacer : MonoBehaviour {
         }
 
         // 如果起点已有电线，删除它并结束拖动
-        if (cell.holdObject != null && cell.holdObject.GetComponent<Wire>() != null) {
+        if (HasWire(cell)) {
             DeleteWire(cell);
             isDragging = false;
             lastGridPos = null;
             return;
         }
 
-        // 起点为空，创建起点预览
-        if (cell.holdObject == null) {
-            CreatePreview(cell, gridPos);
-        } else {
-            // 起点被非电线物体占据，取消拖动
+        // 起点可以放电线，但不在起点创建预览（阈值：拖到第二个格子才显示）
+        if (!CanPlaceWire(cell)) {
             isDragging = false;
             lastGridPos = null;
         }
@@ -98,15 +131,33 @@ public class WirePlacer : MonoBehaviour {
         Vector2Int gridPos = WorldToGrid(world, gmv2.gridSize);
         if (lastGridPos.HasValue && gridPos == lastGridPos.Value) return;
 
-        // 从上一个格子到当前格子画线，填充中间格子（防止鼠标移动过快漏掉格子）
-        Vector2Int from = lastGridPos ?? gridPos;
-        foreach (Vector2Int pos in GetLinePoints(from, gridPos)) {
-            if (previewObjects.ContainsKey(pos)) continue;
+        // 阈值：还没有任何预览时，只有离开起点格子才开始显示预览
+        if (previewObjects.Count == 0) {
+            if (gridPos == dragStartGridPos) {
+                lastGridPos = gridPos;
+                return; // 还在起点，不创建预览
+            }
 
-            GridV2 cell = gmv2.GetGrid(pos.x, pos.y);
-            if (cell == null || cell.holdObject != null) continue;
+            // 第一次离开起点，从起点到当前格子画线
+            foreach (Vector2Int pos in GetLinePoints(dragStartGridPos, gridPos)) {
+                if (previewObjects.ContainsKey(pos)) continue;
 
-            CreatePreview(cell, pos);
+                GridV2 cell = gmv2.GetGrid(pos.x, pos.y);
+                if (cell == null || !CanPlaceWire(cell)) continue;
+
+                CreatePreview(cell, pos);
+            }
+        } else {
+            // 已经有预览了，继续追加
+            Vector2Int from = lastGridPos ?? gridPos;
+            foreach (Vector2Int pos in GetLinePoints(from, gridPos)) {
+                if (previewObjects.ContainsKey(pos)) continue;
+
+                GridV2 cell = gmv2.GetGrid(pos.x, pos.y);
+                if (cell == null || !CanPlaceWire(cell)) continue;
+
+                CreatePreview(cell, pos);
+            }
         }
 
         lastGridPos = gridPos;
@@ -150,17 +201,32 @@ public class WirePlacer : MonoBehaviour {
             return;
         }
 
+        // 没有创建任何预览：说明只是点击（未离开起点），在起点直接放置电线
+        if (previewObjects.Count == 0) {
+            GridV2 startCell = gmv2.GetGrid(dragStartGridPos.x, dragStartGridPos.y);
+            if (startCell != null && CanPlaceWire(startCell)) {
+                startCell.PutElement(CellType.Wire);
+                Wire wire = GetWire(startCell);
+                if (wire != null) {
+                    var sr = wire.GetComponent<SpriteRenderer>();
+                    if (sr != null) sr.enabled = false;
+                }
+            }
+            return;
+        }
+
         foreach (var kv in previewObjects) {
             Vector2Int pos = kv.Key;
             GameObject previewGo = kv.Value;
             if (previewGo != null) Destroy(previewGo);
 
             GridV2 cell = gmv2.GetGrid(pos.x, pos.y);
-            if (cell != null && cell.holdObject == null) {
+            if (cell != null && CanPlaceWire(cell)) {
                 cell.PutElement(CellType.Wire);
                 // 隐藏 Wire 的 SpriteRenderer，由 Tilemap 负责渲染
-                if (cell.holdObject != null) {
-                    var sr = cell.holdObject.GetComponent<SpriteRenderer>();
+                Wire wire = GetWire(cell);
+                if (wire != null) {
+                    var sr = wire.GetComponent<SpriteRenderer>();
                     if (sr != null) sr.enabled = false;
                 }
             }
@@ -178,10 +244,79 @@ public class WirePlacer : MonoBehaviour {
     }
 
     void DeleteWire(GridV2 cell) {
-        if (cell.holdObject != null) {
-            var elem = cell.holdObject.GetComponent<ElectricElementBase>();
-            if (elem != null) elem.Remove();
+        Wire wire = GetWire(cell);
+        if (wire != null) wire.Remove();
+    }
+
+    // ---------- 右键长按擦除 ----------
+
+    void CancelDrag() {
+        isDragging = false;
+        lastGridPos = null;
+        var em = ElectricManager.Instance;
+        em?.ClearAllPreviewTiles();
+        foreach (var go in previewObjects.Values) {
+            if (go != null) Destroy(go);
         }
+        previewObjects.Clear();
+    }
+
+    void EraseWiresUnderCursor() {
+        if (Cam == null) return;
+
+        Vector3 world = Cam.ScreenToWorldPoint(Input.mousePosition);
+        world.z = 0f;
+
+        var gmv2 = GridManagerV2.Instance;
+        if (gmv2 == null) return;
+
+        Vector2Int gridPos = WorldToGrid(world, gmv2.gridSize);
+
+        // 避免同一帧重复处理同一格子
+        if (lastEraseGridPos.HasValue && gridPos == lastEraseGridPos.Value) return;
+        lastEraseGridPos = gridPos;
+
+        GridV2 cell = gmv2.GetGrid(gridPos.x, gridPos.y);
+        if (cell == null) return;
+
+        // 优先删除真正的电线
+        Wire wire = GetWire(cell);
+        if (wire != null) {
+            wire.Remove();
+            return;
+        }
+
+        // 没有真正的电线，清除该位置的预览
+        if (previewObjects.ContainsKey(gridPos)) {
+            GameObject previewGo = previewObjects[gridPos];
+            if (previewGo != null) Destroy(previewGo);
+            previewObjects.Remove(gridPos);
+            ElectricManager.Instance?.ClearPreviewTile(gridPos.x, gridPos.y);
+        }
+    }
+
+    // ---------- 辅助方法 ----------
+
+    static bool HasWire(GridV2 cell) => GetWire(cell) != null;
+
+    static Wire GetWire(GridV2 cell) {
+        if (cell == null) return null;
+        foreach (var obj in cell.holdObjects) {
+            if (obj != null && obj.TryGetComponent(out Wire wire)) return wire;
+        }
+        return null;
+    }
+
+    /// <summary>判断格子是否可以放置电线（空 或 只有 SignalAmplifier）"</summary>
+    static bool CanPlaceWire(GridV2 cell) {
+        if (cell == null) return false;
+        if (cell.holdObjects.Count == 0) return true;
+        foreach (var obj in cell.holdObjects) {
+            if (obj == null) continue;
+            if (obj.GetComponent<Wire>() != null) return false; // 已有电线
+            if (obj.GetComponent<SignalAmplifier>() == null) return false; // 有非叠加元件
+        }
+        return true;
     }
 
     static Vector2Int WorldToGrid(Vector3 world, float gridSize) {

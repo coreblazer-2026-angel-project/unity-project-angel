@@ -95,8 +95,10 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         if (wireTilemap == null) return;
         Vector3Int cellPos = GetTilePos(x, y);
         TileBase target = powered ? wireTilePowered : wireTileUnpowered;
-        if (wireTilemap.GetTile(cellPos) != target)
+        if (wireTilemap.GetTile(cellPos) != target) {
             wireTilemap.SetTile(cellPos, target);
+            RefreshNeighborTiles(cellPos);
+        }
     }
 
     void RefreshNeighborTiles(Vector3Int cellPos) {
@@ -250,16 +252,20 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 continue;
             }
 
-            // 非电线元件（如 HopeLamp）接收信号，但不继续传播给邻居
-            if (cur is not PowerSource && cur is not Wire)
+            // 非电线元件且不传播信号的元件（SignalAmplifier 也会继续传播）
+            if (cur is not PowerSource && cur is not Wire && cur is not SignalAmplifier)
                 continue;
 
             foreach (var next in cur.neighborElements) {
                 if (visited.Contains(next)) continue;
 
                 visited.Add(next);
-                next.intensity = Mathf.Max(0, cur.intensity - 1);
-                Debug.Log($"{next.GetType().Name} Intensity = {next.intensity} CalcIntensity = {Mathf.Max(0, cur.intensity - 1)} CurIntensity = {cur.intensity} Grid = {next.bindGrid.x},{next.bindGrid.y}");
+                int outgoingIntensity = Mathf.Max(0, cur.intensity - 1);
+                if (cur is SignalAmplifier amp && cur.intensity >= cur.workIntensity) {
+                    outgoingIntensity += amp.boostValue;
+                }
+                next.intensity = outgoingIntensity;
+                Debug.Log($"{next.GetType().Name} Intensity = {next.intensity} CalcIntensity = {outgoingIntensity} CurIntensity = {cur.intensity} Grid = {next.bindGrid.x},{next.bindGrid.y}");
                 queue.Enqueue((next, cur));
             }
         }
