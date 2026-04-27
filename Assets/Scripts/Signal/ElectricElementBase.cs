@@ -46,8 +46,7 @@ public abstract class ElectricElementBase : MonoBehaviour {
         Vector3Int cellPos = em.GetTilePos(bindGrid.x, bindGrid.y);
         if (em.wireTilemap.GetTile(cellPos) != null) return;
 
-        TileBase tile = intensity > 0 ? em.wireTilePowered : em.wireTileUnpowered;
-        em.SetWireTile(bindGrid.x, bindGrid.y, tile);
+        em.SetWireTile(bindGrid.x, bindGrid.y, em.wireTileUnpowered);
         em.wireTilemap.SetColor(cellPos, Color.clear);
     }
 
