@@ -25,6 +25,10 @@ public class ElectricManager : ManagerBase<ElectricManager> {
     [Tooltip("不通电状态的 RuleTile")]
     public TileBase wireTileUnpowered;
 
+    [Header("预览 Tilemap 层")]
+    [Tooltip("专门用于预览电线的 Tilemap 层（半透明）")]
+    public Tilemap previewTilemap;
+
     [Header("元件 Tilemap 层")]
     [Tooltip("专门用于非电线元件的 Tilemap 层")]
     public Tilemap elementTilemap;
@@ -70,6 +74,11 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         if (elementTilemap != null && elementTilemap.layoutGrid != null) {
             elementTilemap.layoutGrid.cellSize = new Vector3(gs, gs, 1f);
             elementTilemap.layoutGrid.transform.position = new Vector3(-gs / 2f, -gs / 2f, 0f);
+        }
+
+        if (previewTilemap != null && previewTilemap.layoutGrid != null) {
+            previewTilemap.layoutGrid.cellSize = new Vector3(gs, gs, 1f);
+            previewTilemap.layoutGrid.transform.position = new Vector3(-gs / 2f, -gs / 2f, 0f);
         }
     }
 
@@ -125,6 +134,37 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         Vector3Int cellPos = GetTilePos(x, y);
         elementTilemap.SetTile(cellPos, null);
     }
+
+    // ---------- 预览电线 Tilemap 操作 ----------
+
+    public void SetPreviewWireTile(int x, int y) {
+        if (previewTilemap == null) return;
+        Vector3Int cellPos = GetTilePos(x, y);
+        previewTilemap.SetTile(cellPos, wireTileUnpowered);
+        RefreshPreviewNeighborTiles(cellPos);
+    }
+
+    public void ClearPreviewTile(int x, int y) {
+        if (previewTilemap == null) return;
+        Vector3Int cellPos = GetTilePos(x, y);
+        previewTilemap.SetTile(cellPos, null);
+        RefreshPreviewNeighborTiles(cellPos);
+    }
+
+    public void ClearAllPreviewTiles() {
+        if (previewTilemap == null) return;
+        previewTilemap.ClearAllTiles();
+    }
+
+    void RefreshPreviewNeighborTiles(Vector3Int cellPos) {
+        previewTilemap.RefreshTile(cellPos);
+        previewTilemap.RefreshTile(cellPos + Vector3Int.up);
+        previewTilemap.RefreshTile(cellPos + Vector3Int.down);
+        previewTilemap.RefreshTile(cellPos + Vector3Int.left);
+        previewTilemap.RefreshTile(cellPos + Vector3Int.right);
+    }
+
+    // ----------
 
     void Start() {
 
