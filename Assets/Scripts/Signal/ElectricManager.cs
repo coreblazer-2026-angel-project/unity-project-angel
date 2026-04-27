@@ -25,6 +25,10 @@ public class ElectricManager : ManagerBase<ElectricManager> {
     [Tooltip("不通电状态的 RuleTile")]
     public TileBase wireTileUnpowered;
 
+    [Header("元件 Tilemap 层")]
+    [Tooltip("专门用于非电线元件的 Tilemap 层")]
+    public Tilemap elementTilemap;
+
     [Header("元件 Tile 配置")]
     [Tooltip("非电线元件的 CellType → Tile 映射（未激活/激活）")]
     public List<ElementTileEntry> elementTileEntries;
@@ -62,6 +66,11 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         float gs = GridManagerV2.Instance != null ? GridManagerV2.Instance.gridSize : 0.32f;
         _tilemapGrid.cellSize = new Vector3(gs, gs, 1f);
         _tilemapGrid.transform.position = new Vector3(-gs / 2f, -gs / 2f, 0f);
+
+        if (elementTilemap != null && elementTilemap.layoutGrid != null) {
+            elementTilemap.layoutGrid.cellSize = new Vector3(gs, gs, 1f);
+            elementTilemap.layoutGrid.transform.position = new Vector3(-gs / 2f, -gs / 2f, 0f);
+        }
     }
 
     public Vector3Int GetTilePos(int x, int y) => new Vector3Int(x, -y, 0);
@@ -101,14 +110,20 @@ public class ElectricManager : ManagerBase<ElectricManager> {
     }
 
     public void SetElementTile(int x, int y, CellType type, bool powered) {
-        if (wireTilemap == null) return;
+        if (elementTilemap == null) return;
         if (!elementTileDict.TryGetValue(type, out var entry)) return;
 
         TileBase tile = powered && entry.poweredTile != null ? entry.poweredTile : entry.tile;
         if (tile == null) return;
 
         Vector3Int cellPos = GetTilePos(x, y);
-        wireTilemap.SetTile(cellPos, tile);
+        elementTilemap.SetTile(cellPos, tile);
+    }
+
+    public void ClearElementTile(int x, int y) {
+        if (elementTilemap == null) return;
+        Vector3Int cellPos = GetTilePos(x, y);
+        elementTilemap.SetTile(cellPos, null);
     }
 
     void Start() {
@@ -132,18 +147,22 @@ public class ElectricManager : ManagerBase<ElectricManager> {
             element.Deactive();
         }
 
-        Queue<ElectricElementBase> queue = new();
+        Queue<(ElectricElementBase current, ElectricElementBase from)> queue = new();
         HashSet<ElectricElementBase> visited = new();
         List<ElectricElementBase> toActivate = new();
         bool allValid = true;
 
-        queue.Enqueue(powerSource);
+        // 追踪 CrossConnector 各轴向是否已处理，防止循环
+        Dictionary<CrossConnector, bool> ccHorizontalProcessed = new();
+        Dictionary<CrossConnector, bool> ccVerticalProcessed = new();
+
+        queue.Enqueue((powerSource, null));
         visited.Add(powerSource);
         powerSource.intensity = powerSource.workIntensity;
 
         // 第一遍遍历：收集所有可能激活的元件，检查是否有 intensity <= 0
         while (queue.Count > 0) {
-            var cur = queue.Dequeue();
+            var (cur, from) = queue.Dequeue();
 
             // 检查当前元件是否满足激活条件
             if (cur.intensity <= 0) {
@@ -153,6 +172,42 @@ public class ElectricManager : ManagerBase<ElectricManager> {
             // 只有 intensity >= workIntensity 才加入待激活列表
             if (cur.intensity >= cur.workIntensity) {
                 toActivate.Add(cur);
+            }
+
+            // CrossConnector 特殊处理：按来源轴向隔离信号
+            if (cur is CrossConnector cc) {
+                bool isFromHorizontal = from != null && from.bindGrid != null && cc.bindGrid != null
+                    && from.bindGrid.y == cc.bindGrid.y;
+                bool isFromVertical = from != null && from.bindGrid != null && cc.bindGrid != null
+                    && from.bindGrid.x == cc.bindGrid.x;
+
+                if (isFromHorizontal) {
+                    if (ccHorizontalProcessed.ContainsKey(cc) && ccHorizontalProcessed[cc]) continue;
+                    ccHorizontalProcessed[cc] = true;
+                } else if (isFromVertical) {
+                    if (ccVerticalProcessed.ContainsKey(cc) && ccVerticalProcessed[cc]) continue;
+                    ccVerticalProcessed[cc] = true;
+                } else {
+                    continue;
+                }
+
+                foreach (var next in cc.neighborElements) {
+                    if (visited.Contains(next)) continue;
+
+                    bool nextIsHorizontal = next.bindGrid != null && cc.bindGrid != null
+                        && next.bindGrid.y == cc.bindGrid.y;
+                    bool nextIsVertical = next.bindGrid != null && cc.bindGrid != null
+                        && next.bindGrid.x == cc.bindGrid.x;
+
+                    // 只向同轴方向的邻居传播
+                    if ((isFromHorizontal && nextIsHorizontal) || (isFromVertical && nextIsVertical)) {
+                        visited.Add(next);
+                        next.intensity = Mathf.Max(0, cur.intensity - 1);
+                        Debug.Log($"{next.GetType().Name} Intensity = {next.intensity} CalcIntensity = {Mathf.Max(0, cur.intensity - 1)} CurIntensity = {cur.intensity} Grid = {next.bindGrid.x},{next.bindGrid.y}");
+                        queue.Enqueue((next, cur));
+                    }
+                }
+                continue;
             }
 
             // 非电线元件（如 HopeLamp）接收信号，但不继续传播给邻居
@@ -165,7 +220,7 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 visited.Add(next);
                 next.intensity = Mathf.Max(0, cur.intensity - 1);
                 Debug.Log($"{next.GetType().Name} Intensity = {next.intensity} CalcIntensity = {Mathf.Max(0, cur.intensity - 1)} CurIntensity = {cur.intensity} Grid = {next.bindGrid.x},{next.bindGrid.y}");
-                queue.Enqueue(next);
+                queue.Enqueue((next, cur));
             }
         }
 

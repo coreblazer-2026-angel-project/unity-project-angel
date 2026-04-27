@@ -32,3 +32,10 @@ MonoBehaviour:
     amplifyValue: 0
     activateThreshold: 0
     phaseColor: {r: 0, g: 0, b: 0, a: 0}
+  - position: {x: 1, y: 1}
+    type: 10
+    signalStrength: 0
+    requiredStrength: 0
+    amplifyValue: 0
+    activateThreshold: 0
+    phaseColor: {r: 0, g: 0, b: 0, a: 0}

@@ -67,7 +67,7 @@ public abstract class ElectricElementBase : MonoBehaviour {
     [ContextMenu("Remove")]
     public virtual void Remove() {
         if (!(this is Wire) && bindGrid != null) {
-            ElectricManager.Instance?.ClearTile(bindGrid.x, bindGrid.y);
+            ElectricManager.Instance?.ClearElementTile(bindGrid.x, bindGrid.y);
         }
 
         GridV2[] neighborGrids = bindGrid.GetAllNeighbors();
