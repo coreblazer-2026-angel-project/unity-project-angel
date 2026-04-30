@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find Assets/Art*)",
+      "Bash(xargs grep *)",
+      "Bash(xargs ls *)",
+      "Bash(python3 *)"
+    ]
+  }
+}
