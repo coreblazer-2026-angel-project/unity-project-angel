@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class ElectricManager : ManagerBase<ElectricManager> {
     public PowerSource powerSource;
@@ -16,12 +18,165 @@ public class ElectricManager : ManagerBase<ElectricManager> {
     public Dictionary<CellType, GameObject> prefabDict = new();
     public Dictionary<int, ElectricElementBase> ElectricElements = new();
 
+    [Header("Tilemap 配置")]
+    [Tooltip("专门用于电线的 Tilemap 层")]
+    public Tilemap wireTilemap;
+    [Tooltip("通电状态的 RuleTile")]
+    public TileBase wireTilePowered;
+    [Tooltip("不通电状态的 RuleTile")]
+    public TileBase wireTileUnpowered;
+
+    [Header("预览 Tilemap 层")]
+    [Tooltip("专门用于预览电线的 Tilemap 层（半透明）")]
+    public Tilemap previewTilemap;
+
+    [Header("元件 Tilemap 层")]
+    [Tooltip("专门用于非电线元件的 Tilemap 层")]
+    public Tilemap elementTilemap;
+
+    [Header("元件 Tile 配置")]
+    [Tooltip("非电线元件的 CellType → Tile 映射（未激活/激活）")]
+    public List<ElementTileEntry> elementTileEntries;
+    public Dictionary<CellType, ElementTileEntry> elementTileDict = new();
+
+    [Serializable]
+    public struct ElementTileEntry {
+        public CellType type;
+        public TileBase tile;
+        public TileBase poweredTile;
+        [Tooltip("上方有输出连接时使用的 Tile（如 SignalMerger 上方有电线）")]
+        public TileBase outputTile;
+    }
+
+    Grid _tilemapGrid;
+
     protected override void Awake() {
         base.Awake();
         foreach (ElectricPrefabEntry electricPrefabEntry in prefabEntries) {
-            prefabDict.Add(electricPrefabEntry.type, electricPrefabEntry.prefab);
+            if (electricPrefabEntry.prefab == null) {
+                Debug.LogWarning($"ElectricManager: prefabEntries 中 CellType [{electricPrefabEntry.type}] 的预制体为空，已跳过。");
+                continue;
+            }
+            prefabDict[electricPrefabEntry.type] = electricPrefabEntry.prefab;
+        }
+        foreach (ElementTileEntry entry in elementTileEntries) {
+            elementTileDict[entry.type] = entry;
+        }
+        SyncTilemapGrid();
+    }
+
+    void SyncTilemapGrid() {
+        if (wireTilemap == null) return;
+        _tilemapGrid = wireTilemap.layoutGrid;
+        if (_tilemapGrid == null) return;
+
+        float gs = GridManagerV2.Instance != null ? GridManagerV2.Instance.gridSize : 0.32f;
+        _tilemapGrid.cellSize = new Vector3(gs, gs, 1f);
+        _tilemapGrid.transform.position = new Vector3(-gs / 2f, -gs / 2f, 0f);
+
+        if (elementTilemap != null && elementTilemap.layoutGrid != null) {
+            elementTilemap.layoutGrid.cellSize = new Vector3(gs, gs, 1f);
+            elementTilemap.layoutGrid.transform.position = new Vector3(-gs / 2f, -gs / 2f, 0f);
+        }
+
+        if (previewTilemap != null && previewTilemap.layoutGrid != null) {
+            previewTilemap.layoutGrid.cellSize = new Vector3(gs, gs, 1f);
+            previewTilemap.layoutGrid.transform.position = new Vector3(-gs / 2f, -gs / 2f, 0f);
         }
     }
+
+    public Vector3Int GetTilePos(int x, int y) => new Vector3Int(x, -y, 0);
+
+    public void SetWireTile(int x, int y, TileBase tile) {
+        if (wireTilemap == null) return;
+        Vector3Int cellPos = GetTilePos(x, y);
+        wireTilemap.SetTile(cellPos, tile);
+        RefreshNeighborTiles(cellPos);
+    }
+
+    public void RefreshWireTile(int x, int y, bool powered) {
+        if (wireTilemap == null) return;
+        Vector3Int cellPos = GetTilePos(x, y);
+        TileBase target = powered ? wireTilePowered : wireTileUnpowered;
+        if (wireTilemap.GetTile(cellPos) != target) {
+            wireTilemap.SetTile(cellPos, target);
+            RefreshNeighborTiles(cellPos);
+        }
+    }
+
+    void RefreshNeighborTiles(Vector3Int cellPos) {
+        wireTilemap.RefreshTile(cellPos);
+        wireTilemap.RefreshTile(cellPos + Vector3Int.up);
+        wireTilemap.RefreshTile(cellPos + Vector3Int.down);
+        wireTilemap.RefreshTile(cellPos + Vector3Int.left);
+        wireTilemap.RefreshTile(cellPos + Vector3Int.right);
+    }
+
+    public void ClearTile(int x, int y) {
+        if (wireTilemap == null) return;
+        Vector3Int cellPos = GetTilePos(x, y);
+        wireTilemap.SetTile(cellPos, null);
+        RefreshNeighborTiles(cellPos);
+    }
+
+    public bool HasElementTile(CellType type) {
+        return elementTileDict.ContainsKey(type);
+    }
+
+    public void SetElementTile(int x, int y, CellType type, bool powered, bool hasOutput = false) {
+        if (elementTilemap == null) return;
+        if (!elementTileDict.TryGetValue(type, out var entry)) return;
+
+        TileBase tile = null;
+        if (hasOutput && entry.outputTile != null) {
+            tile = entry.outputTile;
+        } else if (powered && entry.poweredTile != null) {
+            tile = entry.poweredTile;
+        } else {
+            tile = entry.tile;
+        }
+        if (tile == null) return;
+
+        Vector3Int cellPos = GetTilePos(x, y);
+        elementTilemap.SetTile(cellPos, tile);
+    }
+
+    public void ClearElementTile(int x, int y) {
+        if (elementTilemap == null) return;
+        Vector3Int cellPos = GetTilePos(x, y);
+        elementTilemap.SetTile(cellPos, null);
+    }
+
+    // ---------- 预览电线 Tilemap 操作 ----------
+
+    public void SetPreviewWireTile(int x, int y) {
+        if (previewTilemap == null) return;
+        Vector3Int cellPos = GetTilePos(x, y);
+        previewTilemap.SetTile(cellPos, wireTileUnpowered);
+        RefreshPreviewNeighborTiles(cellPos);
+    }
+
+    public void ClearPreviewTile(int x, int y) {
+        if (previewTilemap == null) return;
+        Vector3Int cellPos = GetTilePos(x, y);
+        previewTilemap.SetTile(cellPos, null);
+        RefreshPreviewNeighborTiles(cellPos);
+    }
+
+    public void ClearAllPreviewTiles() {
+        if (previewTilemap == null) return;
+        previewTilemap.ClearAllTiles();
+    }
+
+    void RefreshPreviewNeighborTiles(Vector3Int cellPos) {
+        previewTilemap.RefreshTile(cellPos);
+        previewTilemap.RefreshTile(cellPos + Vector3Int.up);
+        previewTilemap.RefreshTile(cellPos + Vector3Int.down);
+        previewTilemap.RefreshTile(cellPos + Vector3Int.left);
+        previewTilemap.RefreshTile(cellPos + Vector3Int.right);
+    }
+
+    // ----------
 
     void Start() {
 
@@ -33,36 +188,271 @@ public class ElectricManager : ManagerBase<ElectricManager> {
 
     [ContextMenu("Begin Simulate")]
     public void BeginSimulate() {
-        if (powerSource == null) {
+        // 收集所有 PowerSource 作为起点
+        List<PowerSource> powerSources = new();
+        foreach (var element in ElectricElements.Values) {
+            if (element is PowerSource ps) {
+                powerSources.Add(ps);
+            }
+        }
+
+        if (powerSources.Count == 0) {
             Debug.Log("PowerSource Not Selected!");
             return;
         }
 
-        Queue<ElectricElementBase> queue = new();
+        // 先重置所有元件
+        foreach (var element in ElectricElements.Values) {
+            element.intensity = 0;
+            element.Deactive();
+        }
+
+        Queue<(ElectricElementBase current, ElectricElementBase from)> queue = new();
         HashSet<ElectricElementBase> visited = new();
+        List<ElectricElementBase> toActivate = new();
+        bool allValid = true;
 
-        queue.Enqueue(powerSource);
-        visited.Add(powerSource);
-        powerSource.intensity = powerSource.workIntensity;
+        // 追踪 CrossConnector 各轴向是否已处理，防止循环
+        Dictionary<CrossConnector, bool> ccHorizontalProcessed = new();
+        Dictionary<CrossConnector, bool> ccVerticalProcessed = new();
 
+        // 从所有电源开始 BFS
+        foreach (var ps in powerSources) {
+            if (!visited.Contains(ps)) {
+                queue.Enqueue((ps, null));
+                visited.Add(ps);
+                ps.intensity = ps.workIntensity;
+            }
+        }
+
+        // 第一遍遍历：收集所有可能激活的元件，检查是否有 intensity <= 0
         while (queue.Count > 0) {
-            var cur = queue.Dequeue();
+            var (cur, from) = queue.Dequeue();
+
+            // 检查当前元件是否满足激活条件
+            if (cur.intensity <= 0) {
+                allValid = false;
+            }
+
+            // 只有 intensity >= workIntensity 才加入待激活列表
             if (cur.intensity >= cur.workIntensity) {
-                cur.Activate();
+                toActivate.Add(cur);
             }
-            else {
-                cur.Deactive();
+
+            // CrossConnector 特殊处理：按来源轴向隔离信号
+            if (cur is CrossConnector cc) {
+                bool isFromHorizontal = from != null && from.bindGrid != null && cc.bindGrid != null
+                    && from.bindGrid.y == cc.bindGrid.y;
+                bool isFromVertical = from != null && from.bindGrid != null && cc.bindGrid != null
+                    && from.bindGrid.x == cc.bindGrid.x;
+
+                if (isFromHorizontal) {
+                    if (ccHorizontalProcessed.ContainsKey(cc) && ccHorizontalProcessed[cc]) continue;
+                    ccHorizontalProcessed[cc] = true;
+                } else if (isFromVertical) {
+                    if (ccVerticalProcessed.ContainsKey(cc) && ccVerticalProcessed[cc]) continue;
+                    ccVerticalProcessed[cc] = true;
+                } else {
+                    continue;
+                }
+
+                foreach (var next in cc.neighborElements) {
+                    if (visited.Contains(next)) continue;
+
+                    bool nextIsHorizontal = next.bindGrid != null && cc.bindGrid != null
+                        && next.bindGrid.y == cc.bindGrid.y;
+                    bool nextIsVertical = next.bindGrid != null && cc.bindGrid != null
+                        && next.bindGrid.x == cc.bindGrid.x;
+
+                    // 只向同轴方向的邻居传播
+                    if ((isFromHorizontal && nextIsHorizontal) || (isFromVertical && nextIsVertical)) {
+                        visited.Add(next);
+                        next.intensity = Mathf.Max(0, cur.intensity - 1);
+                        Debug.Log($"{next.GetType().Name} Intensity = {next.intensity} CalcIntensity = {Mathf.Max(0, cur.intensity - 1)} CurIntensity = {cur.intensity} Grid = {next.bindGrid.x},{next.bindGrid.y}");
+                        queue.Enqueue((next, cur));
+                    }
+                }
+                continue;
             }
+
+            // 非电线元件且不传播信号的元件（SignalAmplifier 也会继续传播）
+            if (cur is not PowerSource && cur is not Wire && cur is not SignalAmplifier)
+                continue;
 
             foreach (var next in cur.neighborElements) {
                 if (visited.Contains(next)) continue;
 
                 visited.Add(next);
-                next.intensity = Mathf.Max(0, cur.intensity - 1);
-                queue.Enqueue(next);
+                int outgoingIntensity = Mathf.Max(0, cur.intensity - 1);
+                if (cur is SignalAmplifier amp && cur.intensity >= cur.workIntensity) {
+                    outgoingIntensity += amp.boostValue;
+                }
+                next.intensity = outgoingIntensity;
+                Debug.Log($"{next.GetType().Name} Intensity = {next.intensity} CalcIntensity = {outgoingIntensity} CurIntensity = {cur.intensity} Grid = {next.bindGrid.x},{next.bindGrid.y}");
+                queue.Enqueue((next, cur));
+            }
+        }
+
+        // 如果所有元件都有效（没有 intensity <= 0），则统一激活
+        if (allValid) {
+            foreach (var elem in toActivate) {
+                elem.Activate();
+            }
+        }
+        // 否则所有元件保持 Deactive 状态（已在开头重置）
+
+        // 处理 SignalMerger：左右输入相加，从上方输出
+        var gmv2 = GridManagerV2.Instance;
+        foreach (var element in ElectricElements.Values) {
+            if (element is not SignalMerger merger || merger.bindGrid == null) continue;
+
+            int leftIntensity = GetMaxIntensityAt(gmv2, merger.bindGrid.x - 1, merger.bindGrid.y);
+            int rightIntensity = GetMaxIntensityAt(gmv2, merger.bindGrid.x + 1, merger.bindGrid.y);
+            int sum = leftIntensity + rightIntensity;
+
+            if (sum <= 0) continue;
+
+            GridV2 upCell = gmv2?.GetGrid(merger.bindGrid.x, merger.bindGrid.y - 1);
+            if (upCell == null) continue;
+
+            foreach (var obj in upCell.holdObjects) {
+                if (obj == null) continue;
+                if (obj.TryGetComponent(out ElectricElementBase upElem)) {
+                    if (upElem.intensity < sum) {
+                        upElem.intensity = sum;
+                        PropagateFrom(upElem, sum);
+                    }
+                }
+            }
+        }
+
+        // 处理 SignalBooster：上方有激活电线时，永久增强电源并销毁自身
+        bool anyBoosterTriggered = false;
+        foreach (var element in ElectricElements.Values.ToList()) {
+            if (element is not SignalBooster booster || booster.bindGrid == null) continue;
+
+            GridV2 up = gmv2?.GetGrid(booster.bindGrid.x, booster.bindGrid.y - 1);
+            if (up == null) continue;
+
+            bool hasActiveWire = false;
+            foreach (var obj in up.holdObjects) {
+                if (obj != null && obj.TryGetComponent(out Wire upWire) && upWire.intensity > 0) {
+                    hasActiveWire = true;
+                    break;
+                }
+            }
+
+            if (hasActiveWire) {
+                // 永久增强所有电源
+                foreach (var elem in ElectricElements.Values) {
+                    if (elem is PowerSource ps) {
+                        ps.workIntensity += booster.boostValue;
+                    }
+                }
+                Debug.Log($"SignalBooster 触发：所有电源 workIntensity +{booster.boostValue}，booster 销毁");
+                // 销毁自身
+                booster.Remove();
+                anyBoosterTriggered = true;
+            }
+        }
+
+        // 如果有 booster 被触发，电源变强了，重新计算电路
+        if (anyBoosterTriggered) {
+            BeginSimulate();
+            return;
+        }
+
+        // 检查所有灯：相邻有激活电线则点亮，否则熄灭
+        foreach (var element in ElectricElements.Values) {
+            if (element is Light light) {
+                bool hasActiveWire = false;
+                foreach (var neighbor in light.neighborElements) {
+                    if (neighbor is Wire && neighbor.intensity > 0) {
+                        hasActiveWire = true;
+                        break;
+                    }
+                }
+                if (hasActiveWire) {
+                    light.Activate();
+                } else {
+                    light.Deactive();
+                }
             }
         }
     }
+
+    void RefreshAllWireTiles() {
+        if (wireTilemap == null) return;
+        var gmv2 = GridManagerV2.Instance;
+        if (gmv2 == null) return;
+
+        for (int y = 0; y < gmv2.row; y++) {
+            for (int x = 0; x < gmv2.column; x++) {
+                GridV2 cell = gmv2.GetGrid(x, y);
+                if (cell == null || cell.holdObject == null) continue;
+
+                var wire = cell.holdObject.GetComponent<Wire>();
+                if (wire == null) continue;
+
+                RefreshWireTile(x, y, wire.intensity > 0);
+            }
+        }
+    }
+
+    // ---------- SignalMerger 辅助方法 ----------
+
+    /// <summary>获取指定格子中所有元件的最大 intensity</summary>
+    static int GetMaxIntensityAt(GridManagerV2 gmv2, int x, int y) {
+        if (gmv2 == null) return 0;
+        GridV2 cell = gmv2.GetGrid(x, y);
+        if (cell == null) return 0;
+
+        int max = 0;
+        foreach (var obj in cell.holdObjects) {
+            if (obj != null && obj.TryGetComponent(out ElectricElementBase e)) {
+                max = Mathf.Max(max, e.intensity);
+            }
+        }
+        return max;
+    }
+
+    /// <summary>从指定元件开始，向四周传播信号（SignalMerger 除外）</summary>
+    static void PropagateFrom(ElectricElementBase start, int initialIntensity) {
+        Queue<(ElectricElementBase elem, int intensity)> queue = new();
+        HashSet<ElectricElementBase> visited = new();
+
+        queue.Enqueue((start, initialIntensity));
+
+        while (queue.Count > 0) {
+            var (cur, intensity) = queue.Dequeue();
+            if (visited.Contains(cur)) continue;
+            visited.Add(cur);
+
+            cur.intensity = intensity;
+            if (intensity >= cur.workIntensity) {
+                cur.Activate();
+            }
+
+            if (cur is not Wire && cur is not SignalAmplifier) continue;
+
+            foreach (var next in cur.neighborElements) {
+                if (next is SignalMerger) continue;
+                if (visited.Contains(next)) continue;
+
+                int outgoing = Mathf.Max(0, intensity - 1);
+                if (cur is SignalAmplifier amp && intensity >= cur.workIntensity) {
+                    outgoing += amp.boostValue;
+                }
+
+                if (next.intensity < outgoing) {
+                    next.intensity = outgoing;
+                    queue.Enqueue((next, outgoing));
+                }
+            }
+        }
+    }
+
+    // ----------
 
     public void AddElement(ElectricElementBase electricElement) {
         electricElement.ID = curId;

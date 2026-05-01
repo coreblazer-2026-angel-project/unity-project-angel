@@ -5,6 +5,10 @@ using UnityEngine;
 public class ActivatablePowerSource : ElectricElementBase {
     private bool isActivated = false;
 
+    protected override void Start() {
+        base.Start();
+    }
+
     public void ToggleActivation() {
         isActivated = !isActivated;
         if (isActivated) {
