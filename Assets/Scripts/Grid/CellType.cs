@@ -12,6 +12,7 @@ using UnityEngine;
         ActivatablePower,
         SignalAmplifier,
         SignalMerger,
+        SignalBooster,
         PhaseBlock,
         PhaseTrigger,
         CrossConnector,

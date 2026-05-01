@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -43,6 +44,8 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         public CellType type;
         public TileBase tile;
         public TileBase poweredTile;
+        [Tooltip("上方有输出连接时使用的 Tile（如 SignalMerger 上方有电线）")]
+        public TileBase outputTile;
     }
 
     Grid _tilemapGrid;
@@ -120,11 +123,18 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         return elementTileDict.ContainsKey(type);
     }
 
-    public void SetElementTile(int x, int y, CellType type, bool powered) {
+    public void SetElementTile(int x, int y, CellType type, bool powered, bool hasOutput = false) {
         if (elementTilemap == null) return;
         if (!elementTileDict.TryGetValue(type, out var entry)) return;
 
-        TileBase tile = powered && entry.poweredTile != null ? entry.poweredTile : entry.tile;
+        TileBase tile = null;
+        if (hasOutput && entry.outputTile != null) {
+            tile = entry.outputTile;
+        } else if (powered && entry.poweredTile != null) {
+            tile = entry.poweredTile;
+        } else {
+            tile = entry.tile;
+        }
         if (tile == null) return;
 
         Vector3Int cellPos = GetTilePos(x, y);
@@ -178,7 +188,15 @@ public class ElectricManager : ManagerBase<ElectricManager> {
 
     [ContextMenu("Begin Simulate")]
     public void BeginSimulate() {
-        if (powerSource == null) {
+        // 收集所有 PowerSource 作为起点
+        List<PowerSource> powerSources = new();
+        foreach (var element in ElectricElements.Values) {
+            if (element is PowerSource ps) {
+                powerSources.Add(ps);
+            }
+        }
+
+        if (powerSources.Count == 0) {
             Debug.Log("PowerSource Not Selected!");
             return;
         }
@@ -198,9 +216,14 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         Dictionary<CrossConnector, bool> ccHorizontalProcessed = new();
         Dictionary<CrossConnector, bool> ccVerticalProcessed = new();
 
-        queue.Enqueue((powerSource, null));
-        visited.Add(powerSource);
-        powerSource.intensity = powerSource.workIntensity;
+        // 从所有电源开始 BFS
+        foreach (var ps in powerSources) {
+            if (!visited.Contains(ps)) {
+                queue.Enqueue((ps, null));
+                visited.Add(ps);
+                ps.intensity = ps.workIntensity;
+            }
+        }
 
         // 第一遍遍历：收集所有可能激活的元件，检查是否有 intensity <= 0
         while (queue.Count > 0) {
@@ -278,6 +301,67 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         }
         // 否则所有元件保持 Deactive 状态（已在开头重置）
 
+        // 处理 SignalMerger：左右输入相加，从上方输出
+        var gmv2 = GridManagerV2.Instance;
+        foreach (var element in ElectricElements.Values) {
+            if (element is not SignalMerger merger || merger.bindGrid == null) continue;
+
+            int leftIntensity = GetMaxIntensityAt(gmv2, merger.bindGrid.x - 1, merger.bindGrid.y);
+            int rightIntensity = GetMaxIntensityAt(gmv2, merger.bindGrid.x + 1, merger.bindGrid.y);
+            int sum = leftIntensity + rightIntensity;
+
+            if (sum <= 0) continue;
+
+            GridV2 upCell = gmv2?.GetGrid(merger.bindGrid.x, merger.bindGrid.y - 1);
+            if (upCell == null) continue;
+
+            foreach (var obj in upCell.holdObjects) {
+                if (obj == null) continue;
+                if (obj.TryGetComponent(out ElectricElementBase upElem)) {
+                    if (upElem.intensity < sum) {
+                        upElem.intensity = sum;
+                        PropagateFrom(upElem, sum);
+                    }
+                }
+            }
+        }
+
+        // 处理 SignalBooster：上方有激活电线时，永久增强电源并销毁自身
+        bool anyBoosterTriggered = false;
+        foreach (var element in ElectricElements.Values.ToList()) {
+            if (element is not SignalBooster booster || booster.bindGrid == null) continue;
+
+            GridV2 up = gmv2?.GetGrid(booster.bindGrid.x, booster.bindGrid.y - 1);
+            if (up == null) continue;
+
+            bool hasActiveWire = false;
+            foreach (var obj in up.holdObjects) {
+                if (obj != null && obj.TryGetComponent(out Wire upWire) && upWire.intensity > 0) {
+                    hasActiveWire = true;
+                    break;
+                }
+            }
+
+            if (hasActiveWire) {
+                // 永久增强所有电源
+                foreach (var elem in ElectricElements.Values) {
+                    if (elem is PowerSource ps) {
+                        ps.workIntensity += booster.boostValue;
+                    }
+                }
+                Debug.Log($"SignalBooster 触发：所有电源 workIntensity +{booster.boostValue}，booster 销毁");
+                // 销毁自身
+                booster.Remove();
+                anyBoosterTriggered = true;
+            }
+        }
+
+        // 如果有 booster 被触发，电源变强了，重新计算电路
+        if (anyBoosterTriggered) {
+            BeginSimulate();
+            return;
+        }
+
         // 检查所有灯：相邻有激活电线则点亮，否则熄灭
         foreach (var element in ElectricElements.Values) {
             if (element is Light light) {
@@ -314,6 +398,61 @@ public class ElectricManager : ManagerBase<ElectricManager> {
             }
         }
     }
+
+    // ---------- SignalMerger 辅助方法 ----------
+
+    /// <summary>获取指定格子中所有元件的最大 intensity</summary>
+    static int GetMaxIntensityAt(GridManagerV2 gmv2, int x, int y) {
+        if (gmv2 == null) return 0;
+        GridV2 cell = gmv2.GetGrid(x, y);
+        if (cell == null) return 0;
+
+        int max = 0;
+        foreach (var obj in cell.holdObjects) {
+            if (obj != null && obj.TryGetComponent(out ElectricElementBase e)) {
+                max = Mathf.Max(max, e.intensity);
+            }
+        }
+        return max;
+    }
+
+    /// <summary>从指定元件开始，向四周传播信号（SignalMerger 除外）</summary>
+    static void PropagateFrom(ElectricElementBase start, int initialIntensity) {
+        Queue<(ElectricElementBase elem, int intensity)> queue = new();
+        HashSet<ElectricElementBase> visited = new();
+
+        queue.Enqueue((start, initialIntensity));
+
+        while (queue.Count > 0) {
+            var (cur, intensity) = queue.Dequeue();
+            if (visited.Contains(cur)) continue;
+            visited.Add(cur);
+
+            cur.intensity = intensity;
+            if (intensity >= cur.workIntensity) {
+                cur.Activate();
+            }
+
+            if (cur is not Wire && cur is not SignalAmplifier) continue;
+
+            foreach (var next in cur.neighborElements) {
+                if (next is SignalMerger) continue;
+                if (visited.Contains(next)) continue;
+
+                int outgoing = Mathf.Max(0, intensity - 1);
+                if (cur is SignalAmplifier amp && intensity >= cur.workIntensity) {
+                    outgoing += amp.boostValue;
+                }
+
+                if (next.intensity < outgoing) {
+                    next.intensity = outgoing;
+                    queue.Enqueue((next, outgoing));
+                }
+            }
+        }
+    }
+
+    // ----------
 
     public void AddElement(ElectricElementBase electricElement) {
         electricElement.ID = curId;
