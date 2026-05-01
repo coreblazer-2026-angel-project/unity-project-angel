@@ -134,7 +134,12 @@ MonoBehaviour:
   neighborElements: []
   bindGrid: {fileID: 0}
   cellType: 0
-  sprites: []
+  sprites:
+  - {fileID: -905509576, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
+  - {fileID: 1593268481, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
+  - {fileID: -1591587472, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
+  - {fileID: -271175304, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
+  - {fileID: -2108051310, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
   showSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   spriteRenderer: {fileID: 5862720208909679786}
   ID: 0

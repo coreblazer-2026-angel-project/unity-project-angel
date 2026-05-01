@@ -3,74 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PowerSource : ElectricElementBase {
-    [Tooltip("当前已连接的第一根电线（只读，运行时自动维护）")]
-    public Wire firstWire;
 
     protected override void Start() {
         // 电源使用 SpriteRenderer 渲染，不走 Tilemap
         // 放置隐形电线供 RuleTile 连接
         PlaceInvisibleWireTile();
         ElectricManager.Instance?.BeginSimulate();
-        ValidateFirstWire();
         RefreshPowerSourceSprite();
         RefreshAdjacentPowerSources();
     }
 
     public override void Activate() {
-        ValidateFirstWire();
         Debug.Log($"{GetType().Name} Activate Intensity = {this.intensity} Grid = {bindGrid.x},{bindGrid.y}");
         RefreshPowerSourceSprite();
     }
 
     public override void Deactive() {
-        ValidateFirstWire();
         Debug.Log($"{GetType().Name} Deactivate Intensity = {this.intensity} Grid = {bindGrid.x},{bindGrid.y}");
         RefreshPowerSourceSprite();
-    }
-
-    /// <summary>
-    /// 电源只能连接一根电线。
-    /// 如果已经有 firstWire，拒绝新的 Wire；firstWire 销毁后可重新连接。
-    /// </summary>
-    public override bool CanConnectTo(ElectricElementBase other) {
-        if (other is Wire) {
-            ValidateFirstWire();
-            if (firstWire != null && firstWire != other)
-                return false;
-        }
-        return false;
-    }
-
-    int CalcSpriteIndex(bool up, bool down, bool left, bool right) {
-        if (sprites.Count >= 5) {
-            // 0=未连接, 1=上, 2=下, 3=左, 4=右
-            // 多方向时按 上→下→左→右 优先级
-            if (up) return 1;
-            if (down) return 2;
-            if (left) return 3;
-            if (right) return 4;
-            return 0;
-        }
-
-        // 不足 5 个时回退到最简逻辑
-        bool any = up || down || left || right;
-        if (sprites.Count >= 2) {
-            return any ? 1 : 0; // [0=无, 1=有]
-        }
-        return 0;
-    }
-
-    /// <summary>连接成功时的回调，记录第一根电线</summary>
-    protected override void OnNeighborConnected(ElectricElementBase neighbor) {
-        if (neighbor is Wire wire && firstWire == null) {
-            firstWire = wire;
-        }
-    }
-
-    /// <summary>检查 firstWire 是否仍然有效，若已销毁则清空</summary>
-    void ValidateFirstWire() {
-        if (firstWire != null && firstWire.gameObject == null)
-            firstWire = null;
     }
 
     // ---------- 根据四面电线刷新 Sprite ----------

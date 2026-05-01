@@ -452,6 +452,8 @@ MonoBehaviour:
     prefab: {fileID: 6289051811210817330, guid: 9ff5354100c7ac14480ebf00da9864db, type: 3}
   - type: 6
     prefab: {fileID: 4081150779181068875, guid: b784fe0b3f6d64644ac2cef374beba2e, type: 3}
+  - type: 7
+    prefab: {fileID: 444933700545116170, guid: 48e20c9df9689044ca6f43c792b6bd96, type: 3}
   wireTilemap: {fileID: 1439603997}
   wireTilePowered: {fileID: 11400000, guid: 4bd222c54692f5149890de472f505461, type: 2}
   wireTileUnpowered: {fileID: 11400000, guid: c0f1ec38b48d8dd40b815689ff556cd5, type: 2}
@@ -461,12 +463,19 @@ MonoBehaviour:
   - type: 4
     tile: {fileID: 11400000, guid: ae8d3b0ab033dd542a35fe2c3f46048f, type: 2}
     poweredTile: {fileID: 11400000, guid: b80d634f8d9a9744d841cae1dbd34619, type: 2}
+    outputTile: {fileID: 0}
   - type: 10
     tile: {fileID: 11400000, guid: 20d5461c8bd89af40b322622bdbeddfc, type: 2}
     poweredTile: {fileID: 11400000, guid: 20d5461c8bd89af40b322622bdbeddfc, type: 2}
+    outputTile: {fileID: 0}
   - type: 6
     tile: {fileID: 11400000, guid: 8d40bb310a33c9e4bbd792380d4dde46, type: 2}
     poweredTile: {fileID: 11400000, guid: 2a6cc3a30fb2cdc43b02ef7c69031164, type: 2}
+    outputTile: {fileID: 0}
+  - type: 7
+    tile: {fileID: 11400000, guid: c3c0a94327f0908478017ecfd207dec1, type: 2}
+    poweredTile: {fileID: 11400000, guid: c3c0a94327f0908478017ecfd207dec1, type: 2}
+    outputTile: {fileID: 11400000, guid: 16a3f895c3b806d4c8cf74acc8098681, type: 2}
 --- !u!4 &177546393
 Transform:
   m_ObjectHideFlags: 0
@@ -573,7 +582,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoLoadTestLevel: 1
-  testLevel: {fileID: 11400000, guid: 5080aa69984cc3d4a80add32e9228ffc, type: 2}
+  testLevel: {fileID: 11400000, guid: 0d331748e1cc97144a9c3c25039dede8, type: 2}
   levelManager: {fileID: 0}
 --- !u!4 &228908725
 Transform:
