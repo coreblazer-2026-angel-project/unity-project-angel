@@ -61,6 +61,7 @@ public class GameSettingsMenu : MonoBehaviour
         PlayerPrefs.SetInt(ResolutionWidthKey, resolution.width);
         PlayerPrefs.SetInt(ResolutionHeightKey, resolution.height);
         Screen.SetResolution(resolution.width, resolution.height, Screen.fullScreenMode);
+        RefreshResolutionOptions(index);
     }
 
     public void SetWindowMode(int index)
@@ -132,7 +133,6 @@ public class GameSettingsMenu : MonoBehaviour
             });
         }
 
-        List<string> options = new List<string>();
         int savedWidth = PlayerPrefs.GetInt(ResolutionWidthKey, Screen.width);
         int savedHeight = PlayerPrefs.GetInt(ResolutionHeightKey, Screen.height);
         int selectedIndex = 0;
@@ -140,7 +140,6 @@ public class GameSettingsMenu : MonoBehaviour
         for (int i = 0; i < uniqueResolutions.Count; i++)
         {
             Resolution resolution = uniqueResolutions[i];
-            options.Add($"{resolution.width} x {resolution.height}");
 
             if (resolution.width == savedWidth && resolution.height == savedHeight)
             {
@@ -148,10 +147,45 @@ public class GameSettingsMenu : MonoBehaviour
             }
         }
 
-        resolutionDropdown.AddOptions(options);
+        resolutionDropdown.AddOptions(GetResolutionOptions(selectedIndex));
         resolutionDropdown.SetValueWithoutNotify(selectedIndex);
         resolutionDropdown.RefreshShownValue();
         resolutionDropdown.onValueChanged.RemoveListener(SetResolution);
+        resolutionDropdown.onValueChanged.AddListener(SetResolution);
+    }
+
+    private List<string> GetResolutionOptions(int currentIndex)
+    {
+        List<string> options = new List<string>();
+
+        for (int i = 0; i < uniqueResolutions.Count; i++)
+        {
+            Resolution resolution = uniqueResolutions[i];
+            string label = $"{resolution.width} x {resolution.height}";
+
+            if (i == currentIndex)
+            {
+                label += "（当前）";
+            }
+
+            options.Add(label);
+        }
+
+        return options;
+    }
+
+    private void RefreshResolutionOptions(int currentIndex)
+    {
+        if (resolutionDropdown == null)
+        {
+            return;
+        }
+
+        resolutionDropdown.onValueChanged.RemoveListener(SetResolution);
+        resolutionDropdown.ClearOptions();
+        resolutionDropdown.AddOptions(GetResolutionOptions(currentIndex));
+        resolutionDropdown.SetValueWithoutNotify(currentIndex);
+        resolutionDropdown.RefreshShownValue();
         resolutionDropdown.onValueChanged.AddListener(SetResolution);
     }
 
