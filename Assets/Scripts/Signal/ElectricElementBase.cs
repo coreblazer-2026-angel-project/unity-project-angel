@@ -205,7 +205,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
 
         if (this is Wire) {
             em.RefreshWireTile(bindGrid.x, bindGrid.y, intensity > 0);
-        } else {
+        }
+        else {
             if (em.HasElementTile(cellType)) {
                 em.SetElementTile(bindGrid.x, bindGrid.y, cellType, intensity > 0);
             }
@@ -233,5 +234,17 @@ public abstract class ElectricElementBase : MonoBehaviour {
             em.SetWireTile(bindGrid.x, bindGrid.y, target);
             em.wireTilemap.SetColor(cellPos, Color.clear);
         }
+    }
+
+    public void OnMouseEnter() {
+        ShowHighLight(true);
+    }
+
+    public void OnMouseExit() {
+        ShowHighLight(false);
+    }
+    public void ShowHighLight(bool bShow) {
+        Debug.Log($"{GetType().Name} ShowHighLight bShow = {bShow}");
+        // TODO
     }
 }
