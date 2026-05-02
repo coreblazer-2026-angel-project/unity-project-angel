@@ -16,6 +16,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
     [SerializeField] protected Sprite showSprite;
     [SerializeField] protected SpriteRenderer spriteRenderer;
 
+    [SerializeField] protected GameObject HighLight;
+
     public int ID;
     [Tooltip("来自关卡 CSV 的元件编号")]
     public int levelElementId = -1;
@@ -245,6 +247,6 @@ public abstract class ElectricElementBase : MonoBehaviour {
     }
     public void ShowHighLight(bool bShow) {
         Debug.Log($"{GetType().Name} ShowHighLight bShow = {bShow}");
-        // TODO
+        HighLight.SetActive(bShow);
     }
 }
