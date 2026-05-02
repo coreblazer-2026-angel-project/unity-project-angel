@@ -588,7 +588,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoLoadTestLevel: 1
-  testLevel: {fileID: 11400000, guid: 38473b23da0c43e4dbe73bcce80ac9c5, type: 2}
+  testLevel: {fileID: 11400000, guid: 2f074efde2a2de84a84f4e5a9d68480e, type: 2}
   levelManager: {fileID: 0}
 --- !u!4 &228908725
 Transform:

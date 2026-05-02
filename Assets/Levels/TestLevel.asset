@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bac425c755aa1264ab3b5bf26cbf6f2e, type: 3}
+  m_Name: TestLevel
+  m_EditorClassIdentifier: 
+  width: 5
+  height: 5
+  spawnRuntimeFloor: 1
+  floorPrefab: {fileID: 0}
+  wireLimit: 0
+  csvData: {fileID: 4900000, guid: ad2ae3cf276f28a46836c6af710424fb, type: 3}
+  useInlineItems: 1
+  items:
+  - elementId: 0
+    position: {x: 0, y: 0}
+    type: 2
+    signalStrength: 5
+    requiredStrength: 0
+    amplifyValue: 0
+    activateThreshold: 0
+    phaseColor: {r: 0, g: 0, b: 0, a: 0}
+    connections: 
+  - elementId: 2
+    position: {x: 1, y: 2}
+    type: 7
+    signalStrength: 0
+    requiredStrength: 0
+    amplifyValue: 0
+    activateThreshold: 0
+    phaseColor: {r: 0, g: 0, b: 0, a: 0}
+    connections: 
+  - elementId: 3
+    position: {x: 2, y: 1}
+    type: 8
+    signalStrength: 0
+    requiredStrength: 0
+    amplifyValue: 0
+    activateThreshold: 0
+    phaseColor: {r: 0, g: 0, b: 0, a: 0}
+    connections: 
+  - elementId: 4
+    position: {x: 2, y: 2}
+    type: 9
+    signalStrength: 0
+    requiredStrength: 0
+    amplifyValue: 0
+    activateThreshold: 0
+    phaseColor: {r: 0, g: 0, b: 0, a: 0}
+    connections: 
+  - elementId: 5
+    position: {x: 1, y: 1}
+    type: 10
+    signalStrength: 0
+    requiredStrength: 0
+    amplifyValue: 0
+    activateThreshold: 0
+    phaseColor: {r: 0, g: 0, b: 0, a: 0}
+    connections: 
