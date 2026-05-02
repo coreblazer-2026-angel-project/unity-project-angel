@@ -25,8 +25,17 @@ public class LevelManager : MonoBehaviour {
         Dictionary<int, ElectricElementBase> idToElement = new();
 
         foreach (var item in levelData.items) {
-            if (item.type == CellType.Empty || item.type == CellType.Wall)
+            if (item.type == CellType.Empty)
                 continue;
+
+            // 墙：只在 elementTilemap 上放 RuleTile，不创建 ElectricElement，不参与电路
+            if (item.type == CellType.Wall) {
+                var emWall = ElectricManager.Instance;
+                if (emWall != null && emWall.HasElementTile(CellType.Wall)) {
+                    emWall.SetElementTile(item.position.x, item.position.y, CellType.Wall, false);
+                }
+                continue;
+            }
 
             GridV2 cell = gmv2.GetGrid(item.position.x, item.position.y);
             if (cell == null) {
@@ -53,6 +62,12 @@ public class LevelManager : MonoBehaviour {
                         // 将运行时创建的电源注册给 ElectricManager，BeginSimulate 才能找到它
                         if (ElectricManager.Instance != null)
                             ElectricManager.Instance.powerSource = ps;
+                    }
+
+                    if (elem is SignalBooster booster) {
+                        // CSV 中的 signalStrength 映射为 boostValue
+                        if (item.signalStrength > 0)
+                            booster.boostValue = item.signalStrength;
                     }
                 }
             }

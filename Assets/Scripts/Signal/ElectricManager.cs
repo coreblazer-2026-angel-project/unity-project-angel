@@ -62,6 +62,10 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         foreach (ElementTileEntry entry in elementTileEntries) {
             elementTileDict[entry.type] = entry;
         }
+
+        // 为 SignalMerger 方向变体自动复制 prefab 和 tile（只需配置 SignalMerger 一种）
+        CopySignalMergerVariants();
+
         SyncTilemapGrid();
     }
 
@@ -139,6 +143,16 @@ public class ElectricManager : ManagerBase<ElectricManager> {
 
         Vector3Int cellPos = GetTilePos(x, y);
         elementTilemap.SetTile(cellPos, tile);
+        RefreshElementNeighborTiles(cellPos);
+    }
+
+    void RefreshElementNeighborTiles(Vector3Int cellPos) {
+        if (elementTilemap == null) return;
+        elementTilemap.RefreshTile(cellPos);
+        elementTilemap.RefreshTile(cellPos + Vector3Int.up);
+        elementTilemap.RefreshTile(cellPos + Vector3Int.down);
+        elementTilemap.RefreshTile(cellPos + Vector3Int.left);
+        elementTilemap.RefreshTile(cellPos + Vector3Int.right);
     }
 
     public void ClearElementTile(int x, int y) {
@@ -301,28 +315,38 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         }
         // 否则所有元件保持 Deactive 状态（已在开头重置）
 
-        // 处理 SignalMerger：左右输入相加，从上方输出
+        // 处理 SignalMerger：两侧输入相加，从指定方向输出
         var gmv2 = GridManagerV2.Instance;
         foreach (var element in ElectricElements.Values) {
             if (element is not SignalMerger merger || merger.bindGrid == null) continue;
 
-            int leftIntensity = GetMaxIntensityAt(gmv2, merger.bindGrid.x - 1, merger.bindGrid.y);
-            int rightIntensity = GetMaxIntensityAt(gmv2, merger.bindGrid.x + 1, merger.bindGrid.y);
-            int sum = leftIntensity + rightIntensity;
+            var (in1x, in1y, in2x, in2y) = merger.GetInputDirections();
+            var (outx, outy) = merger.GetOutputDirection();
+
+            int in1 = GetMaxIntensityAt(gmv2, merger.bindGrid.x + in1x, merger.bindGrid.y + in1y);
+            int in2 = GetMaxIntensityAt(gmv2, merger.bindGrid.x + in2x, merger.bindGrid.y + in2y);
+            int sum = in1 + in2;
 
             if (sum <= 0) continue;
 
-            GridV2 upCell = gmv2?.GetGrid(merger.bindGrid.x, merger.bindGrid.y - 1);
-            if (upCell == null) continue;
+            GridV2 outCell = gmv2?.GetGrid(merger.bindGrid.x + outx, merger.bindGrid.y + outy);
+            if (outCell == null) continue;
 
-            foreach (var obj in upCell.holdObjects) {
+            foreach (var obj in outCell.holdObjects) {
                 if (obj == null) continue;
-                if (obj.TryGetComponent(out ElectricElementBase upElem)) {
-                    if (upElem.intensity < sum) {
-                        upElem.intensity = sum;
-                        PropagateFrom(upElem, sum);
+                if (obj.TryGetComponent(out ElectricElementBase outElem)) {
+                    if (outElem.intensity < sum) {
+                        outElem.intensity = sum;
+                        PropagateFrom(outElem, sum);
                     }
                 }
+            }
+        }
+
+        // 所有 Wire intensity 已确定，刷新所有 SignalMerger 的显示状态
+        foreach (var element in ElectricElements.Values) {
+            if (element is SignalMerger merger) {
+                merger.Activate();
             }
         }
 
@@ -377,6 +401,19 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 } else {
                     light.Deactive();
                 }
+            }
+        }
+    }
+
+    /// <summary>为 SignalMerger 三种方向变体自动复制 SignalMerger 的 prefab。
+    /// SignalMerger 使用 SpriteRenderer 渲染，不走 elementTilemap，因此不复制 tile 配置。</summary>
+    void CopySignalMergerVariants() {
+        CellType[] variants = { CellType.SignalMergerDown, CellType.SignalMergerLeft, CellType.SignalMergerRight };
+
+        if (prefabDict.TryGetValue(CellType.SignalMerger, out GameObject mergerPrefab)) {
+            foreach (var variant in variants) {
+                if (!prefabDict.ContainsKey(variant))
+                    prefabDict[variant] = mergerPrefab;
             }
         }
     }

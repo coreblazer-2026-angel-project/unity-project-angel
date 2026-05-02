@@ -73,7 +73,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -905509576, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
+  m_Sprite: {fileID: -998304625, guid: 7445c4fa00edc8546ab530dc348b9930, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -135,12 +135,12 @@ MonoBehaviour:
   bindGrid: {fileID: 0}
   cellType: 0
   sprites:
-  - {fileID: -905509576, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
-  - {fileID: 1593268481, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
-  - {fileID: -1591587472, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
-  - {fileID: -271175304, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
-  - {fileID: -2108051310, guid: ac70b249a40d530408a97316cac1bcc1, type: 3}
+  - {fileID: -998304625, guid: 7445c4fa00edc8546ab530dc348b9930, type: 3}
+  - {fileID: -1731114788, guid: 7445c4fa00edc8546ab530dc348b9930, type: 3}
+  - {fileID: -332389762, guid: 7445c4fa00edc8546ab530dc348b9930, type: 3}
+  - {fileID: -1882544797, guid: 7445c4fa00edc8546ab530dc348b9930, type: 3}
+  - {fileID: -1081763651, guid: 7445c4fa00edc8546ab530dc348b9930, type: 3}
   showSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   spriteRenderer: {fileID: 5862720208909679786}
   ID: 0
-  firstWire: {fileID: 0}
+  levelElementId: -1

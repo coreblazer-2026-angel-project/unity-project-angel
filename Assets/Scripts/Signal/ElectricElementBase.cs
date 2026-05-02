@@ -10,7 +10,9 @@ public abstract class ElectricElementBase : MonoBehaviour {
     public List<ElectricElementBase> neighborElements = new();
     public GridV2 bindGrid;
     public CellType cellType;
-    [SerializeField] protected List<Sprite> sprites;
+    [SerializeField]
+    [Tooltip("PowerSource 配置顺序：0=未连接, 1=上, 2=下, 3=左, 4=右。SignalMerger 配置顺序：0=无输入无输出, 1=仅输入1, 2=仅输入2, 3=双输入无输出, 4=双输入有输出")]
+    protected List<Sprite> sprites;
     [SerializeField] protected Sprite showSprite;
     [SerializeField] protected SpriteRenderer spriteRenderer;
 
