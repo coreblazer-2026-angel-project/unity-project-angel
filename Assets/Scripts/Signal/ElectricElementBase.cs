@@ -23,6 +23,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
     public int levelElementId = -1;
     ElectricManager _electricManager;
 
+    public string showName;
+
     void Awake() {
         _electricManager = ElectricManager.Instance;
         if (_electricManager != null)
@@ -163,6 +165,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
         RefreshNeighborPowerSources();
 
         ElectricManager.Instance.RemoveElement(this);
+
+        this.OnMouseExit();
     }
 
     void RefreshNeighborPowerSources() {
@@ -240,10 +244,12 @@ public abstract class ElectricElementBase : MonoBehaviour {
 
     public void OnMouseEnter() {
         ShowHighLight(true);
+        TipManager.Instance.ShowTip(this);
     }
 
     public void OnMouseExit() {
         ShowHighLight(false);
+        TipManager.Instance.HideTip();
     }
     public void ShowHighLight(bool bShow) {
         Debug.Log($"{GetType().Name} ShowHighLight bShow = {bShow}");
