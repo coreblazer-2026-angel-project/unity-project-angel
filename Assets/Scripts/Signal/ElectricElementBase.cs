@@ -240,10 +240,12 @@ public abstract class ElectricElementBase : MonoBehaviour {
 
     public void OnMouseEnter() {
         ShowHighLight(true);
+        TipManager.Instance.ShowTip(this);
     }
 
     public void OnMouseExit() {
         ShowHighLight(false);
+        TipManager.Instance.HideTip();
     }
     public void ShowHighLight(bool bShow) {
         Debug.Log($"{GetType().Name} ShowHighLight bShow = {bShow}");
