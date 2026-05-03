@@ -19,6 +19,11 @@ public class LevelManager : MonoBehaviour {
             return;
         }
 
+        // 根据关卡数据的 width/height 重建网格
+        if (levelData.width > 0 && levelData.height > 0) {
+            gmv2.BuildGridForLevel(levelData.width, levelData.height);
+        }
+
         gmv2.OnLevelLoaded();
 
         // elementId -> 运行时元件映射，用于建立显式连接

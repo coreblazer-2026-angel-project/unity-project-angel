@@ -27,6 +27,43 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
         SetGridVisible(true);
     }
 
+    /// <summary>根据关卡尺寸构建 grid 数组。会销毁场景中已存在的 GridV2 子物体并重新生成。
+    /// 直接创建只挂 GridV2 组件的空 GameObject，不实例化预制体（不会生成 square 等视觉元素）。</summary>
+    public void BuildGridForLevel(int width, int height) {
+        if (width <= 0 || height <= 0) {
+            Debug.LogWarning($"GridManagerV2.BuildGridForLevel: 无效尺寸 {width}x{height}，跳过");
+            return;
+        }
+
+        // 销毁现有的 GridV2 子物体
+        var existing = new List<Transform>();
+        foreach (Transform child in transform) existing.Add(child);
+        foreach (var child in existing) {
+            if (Application.isPlaying)
+                Destroy(child.gameObject);
+            else
+                DestroyImmediate(child.gameObject);
+        }
+
+        // 设置新尺寸并生成
+        column = width;
+        row = height;
+        grids = new GridV2[row, column];
+
+        for (int y = 0; y < row; ++y) {
+            for (int x = 0; x < column; ++x) {
+                GameObject go = new GameObject($"Grid_{x}_{y}");
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = new Vector3(x * gridSize, -y * gridSize, 0);
+
+                GridV2 grid = go.AddComponent<GridV2>();
+                grid.x = x;
+                grid.y = y;
+                grids[y, x] = grid;
+            }
+        }
+    }
+
     void CollectExistingGrids() {
         grids = new GridV2[row, column];
         foreach (var cell in GetComponentsInChildren<GridV2>()) {
