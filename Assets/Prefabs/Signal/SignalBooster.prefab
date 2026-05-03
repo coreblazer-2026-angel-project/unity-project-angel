@@ -58,6 +58,7 @@ MonoBehaviour:
   HighLight: {fileID: 850132578537952843}
   ID: 0
   levelElementId: -1
+  showName: "\u4FE1\u53F7\u8865\u5145\u7403"
   boostValue: 2
 --- !u!212 &1799322024334705173
 SpriteRenderer:

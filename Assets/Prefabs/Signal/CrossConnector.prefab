@@ -226,7 +226,7 @@ MonoBehaviour:
   HighLight: {fileID: 1013839585764452792}
   ID: 0
   levelElementId: -1
-  showName: "\u5341\u5B57\u8FDE\u63A5\u5668"
+  showName: "\u7535\u7EBF\u4EA4\u53C9\u5668"
   draggable: 1
 --- !u!61 &3459825501394438104
 BoxCollider2D:

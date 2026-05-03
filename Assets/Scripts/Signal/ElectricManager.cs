@@ -312,8 +312,13 @@ public class ElectricManager : ManagerBase<ElectricManager> {
             foreach (var elem in toActivate) {
                 elem.Activate();
             }
+        } else {
+            // 拉闸：把所有元件的 intensity 归零，并刷新 Deactive 显示
+            foreach (var element in ElectricElements.Values) {
+                element.intensity = 0;
+                element.Deactive();
+            }
         }
-        // 否则所有元件保持 Deactive 状态（已在开头重置）
 
         // 处理 SignalMerger：两侧输入相加，从指定方向输出
         var gmv2 = GridManagerV2.Instance;

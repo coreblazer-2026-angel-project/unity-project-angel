@@ -115,7 +115,7 @@ MonoBehaviour:
   HighLight: {fileID: 8475309513945800806}
   ID: 0
   levelElementId: -1
-  showName: 
+  showName: "\u4FE1\u53F7\u6C47\u5408\u5668"
 --- !u!61 &7448271285437356908
 BoxCollider2D:
   m_ObjectHideFlags: 0
