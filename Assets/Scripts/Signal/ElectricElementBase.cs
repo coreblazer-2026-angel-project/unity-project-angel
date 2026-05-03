@@ -25,6 +25,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
 
     public string showName;
 
+    public bool isActivate = false;
+
     void Awake() {
         _electricManager = ElectricManager.Instance;
         if (_electricManager != null)
@@ -193,11 +195,13 @@ public abstract class ElectricElementBase : MonoBehaviour {
 
     public virtual void Activate() {
         Debug.Log($"{GetType().Name} Activate Intensity = {this.intensity} Grid = {bindGrid.x},{bindGrid.y}");
+        isActivate = true;
         RefreshTileState();
     }
 
     public virtual void Deactive() {
         Debug.Log($"{GetType().Name} Deactivate Intensity = {this.intensity} Grid = {bindGrid.x},{bindGrid.y}");
+        isActivate = false;
         RefreshTileState();
     }
 

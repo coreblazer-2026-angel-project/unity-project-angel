@@ -36,7 +36,7 @@ public class TipManager : ManagerBase<TipManager> {
 
         _tipRect.localPosition = localPos;
 
-        TipPanel.textIntensity.text = $"强度: {element.intensity}";
+        TipPanel.textIntensity.text = $"强度: {(element.isActivate ? element.intensity : 0)}";
 
         TipPanel.textName.text = element.showName;
     }
