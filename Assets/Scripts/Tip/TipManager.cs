@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class TipManager : ManagerBase<TipManager> {
-    [SerializeField] GameObject TipPanel;
+    [SerializeField] TipPanel TipPanel;
     [SerializeField] Camera uiCamera;
 
     RectTransform _tipRect;
@@ -19,7 +19,7 @@ public class TipManager : ManagerBase<TipManager> {
     public void ShowTip(ElectricElementBase element) {
         if (element == null || TipPanel == null || _tipRect == null) return;
 
-        TipPanel.SetActive(true);
+        TipPanel.gameObject.SetActive(true);
 
         // 将 element 的世界坐标转换为屏幕坐标
         Vector3 worldPos = element.transform.position;
@@ -35,10 +35,14 @@ public class TipManager : ManagerBase<TipManager> {
         );
 
         _tipRect.localPosition = localPos;
+
+        TipPanel.textIntensity.text = $"强度: {element.intensity}";
+
+        TipPanel.textName.text = element.showName;
     }
 
     public void HideTip() {
         if (TipPanel != null)
-            TipPanel.SetActive(false);
+            TipPanel.gameObject.SetActive(false);
     }
 }

@@ -23,6 +23,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
     public int levelElementId = -1;
     ElectricManager _electricManager;
 
+    public string showName;
+
     void Awake() {
         _electricManager = ElectricManager.Instance;
         if (_electricManager != null)
@@ -163,6 +165,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
         RefreshNeighborPowerSources();
 
         ElectricManager.Instance.RemoveElement(this);
+
+        this.OnMouseExit();
     }
 
     void RefreshNeighborPowerSources() {

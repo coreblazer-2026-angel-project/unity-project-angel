@@ -92,6 +92,7 @@ GameObject:
   - component: {fileID: 676894591652234348}
   - component: {fileID: 1327071520678967768}
   - component: {fileID: 8813579554394343210}
+  - component: {fileID: 7409826727656806360}
   m_Layer: 5
   m_Name: TipPanel
   m_TagString: Untagged
@@ -158,6 +159,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7409826727656806360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4613070514262977016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f461f974d0f1f5d4b9bd773991d8d60c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textName: {fileID: 6939291682365084573}
+  textIntensity: {fileID: 5547505422640571819}
 --- !u!1 &5502075279507499450
 GameObject:
   m_ObjectHideFlags: 0
