@@ -1,0 +1,2 @@
+Assets\Editor\CreateSampleStory.cs(28,12): error CS1061: 'StoryCharacter' does not contain a definition for 'defaultSprite' and no accessible extension method 'defaultSprite' accepting a first argument of type 'StoryCharacter' could be found (are you missing a using directive or an assembly reference?)
+

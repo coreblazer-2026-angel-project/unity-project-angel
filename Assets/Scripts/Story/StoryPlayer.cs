@@ -40,9 +40,6 @@ namespace Game.Story {
         [Header("UI")]
         public StoryDialoguePanel dialoguePanel;
 
-        [Header("角色")]
-        public List<StoryCharacter> characters = new List<StoryCharacter>();
-
         [Header("打字机")]
         [Tooltip("每个字符的等待秒数")]
         public float typewriterSpeed = 0.04f;
@@ -98,6 +95,7 @@ namespace Game.Story {
                 _typewriterCoroutine = null;
             }
             if (dialoguePanel != null) dialoguePanel.Hide();
+            StoryCharacterManager.Instance?.HideAllCharacters();
             OnStoryEnd?.Invoke();
         }
 
@@ -122,16 +120,12 @@ namespace Game.Story {
         }
 
         void DisplayLine(StoryLine line) {
-            // 切换角色表情
+            // 通过 StoryCharacterManager 显示/切换角色立绘
             if (!string.IsNullOrEmpty(line.character)) {
-                var ch = FindCharacter(line.character);
-                if (ch != null) {
-                    if (!string.IsNullOrEmpty(line.expression)) {
-                        ch.SetExpression(line.expression);
-                    } else {
-                        ch.Show();
-                    }
-                }
+                StoryCharacterManager.Instance?.ShowCharacter(
+                    line.character,
+                    line.expression,
+                    0.4f, 0.15f, 0f);
             }
 
             // 显示文字
@@ -171,10 +165,6 @@ namespace Game.Story {
 
             _isTyping = false;
             _typewriterCoroutine = null;
-        }
-
-        StoryCharacter FindCharacter(string id) {
-            return characters.Find(c => c.characterId == id);
         }
     }
 }

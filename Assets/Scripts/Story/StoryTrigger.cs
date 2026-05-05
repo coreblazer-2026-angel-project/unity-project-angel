@@ -48,9 +48,7 @@ namespace Game.Story {
         }
 
         void HideCharacters() {
-            foreach (var ch in StoryPlayer.Instance.characters) {
-                ch.Hide();
-            }
+            StoryCharacterManager.Instance?.HideAllCharacters();
             StoryPlayer.Instance.OnStoryEnd -= HideCharacters;
         }
 
