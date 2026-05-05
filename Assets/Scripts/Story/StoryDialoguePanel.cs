@@ -55,5 +55,10 @@ namespace Game.Story {
             if (dialogueText != null) dialogueText.text = text ?? "";
             if (dialogueTextPro != null) dialogueTextPro.text = text ?? "";
         }
+
+        /// <summary>设置继续提示显示状态（打字完成后显示）</summary>
+        public void SetContinueIndicator(bool visible) {
+            if (continueIndicator != null) continueIndicator.gameObject.SetActive(visible);
+        }
     }
 }
