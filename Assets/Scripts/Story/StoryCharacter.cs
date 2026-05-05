@@ -30,6 +30,12 @@ namespace Game.Story {
         private string _currentExpression = "";
 
         void Awake() {
+            // 确保有 RectTransform（在 Canvas 下时必须）
+            RectTransform rect = GetComponent<RectTransform>();
+            if (rect == null) {
+                gameObject.AddComponent<RectTransform>();
+            }
+
             _image = GetComponent<Image>();
             if (_image == null) {
                 _image = gameObject.AddComponent<Image>();
@@ -45,11 +51,27 @@ namespace Game.Story {
             if (defaultSprite != null) {
                 _image.sprite = defaultSprite;
                 _image.SetNativeSize();
+                LimitSize();
             } else if (expressions.Count > 0 && expressions[0].sprite != null) {
                 var first = expressions[0];
                 _image.sprite = first.sprite;
                 _image.SetNativeSize();
+                LimitSize();
                 _currentExpression = first.name;
+            }
+        }
+
+        /// <summary>限制立绘最大宽度（像素）</summary>
+        private void LimitSize(float maxWidth = 400f) {
+            RectTransform rect = GetComponent<RectTransform>();
+            if (rect == null) return;
+
+            float currentWidth = rect.rect.width;
+            if (currentWidth > maxWidth && currentWidth > 0) {
+                float scale = maxWidth / currentWidth;
+                rect.localScale = new Vector3(scale, scale, 1f);
+            } else {
+                rect.localScale = Vector3.one;
             }
         }
 
@@ -86,6 +108,7 @@ namespace Game.Story {
             _currentExpression = entry.name;
             _image.sprite = entry.sprite;
             _image.SetNativeSize();
+            LimitSize();
             gameObject.SetActive(true);
         }
     }
