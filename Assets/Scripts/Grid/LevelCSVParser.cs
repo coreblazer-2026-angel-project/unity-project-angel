@@ -137,7 +137,11 @@ public static class LevelCSVParser {
     static int ParseIntField(string[] fields, Dictionary<string, int> colIndex, string colName) {
         string val = GetField(fields, colIndex, colName);
         if (string.IsNullOrEmpty(val)) return 0;
-        return int.TryParse(val, out int result) ? result : 0;
+        if (int.TryParse(val, out int result)) return result;
+        // 兼容 Excel 导出的浮点格式（"8.0" / "3.5"）
+        if (float.TryParse(val, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float fresult))
+            return Mathf.RoundToInt(fresult);
+        return 0;
     }
 
     static List<int> ParseConnections(string connStr) {

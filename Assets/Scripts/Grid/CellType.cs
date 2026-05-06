@@ -16,6 +16,7 @@ using UnityEngine;
         SignalMergerLeft,
         SignalMergerRight,
         SignalBooster,
+        NoPlaceZone,
         PhaseBlock,
         PhaseTrigger,
         CrossConnector,

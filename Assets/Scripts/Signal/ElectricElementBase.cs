@@ -21,6 +21,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
     public int ID;
     [Tooltip("来自关卡 CSV 的元件编号")]
     public int levelElementId = -1;
+    [Tooltip("BFS 期间记录该元件的信号源电源（用于 SignalBooster 等需要追溯电源的逻辑），每次 BeginSimulate 重置")]
+    public PowerSource sourcePower;
     ElectricManager _electricManager;
 
     public string showName;
@@ -71,8 +73,12 @@ public abstract class ElectricElementBase : MonoBehaviour {
     protected virtual void OnDestroy() {
         // 使用缓存引用，避免退出播放模式时触发 Singleton 的 isQuitting 警告
         if (_electricManager != null) {
-            _electricManager.ElectricElements.Remove(ID);
-            _electricManager.BeginSimulate();
+            // 只在字典中保存的确实是 this 时才 Remove，避免切换关卡时旧元件
+            // 因 Destroy 延迟执行而错误地把新元件（ID 复用）从字典中移除。
+            if (_electricManager.ElectricElements.TryGetValue(ID, out var existing) && existing == this) {
+                _electricManager.ElectricElements.Remove(ID);
+                _electricManager.BeginSimulate();
+            }
         }
     }
 

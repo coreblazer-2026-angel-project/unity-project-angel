@@ -50,6 +50,11 @@ public static class CellTypeNames {
         ["信号增幅器"] = CellType.SignalBooster,
         ["能量注入器"] = CellType.SignalBooster,
 
+        // 不可放置区
+        ["不可放置"] = CellType.NoPlaceZone,
+        ["不可放置区"] = CellType.NoPlaceZone,
+        ["禁区"] = CellType.NoPlaceZone,
+
         // 十字交叉
         ["十字"] = CellType.CrossConnector,
         ["交叉器"] = CellType.CrossConnector,
@@ -75,6 +80,7 @@ public static class CellTypeNames {
         [CellType.SignalMergerLeft] = "合并器(左)",
         [CellType.SignalMergerRight] = "合并器(右)",
         [CellType.SignalBooster] = "增幅器",
+        [CellType.NoPlaceZone] = "不可放置区",
         [CellType.CrossConnector] = "十字交叉",
         [CellType.PhaseBlock] = "相位块",
         [CellType.PhaseTrigger] = "相位触发器",

@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bac425c755aa1264ab3b5bf26cbf6f2e, type: 3}
-  m_Name: 1-1
+  m_Name: 1-1 (7x5)
   m_EditorClassIdentifier: 
-  width: 5
-  height: 8
+  width: 8
+  height: 5
   spawnRuntimeFloor: 1
   floorPrefab: {fileID: 0}
   wireLimit: 0
-  csvData: {fileID: 4900000, guid: ba3f73db2f75c884686dae60e24beb8f, type: 3}
-  useInlineItems: 1
+  csvData: {fileID: 4900000, guid: baf5dbf69958e3f488ad46d383b7baed, type: 3}
+  useInlineItems: 0
   items:
   - elementId: 0
     position: {x: 2, y: 2}
@@ -30,7 +30,7 @@ MonoBehaviour:
     phaseColor: {r: 0, g: 0, b: 0, a: 0}
     connections: 
   - elementId: 1
-    position: {x: 2, y: 5}
+    position: {x: 5, y: 2}
     type: 4
     signalStrength: 1
     requiredStrength: 0

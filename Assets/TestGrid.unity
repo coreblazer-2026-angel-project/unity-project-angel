@@ -168,6 +168,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 1
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &16492042
@@ -318,6 +319,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 2
   y: 3
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &55749152
@@ -366,6 +368,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 4
   y: 4
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &91997702
@@ -414,6 +417,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 4
   y: 3
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &93909630
@@ -462,6 +466,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 3
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &140876480
@@ -510,6 +515,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 1
   y: 1
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &177546391
@@ -558,6 +564,10 @@ MonoBehaviour:
     prefab: {fileID: 4634727557176366364, guid: adfa6005e1626a343b0bb1830a7b41cd, type: 3}
   - type: 11
     prefab: {fileID: 444753559648630896, guid: ef4e07936c3f033479b2c25c06e096ac, type: 3}
+  - type: 12
+    prefab: {fileID: 1347311123572515358, guid: ca68dae3407a34944995498a3ff44996, type: 3}
+  - type: 15
+    prefab: {fileID: 6289051811210817330, guid: 9ff5354100c7ac14480ebf00da9864db, type: 3}
   wireTilemap: {fileID: 1439603997}
   wireTilePowered: {fileID: 11400000, guid: 4bd222c54692f5149890de472f505461, type: 2}
   wireTileUnpowered: {fileID: 11400000, guid: c0f1ec38b48d8dd40b815689ff556cd5, type: 2}
@@ -582,6 +592,14 @@ MonoBehaviour:
     outputTile: {fileID: 0}
   - type: 1
     tile: {fileID: 11400000, guid: f0968bf6a2c4bb846af3972ca146673a, type: 2}
+    poweredTile: {fileID: 0}
+    outputTile: {fileID: 0}
+  - type: 12
+    tile: {fileID: 11400000, guid: 69700388562831349bb50e78e6ed6070, type: 2}
+    poweredTile: {fileID: 0}
+    outputTile: {fileID: 0}
+  - type: 15
+    tile: {fileID: 11400000, guid: 20d5461c8bd89af40b322622bdbeddfc, type: 2}
     poweredTile: {fileID: 0}
     outputTile: {fileID: 0}
 --- !u!4 &177546393
@@ -645,6 +663,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 3
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &228908722
@@ -658,6 +677,7 @@ GameObject:
   - component: {fileID: 228908725}
   - component: {fileID: 228908724}
   - component: {fileID: 228908723}
+  - component: {fileID: 228908726}
   m_Layer: 0
   m_Name: TestStart
   m_TagString: Untagged
@@ -690,7 +710,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoLoadTestLevel: 1
-  testLevel: {fileID: 11400000, guid: 2f074efde2a2de84a84f4e5a9d68480e, type: 2}
+  testLevel: {fileID: 11400000, guid: 585a65a641cd2eb4eb5f915a11ef4a19, type: 2}
   levelManager: {fileID: 0}
 --- !u!4 &228908725
 Transform:
@@ -707,6 +727,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &228908726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 228908722}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe583c45468c52b46a6016edd3a9adcb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levels:
+  - {fileID: 11400000, guid: cc9c263e5f8814f45aeb3e332f61c56d, type: 2}
+  - {fileID: 11400000, guid: d12b547f0ea45fa469dba351ca785977, type: 2}
+  - {fileID: 11400000, guid: 39cb45c88360f874093e47a84e7d933e, type: 2}
+  - {fileID: 11400000, guid: d5a86171745431f4cb9869609bc011f5, type: 2}
+  - {fileID: 11400000, guid: 39e551ff0643e674da695859a3fb5041, type: 2}
+  - {fileID: 11400000, guid: 6dce4e0075548784481c3d42de140eef, type: 2}
+  - {fileID: 11400000, guid: f053fd9027c32844caae0b992f8d5739, type: 2}
+  - {fileID: 11400000, guid: 19d6354f68bf9ec49906ff87e8744941, type: 2}
+  - {fileID: 11400000, guid: 585a65a641cd2eb4eb5f915a11ef4a19, type: 2}
+  currentIndex: 0
+  advanceDelay: 1.5
+  autoStart: 1
+  checkInterval: 0.3
 --- !u!1 &284079135
 GameObject:
   m_ObjectHideFlags: 0
@@ -753,6 +799,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 3
   y: 4
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &330889210
@@ -801,6 +848,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 4
   y: 3
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &359523536
@@ -849,6 +897,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 1
   y: 4
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!224 &414644123 stripped
@@ -1011,6 +1060,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 2
   y: 3
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &480520028
@@ -1104,6 +1154,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 0
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &489973876
@@ -1152,6 +1203,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 4
   y: 0
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &507512726
@@ -1200,6 +1252,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 4
   y: 1
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &533182286
@@ -1248,6 +1301,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 4
   y: 0
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &537860700
@@ -1296,6 +1350,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 1
   y: 0
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &540167760
@@ -1344,6 +1399,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 2
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &693383036
@@ -1392,6 +1448,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 2
   y: 0
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &750070050
@@ -1440,6 +1497,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 4
   y: 4
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &765500594
@@ -1488,6 +1546,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 3
   y: 1
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &766376982
@@ -1536,6 +1595,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 2
   y: 0
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &776790669
@@ -1584,6 +1644,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 4
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &801769483
@@ -1678,6 +1739,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 1
   y: 4
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &819216976
@@ -1726,6 +1788,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 3
   y: 0
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &823326872
@@ -1774,6 +1837,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 3
   y: 2
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &909935313
@@ -1822,6 +1886,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 3
   y: 0
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &929742319
@@ -1870,6 +1935,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 3
   y: 2
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1069258193
@@ -1918,6 +1984,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 2
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1085743189
@@ -2086,6 +2153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 1
   y: 3
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1189510679
@@ -2134,6 +2202,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 4
   y: 2
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1250037209
@@ -2182,6 +2251,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 3
   y: 3
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1260480766
@@ -2230,6 +2300,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 1
   y: 2
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1314695726
@@ -2278,6 +2349,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 3
   y: 1
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1417190242
@@ -2326,6 +2398,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 1
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1433467524
@@ -2374,6 +2447,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 2
   y: 4
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1439603994
@@ -2628,7 +2702,7 @@ Transform:
   m_GameObject: {fileID: 1494849919}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 2, y: -1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2696,6 +2770,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 2
   y: 1
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1529564657
@@ -2744,6 +2819,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 2
   y: 1
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1534703294
@@ -2792,6 +2868,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 1
   y: 3
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1640005034
@@ -2908,6 +2985,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 2
   y: 4
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1753047707
@@ -2956,6 +3034,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 2
   y: 2
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1758755241
@@ -3172,6 +3251,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 4
   y: 2
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1873570525
@@ -3220,6 +3300,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 1
   y: 0
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1914807067
@@ -3268,6 +3349,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 3
   y: 3
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &1940193786
@@ -3316,6 +3398,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 2
   y: 2
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &2007151203
@@ -3364,6 +3447,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 3
   y: 4
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &2024101633
@@ -3412,6 +3496,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 4
   y: 1
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &2044648019
@@ -3460,6 +3545,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 1
   y: 2
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &2068698861
@@ -3555,6 +3641,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 4
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &2080708884
@@ -3603,6 +3690,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 1
   y: 1
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1 &2144398240
@@ -3651,6 +3739,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 0
+  noPlace: 0
   holdObject: {fileID: 0}
   holdObjects: []
 --- !u!1001 &7461359428640845270

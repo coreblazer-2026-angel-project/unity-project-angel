@@ -6,6 +6,9 @@ public class GridV2 : MonoBehaviour {
     public int x;
     public int y;
 
+    /// <summary>不可放置标记：true 时此格子禁止放置任何元件</summary>
+    public bool noPlace;
+
     /// <summary>兼容旧代码，返回第一个放置的物体</summary>
     public GameObject holdObject;
 
@@ -21,6 +24,11 @@ public class GridV2 : MonoBehaviour {
     }
 
     public void PutElement(CellType cellType) {
+        if (noPlace) {
+            Debug.Log($"GridV2.PutElement: 坐标 ({x},{y}) 是不可放置区，跳过 [{cellType}]");
+            return;
+        }
+
         if (ElectricManager.Instance == null) {
             Debug.LogError($"GridV2.PutElement: ElectricManager 实例不存在，无法放置 {cellType}");
             return;
@@ -40,8 +48,10 @@ public class GridV2 : MonoBehaviour {
             }
         }
 
-        // 可叠加类型：Wire / SignalAmplifier 可以共存
-        bool isOverlayType = cellType == CellType.Wire || cellType == CellType.SignalAmplifier;
+        // 可叠加类型：Wire / SignalAmplifier / SignalBooster 可以共存
+        bool isOverlayType = cellType == CellType.Wire
+            || cellType == CellType.SignalAmplifier
+            || cellType == CellType.SignalBooster;
 
         // 非叠加类型独占格子
         if (!isOverlayType && holdObjects.Count > 0) {
@@ -49,12 +59,14 @@ public class GridV2 : MonoBehaviour {
             return;
         }
 
-        // 叠加类型只能和 Wire / SignalAmplifier 共存
+        // 叠加类型只能和 Wire / SignalAmplifier / SignalBooster 共存
         if (isOverlayType) {
             foreach (var obj in holdObjects) {
                 if (obj == null) continue;
                 if (obj.TryGetComponent(out ElectricElementBase elem)) {
-                    if (elem.cellType != CellType.Wire && elem.cellType != CellType.SignalAmplifier) {
+                    if (elem.cellType != CellType.Wire
+                        && elem.cellType != CellType.SignalAmplifier
+                        && elem.cellType != CellType.SignalBooster) {
                         Debug.LogWarning($"GridV2.PutElement: 坐标 ({x},{y}) 已有非叠加元件 [{elem.cellType}]，无法放置 [{cellType}]");
                         return;
                     }

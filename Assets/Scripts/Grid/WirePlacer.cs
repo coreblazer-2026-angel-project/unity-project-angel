@@ -307,14 +307,18 @@ public class WirePlacer : MonoBehaviour {
         return null;
     }
 
-    /// <summary>判断格子是否可以放置电线（空 或 只有 SignalAmplifier）"</summary>
+    /// <summary>判断格子是否可以放置电线（空 或 只有 SignalAmplifier / SignalBooster；不可放置区禁止放置）</summary>
     static bool CanPlaceWire(GridV2 cell) {
         if (cell == null) return false;
+        if (cell.noPlace) return false;
         if (cell.holdObjects.Count == 0) return true;
         foreach (var obj in cell.holdObjects) {
             if (obj == null) continue;
             if (obj.GetComponent<Wire>() != null) return false; // 已有电线
-            if (obj.GetComponent<SignalAmplifier>() == null) return false; // 有非叠加元件
+            // 允许与 SignalAmplifier / SignalBooster 共存
+            if (obj.GetComponent<SignalAmplifier>() == null
+                && obj.GetComponent<SignalBooster>() == null)
+                return false;
         }
         return true;
     }

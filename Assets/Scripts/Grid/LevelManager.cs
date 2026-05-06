@@ -11,8 +11,21 @@ public class LevelManager : MonoBehaviour {
             return;
         }
 
+        // 切换关卡前先清空所有旧元件和 tilemap 状态，避免上一关的电强残留
+        ElectricManager.Instance?.ClearAll();
+
         // 若配置了 CSV 且未勾选 useInlineItems，从 CSV 解析 items
         levelData.ParseCSV();
+
+        // 调试：打印关卡所有 PowerSource 的 signalStrength，方便确认数据是否正确
+        Debug.Log($"LevelManager: 加载 [{levelData.name}], useInlineItems={levelData.useInlineItems}, csvData={(levelData.csvData != null ? levelData.csvData.name : "null")}, items={levelData.items?.Count}");
+        if (levelData.items != null) {
+            foreach (var dItem in levelData.items) {
+                if (dItem.type == CellType.PowerSource) {
+                    Debug.Log($"  → PowerSource id={dItem.elementId}, pos={dItem.position}, signalStrength={dItem.signalStrength}");
+                }
+            }
+        }
 
         if (levelData.items == null || levelData.items.Count == 0) {
             Debug.LogWarning("LevelManager: 关卡没有元件数据");
@@ -38,6 +51,18 @@ public class LevelManager : MonoBehaviour {
                 var emWall = ElectricManager.Instance;
                 if (emWall != null && emWall.HasElementTile(CellType.Wall)) {
                     emWall.SetElementTile(item.position.x, item.position.y, CellType.Wall, false);
+                }
+                continue;
+            }
+
+            // 不可放置区：标记 GridV2.noPlace，禁止后续在此格放任何元件，可选放 tile 显示
+            if (item.type == CellType.NoPlaceZone) {
+                GridV2 npCell = gmv2.GetGrid(item.position.x, item.position.y);
+                if (npCell != null) npCell.noPlace = true;
+
+                var emNp = ElectricManager.Instance;
+                if (emNp != null && emNp.HasElementTile(CellType.NoPlaceZone)) {
+                    emNp.SetElementTile(item.position.x, item.position.y, CellType.NoPlaceZone, false);
                 }
                 continue;
             }

@@ -218,6 +218,7 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         // 先重置所有元件
         foreach (var element in ElectricElements.Values) {
             element.intensity = 0;
+            element.sourcePower = null;
             element.Deactive();
         }
 
@@ -236,6 +237,7 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 queue.Enqueue((ps, null));
                 visited.Add(ps);
                 ps.intensity = ps.workIntensity;
+                ps.sourcePower = ps;     // 电源本身的 sourcePower 是自己
             }
         }
 
@@ -271,20 +273,34 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 }
 
                 foreach (var next in cc.neighborElements) {
-                    if (visited.Contains(next)) continue;
-
                     bool nextIsHorizontal = next.bindGrid != null && cc.bindGrid != null
                         && next.bindGrid.y == cc.bindGrid.y;
                     bool nextIsVertical = next.bindGrid != null && cc.bindGrid != null
                         && next.bindGrid.x == cc.bindGrid.x;
 
                     // 只向同轴方向的邻居传播
-                    if ((isFromHorizontal && nextIsHorizontal) || (isFromVertical && nextIsVertical)) {
+                    if (!((isFromHorizontal && nextIsHorizontal) || (isFromVertical && nextIsVertical))) continue;
+
+                    // CrossConnector 邻居用方向标记，普通元件用 visited
+                    if (next is CrossConnector ccNext) {
+                        bool toH = isFromHorizontal;
+                        bool toV = isFromVertical;
+                        if (toH && ccHorizontalProcessed.TryGetValue(ccNext, out bool hp) && hp) continue;
+                        if (toV && ccVerticalProcessed.TryGetValue(ccNext, out bool vp) && vp) continue;
+                    } else {
+                        if (visited.Contains(next)) continue;
                         visited.Add(next);
-                        next.intensity = Mathf.Max(0, cur.intensity - 1);
-                        Debug.Log($"{next.GetType().Name} Intensity = {next.intensity} CalcIntensity = {Mathf.Max(0, cur.intensity - 1)} CurIntensity = {cur.intensity} Grid = {next.bindGrid.x},{next.bindGrid.y}");
-                        queue.Enqueue((next, cur));
                     }
+
+                    int outgoingIntensity = Mathf.Max(0, cur.intensity - 1);
+                    if (next is CrossConnector) {
+                        next.intensity = Mathf.Max(next.intensity, outgoingIntensity);
+                    } else {
+                        next.intensity = outgoingIntensity;
+                    }
+                    next.sourcePower = cc.sourcePower;
+                    Debug.Log($"{next.GetType().Name} Intensity = {next.intensity} CalcIntensity = {outgoingIntensity} CurIntensity = {cur.intensity} Grid = {next.bindGrid.x},{next.bindGrid.y}");
+                    queue.Enqueue((next, cur));
                 }
                 continue;
             }
@@ -294,14 +310,32 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 continue;
 
             foreach (var next in cur.neighborElements) {
-                if (visited.Contains(next)) continue;
+                // CrossConnector 邻居用方向标记，普通元件用 visited
+                if (next is CrossConnector ccNext) {
+                    bool fromH = cur.bindGrid != null && ccNext.bindGrid != null && cur.bindGrid.y == ccNext.bindGrid.y;
+                    bool fromV = cur.bindGrid != null && ccNext.bindGrid != null && cur.bindGrid.x == ccNext.bindGrid.x;
+                    if (!fromH && !fromV) continue;
+                    if (fromH && ccHorizontalProcessed.TryGetValue(ccNext, out bool hp) && hp) continue;
+                    if (fromV && ccVerticalProcessed.TryGetValue(ccNext, out bool vp) && vp) continue;
+                } else {
+                    if (visited.Contains(next)) continue;
+                    visited.Add(next);
+                }
 
-                visited.Add(next);
-                int outgoingIntensity = Mathf.Max(0, cur.intensity - 1);
+                // 电源出来的第一格不衰减；从其他元件出来的衰减 1
+                int outgoingIntensity = (cur is PowerSource)
+                    ? cur.intensity
+                    : Mathf.Max(0, cur.intensity - 1);
                 if (cur is SignalAmplifier amp && cur.intensity >= cur.workIntensity) {
                     outgoingIntensity += amp.boostValue;
                 }
-                next.intensity = outgoingIntensity;
+                if (next is CrossConnector) {
+                    next.intensity = Mathf.Max(next.intensity, outgoingIntensity);
+                } else {
+                    next.intensity = outgoingIntensity;
+                }
+                // 传播信号源：自己是 PowerSource 就用自己，否则继承 cur 的 sourcePower
+                next.sourcePower = (cur as PowerSource) ?? cur.sourcePower;
                 Debug.Log($"{next.GetType().Name} Intensity = {next.intensity} CalcIntensity = {outgoingIntensity} CurIntensity = {cur.intensity} Grid = {next.bindGrid.x},{next.bindGrid.y}");
                 queue.Enqueue((next, cur));
             }
@@ -342,6 +376,7 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 if (obj.TryGetComponent(out ElectricElementBase outElem)) {
                     if (outElem.intensity < sum) {
                         outElem.intensity = sum;
+                        outElem.sourcePower = merger.sourcePower;   // 继承 SignalMerger 的 sourcePower
                         PropagateFrom(outElem, sum);
                     }
                 }
@@ -355,32 +390,41 @@ public class ElectricManager : ManagerBase<ElectricManager> {
             }
         }
 
-        // 处理 SignalBooster：上方有激活电线时，永久增强电源并销毁自身
+        // 处理 SignalBooster：仅当同格子叠加有 intensity >= 1 的电线时触发，
+        // 把 boostValue 永久加到该电线所属电源的 workIntensity 上，然后销毁自身
         bool anyBoosterTriggered = false;
         foreach (var element in ElectricElements.Values.ToList()) {
             if (element is not SignalBooster booster || booster.bindGrid == null) continue;
 
-            GridV2 up = gmv2?.GetGrid(booster.bindGrid.x, booster.bindGrid.y - 1);
-            if (up == null) continue;
+            Wire activeWire = null;
 
-            bool hasActiveWire = false;
-            foreach (var obj in up.holdObjects) {
-                if (obj != null && obj.TryGetComponent(out Wire upWire) && upWire.intensity > 0) {
-                    hasActiveWire = true;
+            // 仅检查同格子叠加的电线，忽略上下左右邻居格子
+            foreach (var obj in booster.bindGrid.holdObjects) {
+                if (obj == null || obj == booster.gameObject) continue;
+                if (obj.TryGetComponent(out Wire sameWire) && sameWire.intensity >= 1) {
+                    activeWire = sameWire;
                     break;
                 }
             }
 
-            if (hasActiveWire) {
-                // 永久增强所有电源
-                foreach (var elem in ElectricElements.Values) {
-                    if (elem is PowerSource ps) {
-                        ps.workIntensity += booster.boostValue;
-                    }
+            if (activeWire != null) {
+                // 找到电线所属的电源，只增强它
+                PowerSource ps = activeWire.sourcePower;
+                if (ps != null) {
+                    ps.workIntensity += booster.boostValue;
+                    Debug.Log($"SignalBooster 触发：电源 [{ps.name}] workIntensity +{booster.boostValue} → {ps.workIntensity}，booster 销毁");
+                } else {
+                    Debug.LogWarning($"SignalBooster 触发：电线没有 sourcePower 记录，跳过电源增强");
                 }
-                Debug.Log($"SignalBooster 触发：所有电源 workIntensity +{booster.boostValue}，booster 销毁");
-                // 销毁自身
+
+                // 记录销毁前的位置和格子，触发后在原位置重新放置一根电线
+                GridV2 boosterCell = booster.bindGrid;
                 booster.Remove();
+
+                if (boosterCell != null) {
+                    boosterCell.PutElement(CellType.Wire);
+                }
+
                 anyBoosterTriggered = true;
             }
         }
@@ -488,6 +532,7 @@ public class ElectricManager : ManagerBase<ElectricManager> {
 
                 if (next.intensity < outgoing) {
                     next.intensity = outgoing;
+                    next.sourcePower = cur.sourcePower;  // 继承 cur 的 sourcePower
                     queue.Enqueue((next, outgoing));
                 }
             }
@@ -505,6 +550,29 @@ public class ElectricManager : ManagerBase<ElectricManager> {
     public void RemoveElement(ElectricElementBase electricElementBase) {
         ElectricElements.Remove(electricElementBase.ID);
         Destroy(electricElementBase.gameObject);
+    }
+
+    /// <summary>清理所有元件状态和 tilemap，用于切换关卡前的重置。
+    /// 显式销毁所有元件 GameObject，并清空字典/电源/curId/三个 tilemap。</summary>
+    public void ClearAll() {
+        // 先收集快照，避免遍历过程中字典被 OnDestroy 修改
+        var toDestroy = ElectricElements.Values.ToList();
+
+        // 先清空字典，避免 OnDestroy 中的 Remove 找不到 key
+        ElectricElements.Clear();
+        curId = 0;
+        powerSource = null;
+
+        // 销毁所有元件 GameObject（OnDestroy 中的 BeginSimulate 因 powerSource 为 null 会立即 return）
+        foreach (var element in toDestroy) {
+            if (element != null && element.gameObject != null) {
+                Destroy(element.gameObject);
+            }
+        }
+
+        if (wireTilemap != null) wireTilemap.ClearAllTiles();
+        if (elementTilemap != null) elementTilemap.ClearAllTiles();
+        if (previewTilemap != null) previewTilemap.ClearAllTiles();
     }
 
     class UnionFind {
