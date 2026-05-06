@@ -28,10 +28,15 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
     }
 
     /// <summary>根据关卡尺寸构建 grid 数组。会销毁场景中已存在的 GridV2 子物体并重新生成。
-    /// 直接创建只挂 GridV2 组件的空 GameObject，不实例化预制体（不会生成 square 等视觉元素）。</summary>
+    /// 通过 Instantiate(gridPrefab) 实例化预制体，保留预制体上挂载的所有组件。</summary>
     public void BuildGridForLevel(int width, int height) {
         if (width <= 0 || height <= 0) {
             Debug.LogWarning($"GridManagerV2.BuildGridForLevel: 无效尺寸 {width}x{height}，跳过");
+            return;
+        }
+
+        if (gridPrefab == null) {
+            Debug.LogError("GridManagerV2.BuildGridForLevel: gridPrefab 未配置，无法生成网格");
             return;
         }
 
@@ -45,18 +50,16 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
                 DestroyImmediate(child.gameObject);
         }
 
-        // 设置新尺寸并生成
+        // 设置新尺寸并实例化预制体
         column = width;
         row = height;
         grids = new GridV2[row, column];
 
         for (int y = 0; y < row; ++y) {
             for (int x = 0; x < column; ++x) {
-                GameObject go = new GameObject($"Grid_{x}_{y}");
-                go.transform.SetParent(transform, false);
-                go.transform.localPosition = new Vector3(x * gridSize, -y * gridSize, 0);
-
-                GridV2 grid = go.AddComponent<GridV2>();
+                GridV2 grid = Instantiate(gridPrefab, transform);
+                grid.name = $"Grid_{x}_{y}";
+                grid.transform.localPosition = new Vector3(x * gridSize, -y * gridSize, 0);
                 grid.x = x;
                 grid.y = y;
                 grids[y, x] = grid;
