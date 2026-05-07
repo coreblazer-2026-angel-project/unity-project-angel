@@ -155,5 +155,20 @@ namespace Game.Story {
             foreach (var p in presets)
                 if (p.image != null) p.image.enabled = false;
         }
+
+        /// <summary>获取当前显示的角色预设</summary>
+        public CharacterPreset GetActivePreset() {
+            foreach (var p in presets) {
+                if (p.image != null && p.image.enabled) {
+                    return p;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>获取指定ID的角色预设</summary>
+        public CharacterPreset GetPreset(string characterId) {
+            return presets.Find(p => p.characterId == characterId);
+        }
     }
 }
