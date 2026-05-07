@@ -62,6 +62,12 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
                 grid.transform.localPosition = new Vector3(x * gridSize, -y * gridSize, 0);
                 grid.x = x;
                 grid.y = y;
+
+                // 重置预制体上序列化遗留的状态，避免 PutElement 时误判
+                grid.holdObjects.Clear();
+                grid.holdObject = null;
+                grid.noPlace = false;
+
                 grids[y, x] = grid;
             }
         }

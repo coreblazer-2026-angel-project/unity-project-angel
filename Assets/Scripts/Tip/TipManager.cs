@@ -36,7 +36,26 @@ public class TipManager : ManagerBase<TipManager> {
 
         _tipRect.localPosition = localPos;
 
-        TipPanel.textIntensity.text = $"强度: {(element.isActivate ? element.intensity : 0)}";
+        // 按元件类型显示不同的详细信息
+        string detail;
+        switch (element) {
+            case PowerSource ps:
+                detail = $"当前电强: {ps.workIntensity}";
+                break;
+            case Light light:
+                detail = $"工作阈值: {light.workIntensity}";
+                break;
+            case SignalBooster booster:
+                detail = $"增强电强: {booster.boostValue}";
+                break;
+            case SignalAmplifier amp:
+                detail = $"增强电强: {amp.boostValue}";
+                break;
+            default:
+                detail = $"强度: {(element.isActivate ? element.intensity : 0)}";
+                break;
+        }
+        TipPanel.textIntensity.text = detail;
 
         TipPanel.textName.text = element.showName;
     }

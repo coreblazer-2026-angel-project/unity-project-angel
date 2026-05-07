@@ -15,12 +15,46 @@ public class GridV2 : MonoBehaviour {
     /// <summary>当前格子内所有放置的物体（支持叠加）</summary>
     public List<GameObject> holdObjects = new();
 
-    void Start() {
+    [Header("边框")]
+    [Tooltip("勾选后在 Start 时生成 32x32（gridSize）的方框边线")]
+    public bool showBorder = true;
+    [Tooltip("边线宽度（世界单位）")]
+    public float borderWidth = 0.01f;
+    [Tooltip("边线颜色")]
+    public Color borderColor = Color.white;
 
+    void Start() {
+        if (showBorder) CreateBorder();
     }
 
     void Update() {
 
+    }
+
+    /// <summary>在自身位置画一个 gridSize × gridSize 的方框（中心对齐）</summary>
+    void CreateBorder() {
+        float size = GridManagerV2.Instance != null ? GridManagerV2.Instance.gridSize : 0.32f;
+        float half = size / 2f;
+
+        var go = new GameObject("Border");
+        go.transform.SetParent(transform, false);
+        go.transform.localPosition = Vector3.zero;
+
+        var lr = go.AddComponent<LineRenderer>();
+        lr.useWorldSpace = false;
+        lr.loop = false;
+        lr.positionCount = 5;
+        lr.startWidth = borderWidth;
+        lr.endWidth = borderWidth;
+        lr.startColor = borderColor;
+        lr.endColor = borderColor;
+        lr.material = new Material(Shader.Find("Sprites/Default"));
+
+        lr.SetPosition(0, new Vector3(-half, -half, 0));
+        lr.SetPosition(1, new Vector3( half, -half, 0));
+        lr.SetPosition(2, new Vector3( half,  half, 0));
+        lr.SetPosition(3, new Vector3(-half,  half, 0));
+        lr.SetPosition(4, new Vector3(-half, -half, 0));   // 闭合
     }
 
     public void PutElement(CellType cellType) {
@@ -86,6 +120,15 @@ public class GridV2 : MonoBehaviour {
         if (spawnGameObject.TryGetComponent(out ElectricElementBase electricElement)) {
             electricElement.cellType = cellType;
             electricElement.BindToGrid(this);
+
+            // Wire 创建时立即在 wireTilemap 上设置默认 tile（不依赖 Wire.Start，因为 Start 要等下一帧）
+            if (electricElement is Wire) {
+                var em = ElectricManager.Instance;
+                if (em != null && em.wireTilemap != null) {
+                    em.SetWireTile(this.x, this.y, em.wireTileUnpowered);
+                }
+            }
+
             Debug.Log($"GridV2.PutElement: 实例化完成，实际组件类型 = [{electricElement.GetType().Name}]，cellType = {electricElement.cellType}");
         } else {
             Debug.LogError($"GridV2.PutElement: 实例化出来的对象没有 ElectricElementBase 组件！cellType = {cellType}");

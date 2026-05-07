@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bac425c755aa1264ab3b5bf26cbf6f2e, type: 3}
-  m_Name: 1-7 (7x7)
+  m_Name: 2-2(7x5)
   m_EditorClassIdentifier: 
-  width: 8
-  height: 9
+  width: 9
+  height: 7
   spawnRuntimeFloor: 1
   floorPrefab: {fileID: 0}
   wireLimit: 0
-  csvData: {fileID: 4900000, guid: e7a03c3520774df42883e9ff29af8587, type: 3}
+  csvData: {fileID: 4900000, guid: 5b4ba4e0bf449954ea2bcb4a178be721, type: 3}
   useInlineItems: 0
   items:
   - elementId: 0
-    position: {x: 3, y: 6}
+    position: {x: 0, y: 0}
     type: 2
     signalStrength: 4
     requiredStrength: 0
@@ -30,7 +30,7 @@ MonoBehaviour:
     phaseColor: {r: 0, g: 0, b: 0, a: 0}
     connections: 
   - elementId: 1
-    position: {x: 5, y: 2}
+    position: {x: 0, y: 2}
     type: 2
     signalStrength: 4
     requiredStrength: 0
@@ -39,8 +39,8 @@ MonoBehaviour:
     phaseColor: {r: 0, g: 0, b: 0, a: 0}
     connections: 
   - elementId: 2
-    position: {x: 4, y: 3}
-    type: 11
+    position: {x: 6, y: 0}
+    type: 2
     signalStrength: 4
     requiredStrength: 0
     amplifyValue: 0
@@ -48,17 +48,17 @@ MonoBehaviour:
     phaseColor: {r: 0, g: 0, b: 0, a: 0}
     connections: 
   - elementId: 3
-    position: {x: 5, y: 6}
-    type: 11
-    signalStrength: 2
+    position: {x: 6, y: 2}
+    type: 2
+    signalStrength: 4
     requiredStrength: 0
     amplifyValue: 0
     activateThreshold: 0
     phaseColor: {r: 0, g: 0, b: 0, a: 0}
     connections: 
   - elementId: 4
-    position: {x: 3, y: 2}
-    type: 15
+    position: {x: 1, y: 1}
+    type: 10
     signalStrength: 0
     requiredStrength: 0
     amplifyValue: 0
@@ -66,72 +66,36 @@ MonoBehaviour:
     phaseColor: {r: 0, g: 0, b: 0, a: 0}
     connections: 
   - elementId: 5
-    position: {x: 3, y: 0}
-    type: 4
-    signalStrength: 3
+    position: {x: 5, y: 1}
+    type: 9
+    signalStrength: 0
     requiredStrength: 0
     amplifyValue: 0
     activateThreshold: 0
     phaseColor: {r: 0, g: 0, b: 0, a: 0}
     connections: 
   - elementId: 6
-    position: {x: 0, y: 2}
-    type: 4
-    signalStrength: 2
+    position: {x: 3, y: 1}
+    type: 8
+    signalStrength: 0
     requiredStrength: 0
     amplifyValue: 0
     activateThreshold: 0
     phaseColor: {r: 0, g: 0, b: 0, a: 0}
     connections: 
   - elementId: 7
-    position: {x: 4, y: 0}
-    type: 1
-    signalStrength: 0
+    position: {x: 1, y: 4}
+    type: 4
+    signalStrength: 5
     requiredStrength: 0
     amplifyValue: 0
     activateThreshold: 0
     phaseColor: {r: 0, g: 0, b: 0, a: 0}
     connections: 
   - elementId: 8
-    position: {x: 4, y: 1}
-    type: 1
-    signalStrength: 0
-    requiredStrength: 0
-    amplifyValue: 0
-    activateThreshold: 0
-    phaseColor: {r: 0, g: 0, b: 0, a: 0}
-    connections: 
-  - elementId: 9
-    position: {x: 2, y: 3}
-    type: 1
-    signalStrength: 0
-    requiredStrength: 0
-    amplifyValue: 0
-    activateThreshold: 0
-    phaseColor: {r: 0, g: 0, b: 0, a: 0}
-    connections: 
-  - elementId: 10
-    position: {x: 2, y: 4}
-    type: 1
-    signalStrength: 0
-    requiredStrength: 0
-    amplifyValue: 0
-    activateThreshold: 0
-    phaseColor: {r: 0, g: 0, b: 0, a: 0}
-    connections: 
-  - elementId: 11
-    position: {x: 2, y: 5}
-    type: 1
-    signalStrength: 0
-    requiredStrength: 0
-    amplifyValue: 0
-    activateThreshold: 0
-    phaseColor: {r: 0, g: 0, b: 0, a: 0}
-    connections: 
-  - elementId: 12
-    position: {x: 2, y: 6}
-    type: 1
-    signalStrength: 0
+    position: {x: 5, y: 4}
+    type: 4
+    signalStrength: 5
     requiredStrength: 0
     amplifyValue: 0
     activateThreshold: 0

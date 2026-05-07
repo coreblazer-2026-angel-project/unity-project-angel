@@ -95,6 +95,8 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         if (wireTilemap == null) return;
         Vector3Int cellPos = GetTilePos(x, y);
         wireTilemap.SetTile(cellPos, tile);
+        // 重置 tile 颜色为不透明白色（PlaceInvisibleWireTile 之后会再单独 SetColor(clear) 让自己透明）
+        wireTilemap.SetColor(cellPos, Color.white);
         RefreshNeighborTiles(cellPos);
     }
 
@@ -224,8 +226,9 @@ public class ElectricManager : ManagerBase<ElectricManager> {
 
         Queue<(ElectricElementBase current, ElectricElementBase from)> queue = new();
         HashSet<ElectricElementBase> visited = new();
-        List<ElectricElementBase> toActivate = new();
-        bool allValid = true;
+        // 按电源分组：每个电源独立的 allValid 标志和待激活列表，避免一个电源拉闸影响其他电源的电路
+        Dictionary<PowerSource, bool> psAllValid = new();
+        Dictionary<PowerSource, List<ElectricElementBase>> psToActivate = new();
 
         // 追踪 CrossConnector 各轴向是否已处理，防止循环
         Dictionary<CrossConnector, bool> ccHorizontalProcessed = new();
@@ -233,6 +236,8 @@ public class ElectricManager : ManagerBase<ElectricManager> {
 
         // 从所有电源开始 BFS
         foreach (var ps in powerSources) {
+            psAllValid[ps] = true;
+            psToActivate[ps] = new List<ElectricElementBase>();
             if (!visited.Contains(ps)) {
                 queue.Enqueue((ps, null));
                 visited.Add(ps);
@@ -245,14 +250,19 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         while (queue.Count > 0) {
             var (cur, from) = queue.Dequeue();
 
+            // 按当前元件的 sourcePower 分组判定 allValid
+            PowerSource curPs = cur.sourcePower;
+
             // 检查当前元件是否满足激活条件
             if (cur.intensity <= 0) {
-                allValid = false;
+                if (curPs != null && psAllValid.ContainsKey(curPs))
+                    psAllValid[curPs] = false;
             }
 
             // 只有 intensity >= workIntensity 才加入待激活列表
             if (cur.intensity >= cur.workIntensity) {
-                toActivate.Add(cur);
+                if (curPs != null && psToActivate.ContainsKey(curPs))
+                    psToActivate[curPs].Add(cur);
             }
 
             // CrossConnector 特殊处理：按来源轴向隔离信号
@@ -273,6 +283,9 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 }
 
                 foreach (var next in cc.neighborElements) {
+                    // SignalBooster 不参与 BFS
+                    if (next is SignalBooster) continue;
+
                     bool nextIsHorizontal = next.bindGrid != null && cc.bindGrid != null
                         && next.bindGrid.y == cc.bindGrid.y;
                     bool nextIsVertical = next.bindGrid != null && cc.bindGrid != null
@@ -310,6 +323,9 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 continue;
 
             foreach (var next in cur.neighborElements) {
+                // SignalBooster 不参与 BFS：它只是触发器，不应被视为电路节点（避免被设 intensity / 影响 allValid）
+                if (next is SignalBooster) continue;
+
                 // CrossConnector 邻居用方向标记，普通元件用 visited
                 if (next is CrossConnector ccNext) {
                     bool fromH = cur.bindGrid != null && ccNext.bindGrid != null && cur.bindGrid.y == ccNext.bindGrid.y;
@@ -326,9 +342,6 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                 int outgoingIntensity = (cur is PowerSource)
                     ? cur.intensity
                     : Mathf.Max(0, cur.intensity - 1);
-                if (cur is SignalAmplifier amp && cur.intensity >= cur.workIntensity) {
-                    outgoingIntensity += amp.boostValue;
-                }
                 if (next is CrossConnector) {
                     next.intensity = Mathf.Max(next.intensity, outgoingIntensity);
                 } else {
@@ -341,16 +354,26 @@ public class ElectricManager : ManagerBase<ElectricManager> {
             }
         }
 
-        // 如果所有元件都有效（没有 intensity <= 0），则统一激活
-        if (allValid) {
-            foreach (var elem in toActivate) {
-                elem.Activate();
-            }
-        } else {
-            // 拉闸：把所有元件的 intensity 归零，并刷新 Deactive 显示
-            foreach (var element in ElectricElements.Values) {
-                element.intensity = 0;
-                element.Deactive();
+        // 按电源分组处理：每个电源独立判定 allValid，互不影响
+        foreach (var ps in powerSources) {
+            bool valid = psAllValid.TryGetValue(ps, out bool v) && v;
+            var list = psToActivate.TryGetValue(ps, out var l) ? l : null;
+
+            if (valid) {
+                // 该电源电路完整有效，激活所有满足条件的元件
+                if (list != null) {
+                    foreach (var elem in list) {
+                        elem.Activate();
+                    }
+                }
+            } else {
+                // 该电源电路拉闸：仅把该电源的 sourcePower 元件 intensity 归零并 Deactive
+                foreach (var element in ElectricElements.Values) {
+                    if (element.sourcePower == ps) {
+                        element.intensity = 0;
+                        element.Deactive();
+                    }
+                }
             }
         }
 
@@ -417,12 +440,22 @@ public class ElectricManager : ManagerBase<ElectricManager> {
                     Debug.LogWarning($"SignalBooster 触发：电线没有 sourcePower 记录，跳过电源增强");
                 }
 
-                // 记录销毁前的位置和格子，触发后在原位置重新放置一根电线
+                // 记录销毁前的位置和格子，触发后在原位置重新放置一根电线（流程与玩家鼠标点击一致）
                 GridV2 boosterCell = booster.bindGrid;
                 booster.Remove();
 
                 if (boosterCell != null) {
                     boosterCell.PutElement(CellType.Wire);
+
+                    // 与 WirePlacer.ConfirmWires 一致：找到 Wire 实例，隐藏 SpriteRenderer，由 wireTilemap 负责渲染 tile
+                    Wire newWire = null;
+                    foreach (var obj in boosterCell.holdObjects) {
+                        if (obj != null && obj.TryGetComponent(out Wire w)) { newWire = w; break; }
+                    }
+                    if (newWire != null) {
+                        var sr = newWire.GetComponent<SpriteRenderer>();
+                        if (sr != null) sr.enabled = false;
+                    }
                 }
 
                 anyBoosterTriggered = true;
@@ -435,17 +468,44 @@ public class ElectricManager : ManagerBase<ElectricManager> {
             return;
         }
 
-        // 检查所有灯：相邻有激活电线则点亮，否则熄灭
+        // 处理 SignalAmplifier：当自身被信号激活（intensity >= workIntensity）时，
+        // 给该信号源头电源加 boostValue（一次性）
+        bool anyAmplifierTriggered = false;
+        foreach (var element in ElectricElements.Values) {
+            if (element is not SignalAmplifier amp || amp.bindGrid == null) continue;
+            if (amp.hasBuffedPower) continue;   // 同一 amp 只触发一次
+
+            // 激活条件：自身 intensity 达到 workIntensity（与"被信号点亮"同义）
+            if (amp.intensity < Mathf.Max(1, amp.workIntensity)) continue;
+
+            PowerSource ps = amp.sourcePower;
+            if (ps != null) {
+                ps.workIntensity += amp.boostValue;
+                Debug.Log($"SignalAmplifier 触发：电源 [{ps.name}] workIntensity +{amp.boostValue} → {ps.workIntensity}");
+                amp.hasBuffedPower = true;
+                anyAmplifierTriggered = true;
+            } else {
+                Debug.LogWarning($"SignalAmplifier 触发：自身没有 sourcePower 记录，跳过电源增强");
+            }
+        }
+
+        // 如果有 amplifier 被触发，电源变强了，重新计算电路
+        if (anyAmplifierTriggered) {
+            BeginSimulate();
+            return;
+        }
+
+        // 检查所有灯：硬性条件 —— 相邻 Wire 的最大 intensity >= 灯自身的 workIntensity（激活阈值）才点亮
         foreach (var element in ElectricElements.Values) {
             if (element is Light light) {
-                bool hasActiveWire = false;
+                int maxNeighborIntensity = 0;
                 foreach (var neighbor in light.neighborElements) {
-                    if (neighbor is Wire && neighbor.intensity > 0) {
-                        hasActiveWire = true;
-                        break;
+                    if (neighbor is Wire && neighbor.intensity > maxNeighborIntensity) {
+                        maxNeighborIntensity = neighbor.intensity;
                     }
                 }
-                if (hasActiveWire) {
+                light.intensity = maxNeighborIntensity;
+                if (maxNeighborIntensity >= light.workIntensity) {
                     light.Activate();
                 } else {
                     light.Deactive();
@@ -523,12 +583,10 @@ public class ElectricManager : ManagerBase<ElectricManager> {
 
             foreach (var next in cur.neighborElements) {
                 if (next is SignalMerger) continue;
+                if (next is SignalBooster) continue;   // booster 不参与 BFS / 额外传播
                 if (visited.Contains(next)) continue;
 
                 int outgoing = Mathf.Max(0, intensity - 1);
-                if (cur is SignalAmplifier amp && intensity >= cur.workIntensity) {
-                    outgoing += amp.boostValue;
-                }
 
                 if (next.intensity < outgoing) {
                     next.intensity = outgoing;
