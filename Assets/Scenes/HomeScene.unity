@@ -972,8 +972,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1400, y: 1800}
+  m_AnchoredPosition: {x: 0.000011444, y: -0.0001463}
+  m_SizeDelta: {x: 3748.8, y: 2212.5}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1714672844
 MonoBehaviour:
@@ -995,7 +995,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: dd1202f5a66d28d4e841cf5d1fd9d4d9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6f18ecb5da99ee34b86eb29665c20166, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1021,6 +1021,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3364421306083450536, guid: 35d3d3d55366dbe4590768f8fad04f4f, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 1537.017
+      objectReference: {fileID: 0}
+    - target: {fileID: 3364421306083450536, guid: 35d3d3d55366dbe4590768f8fad04f4f, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 949.8419
+      objectReference: {fileID: 0}
     - target: {fileID: 4364309342721881080, guid: 35d3d3d55366dbe4590768f8fad04f4f, type: 3}
       propertyPath: m_hasFontAssetChanged
       value: 0
@@ -1044,6 +1052,14 @@ PrefabInstance:
     - target: {fileID: 4682972604397083869, guid: 35d3d3d55366dbe4590768f8fad04f4f, type: 3}
       propertyPath: m_AnchorMin.x
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5116015756546302513, guid: 35d3d3d55366dbe4590768f8fad04f4f, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.8400065
+      objectReference: {fileID: 0}
+    - target: {fileID: 5116015756546302513, guid: 35d3d3d55366dbe4590768f8fad04f4f, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.8400065
       objectReference: {fileID: 0}
     - target: {fileID: 5722080283652280237, guid: 35d3d3d55366dbe4590768f8fad04f4f, type: 3}
       propertyPath: m_Name
