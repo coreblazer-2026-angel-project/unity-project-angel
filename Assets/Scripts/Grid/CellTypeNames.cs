@@ -39,15 +39,21 @@ public static class CellTypeNames {
         ["信号放大器"] = CellType.SignalAmplifier,
         ["增强器"] = CellType.SignalAmplifier,
 
-        // 信号合并器
-        ["合并器"] = CellType.SignalMerger,
-        ["信号合并器"] = CellType.SignalMerger,
-        ["加法器"] = CellType.SignalMerger,
+        // 信号合并器（四种方向映射到四种 CellType）
+        ["合并器(上)"] = CellType.SignalMerger,
+        ["合并器(下)"] = CellType.SignalMergerDown,
+        ["合并器(左)"] = CellType.SignalMergerLeft,
+        ["合并器(右)"] = CellType.SignalMergerRight,
 
         // 信号增幅器
         ["增幅器"] = CellType.SignalBooster,
         ["信号增幅器"] = CellType.SignalBooster,
         ["能量注入器"] = CellType.SignalBooster,
+
+        // 不可放置区
+        ["不可放置"] = CellType.NoPlaceZone,
+        ["不可放置区"] = CellType.NoPlaceZone,
+        ["禁区"] = CellType.NoPlaceZone,
 
         // 十字交叉
         ["十字"] = CellType.CrossConnector,
@@ -69,8 +75,12 @@ public static class CellTypeNames {
         [CellType.ActivatablePower] = "可激活电源",
         [CellType.PressSource] = "按压电源",
         [CellType.SignalAmplifier] = "放大器",
-        [CellType.SignalMerger] = "合并器",
+        [CellType.SignalMerger] = "合并器(上)",
+        [CellType.SignalMergerDown] = "合并器(下)",
+        [CellType.SignalMergerLeft] = "合并器(左)",
+        [CellType.SignalMergerRight] = "合并器(右)",
         [CellType.SignalBooster] = "增幅器",
+        [CellType.NoPlaceZone] = "不可放置区",
         [CellType.CrossConnector] = "十字交叉",
         [CellType.PhaseBlock] = "相位块",
         [CellType.PhaseTrigger] = "相位触发器",

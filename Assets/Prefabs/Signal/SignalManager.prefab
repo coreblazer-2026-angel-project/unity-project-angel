@@ -53,3 +53,9 @@ MonoBehaviour:
     prefab: {fileID: 3359336287815227746, guid: 7936ee61fe1a1514d994dacaa52f88ca, type: 3}
   - type: 4
     prefab: {fileID: 3004771689938507433, guid: e1f5363503d9d2d4a8852181a8864aae, type: 3}
+  wireTilemap: {fileID: 0}
+  wireTilePowered: {fileID: 0}
+  wireTileUnpowered: {fileID: 0}
+  previewTilemap: {fileID: 0}
+  elementTilemap: {fileID: 0}
+  elementTileEntries: []

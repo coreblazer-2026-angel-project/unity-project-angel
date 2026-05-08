@@ -45,9 +45,13 @@ public class LevelData : ScriptableObject
     [HideInInspector]
     public List<LevelItem> items;
 
-    /// <summary>解析 CSV 数据到 items 列表</summary>
+    /// <summary>解析 CSV 数据到 items 列表。
+    /// 只要 csvData 不为 null，就强制重新解析（忽略 useInlineItems），
+    /// 保证每次加载关卡时拿到的是 CSV 中最新的数据。
+    /// useInlineItems = true 时仅作为"完全没有 CSV，纯靠 Inspector 配置 items"的退路。</summary>
     public void ParseCSV() {
-        if (csvData == null || useInlineItems) return;
+        if (csvData == null) return;            // 没 CSV 就保留 inline items
+        if (useInlineItems) return;             // 用户明确禁用 CSV
         items = LevelCSVParser.Parse(csvData.text);
     }
 }
