@@ -10,14 +10,24 @@ public abstract class ElectricElementBase : MonoBehaviour {
     public List<ElectricElementBase> neighborElements = new();
     public GridV2 bindGrid;
     public CellType cellType;
-    [SerializeField] protected List<Sprite> sprites;
+    [SerializeField]
+    [Tooltip("PowerSource 配置顺序：0=未连接, 1=上, 2=下, 3=左, 4=右。SignalMerger 配置顺序：0=无输入无输出, 1=仅输入1, 2=仅输入2, 3=双输入无输出, 4=双输入有输出")]
+    protected List<Sprite> sprites;
     [SerializeField] protected Sprite showSprite;
     [SerializeField] protected SpriteRenderer spriteRenderer;
+
+    [SerializeField] protected GameObject HighLight;
 
     public int ID;
     [Tooltip("来自关卡 CSV 的元件编号")]
     public int levelElementId = -1;
+    [Tooltip("BFS 期间记录该元件的信号源电源（用于 SignalBooster 等需要追溯电源的逻辑），每次 BeginSimulate 重置")]
+    public PowerSource sourcePower;
     ElectricManager _electricManager;
+
+    public string showName;
+
+    public bool isActivate = false;
 
     void Awake() {
         _electricManager = ElectricManager.Instance;
@@ -63,8 +73,12 @@ public abstract class ElectricElementBase : MonoBehaviour {
     protected virtual void OnDestroy() {
         // 使用缓存引用，避免退出播放模式时触发 Singleton 的 isQuitting 警告
         if (_electricManager != null) {
-            _electricManager.ElectricElements.Remove(ID);
-            _electricManager.BeginSimulate();
+            // 只在字典中保存的确实是 this 时才 Remove，避免切换关卡时旧元件
+            // 因 Destroy 延迟执行而错误地把新元件（ID 复用）从字典中移除。
+            if (_electricManager.ElectricElements.TryGetValue(ID, out var existing) && existing == this) {
+                _electricManager.ElectricElements.Remove(ID);
+                _electricManager.BeginSimulate();
+            }
         }
     }
 
@@ -159,6 +173,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
         RefreshNeighborPowerSources();
 
         ElectricManager.Instance.RemoveElement(this);
+
+        this.OnMouseExit();
     }
 
     void RefreshNeighborPowerSources() {
@@ -185,11 +201,13 @@ public abstract class ElectricElementBase : MonoBehaviour {
 
     public virtual void Activate() {
         Debug.Log($"{GetType().Name} Activate Intensity = {this.intensity} Grid = {bindGrid.x},{bindGrid.y}");
+        isActivate = true;
         RefreshTileState();
     }
 
     public virtual void Deactive() {
         Debug.Log($"{GetType().Name} Deactivate Intensity = {this.intensity} Grid = {bindGrid.x},{bindGrid.y}");
+        isActivate = false;
         RefreshTileState();
     }
 
@@ -203,7 +221,8 @@ public abstract class ElectricElementBase : MonoBehaviour {
 
         if (this is Wire) {
             em.RefreshWireTile(bindGrid.x, bindGrid.y, intensity > 0);
-        } else {
+        }
+        else {
             if (em.HasElementTile(cellType)) {
                 em.SetElementTile(bindGrid.x, bindGrid.y, cellType, intensity > 0);
             }
@@ -231,5 +250,19 @@ public abstract class ElectricElementBase : MonoBehaviour {
             em.SetWireTile(bindGrid.x, bindGrid.y, target);
             em.wireTilemap.SetColor(cellPos, Color.clear);
         }
+    }
+
+    public void OnMouseEnter() {
+        ShowHighLight(true);
+        TipManager.Instance.ShowTip(this);
+    }
+
+    public void OnMouseExit() {
+        ShowHighLight(false);
+        TipManager.Instance.HideTip();
+    }
+    public void ShowHighLight(bool bShow) {
+        Debug.Log($"{GetType().Name} ShowHighLight bShow = {bShow}");
+        HighLight.SetActive(bShow);
     }
 }

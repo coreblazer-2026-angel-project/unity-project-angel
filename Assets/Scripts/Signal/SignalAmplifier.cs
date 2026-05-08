@@ -1,11 +1,14 @@
 using UnityEngine;
 
 /// <summary>
-/// 信号增强器（放大器）。信号经过此元件时，传出强度会在衰减后额外增加 boostValue。
-/// 只有当自身接收到的信号强度 >= workIntensity 时，增强效果才会生效。
+/// 信号放大器：当上方格子有激活电线时，把 boostValue 永久加到该电线所属电源的 workIntensity 上。
+/// 只触发一次（用 hasBuffedPower 标记），不自销毁。
 /// </summary>
 public class SignalAmplifier : ElectricElementBase {
     [Header("增强数值")]
-    [Tooltip("传播给邻居时额外增加的电强值")]
+    [Tooltip("触发时加到电源 workIntensity 的电强值，同时也作为传出信号的额外增益")]
     public int boostValue = 2;
+
+    [Tooltip("是否已触发过电源增强（运行时标记，避免每次 BeginSimulate 重复触发）")]
+    [System.NonSerialized] public bool hasBuffedPower = false;
 }

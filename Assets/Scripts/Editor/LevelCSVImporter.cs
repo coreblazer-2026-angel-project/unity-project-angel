@@ -20,6 +20,71 @@ public class LevelCSVImporter : EditorWindow {
         window.minSize = new Vector2(400, 250);
     }
 
+    /// <summary>批量导入：从 Assets 内某个文件夹读取所有 CSV，逐个生成 LevelData asset</summary>
+    [MenuItem("Tools/Level/批量导入CSV关卡")]
+    static void BatchImport() {
+        string folderPath = EditorUtility.OpenFolderPanel("选择 CSV 所在文件夹（必须在 Assets 内）", Application.dataPath, "");
+        if (string.IsNullOrEmpty(folderPath)) return;
+        if (!folderPath.StartsWith(Application.dataPath)) {
+            EditorUtility.DisplayDialog("错误", "CSV 文件夹必须在 Assets 目录下", "确定");
+            return;
+        }
+
+        string outputDir = EditorUtility.OpenFolderPanel("选择 LevelData 输出文件夹（必须在 Assets 内）", Application.dataPath, "");
+        if (string.IsNullOrEmpty(outputDir)) return;
+        if (!outputDir.StartsWith(Application.dataPath)) {
+            EditorUtility.DisplayDialog("错误", "输出文件夹必须在 Assets 目录下", "确定");
+            return;
+        }
+
+        string[] csvFiles = Directory.GetFiles(folderPath, "*.csv", SearchOption.TopDirectoryOnly);
+        if (csvFiles.Length == 0) {
+            EditorUtility.DisplayDialog("批量导入", "文件夹中没有 .csv 文件", "确定");
+            return;
+        }
+
+        string outputRel = "Assets" + outputDir.Substring(Application.dataPath.Length).Replace('\\', '/');
+        int success = 0;
+
+        foreach (var csvPath in csvFiles) {
+            string csvRel = "Assets" + csvPath.Substring(Application.dataPath.Length).Replace('\\', '/');
+            var csvAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(csvRel);
+            if (csvAsset == null) {
+                Debug.LogWarning($"批量导入：无法加载 {csvRel}，跳过");
+                continue;
+            }
+
+            var items = LevelCSVParser.Parse(csvAsset.text);
+            if (items.Count == 0) {
+                Debug.LogWarning($"批量导入：{csvRel} 解析为空，跳过");
+                continue;
+            }
+
+            string assetName = Path.GetFileNameWithoutExtension(csvPath);
+            string assetPath = $"{outputRel}/{assetName}.asset";
+
+            var levelData = AssetDatabase.LoadAssetAtPath<LevelData>(assetPath);
+            bool isNew = levelData == null;
+            if (isNew) levelData = ScriptableObject.CreateInstance<LevelData>();
+
+            levelData.csvData = csvAsset;
+            levelData.useInlineItems = false;   // 默认运行时重新解析 CSV，CSV 改了不用重新导入
+            levelData.items = items;
+            InferLevelSize(levelData, items);
+
+            if (isNew)
+                AssetDatabase.CreateAsset(levelData, assetPath);
+            else
+                EditorUtility.SetDirty(levelData);
+
+            success++;
+        }
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        EditorUtility.DisplayDialog("批量导入完成", $"成功导入 {success}/{csvFiles.Length} 个关卡到\n{outputRel}", "确定");
+    }
+
     void OnGUI() {
         GUILayout.Label("CSV 关卡数据导入", EditorStyles.boldLabel);
         GUILayout.Space(10);
@@ -82,7 +147,7 @@ public class LevelCSVImporter : EditorWindow {
 
             levelData = ScriptableObject.CreateInstance<LevelData>();
             levelData.csvData = csvAsset;
-            levelData.useInlineItems = true;
+            levelData.useInlineItems = false;   // 运行时重新解析 CSV
             levelData.items = items;
 
             // 从数据推断关卡尺寸
@@ -98,7 +163,7 @@ public class LevelCSVImporter : EditorWindow {
             Undo.RecordObject(levelData, "Import Level CSV");
 
             levelData.csvData = csvAsset;
-            levelData.useInlineItems = true;
+            levelData.useInlineItems = false;   // 运行时重新解析 CSV
             levelData.items = items;
 
             InferLevelSize(levelData, items);

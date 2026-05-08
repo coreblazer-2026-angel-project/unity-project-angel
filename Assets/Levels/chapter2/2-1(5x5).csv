@@ -1,0 +1,5 @@
+﻿elementId,cellType,x,y,signalStrength
+0,电源,0,1,4.0
+1,电源,0,3,4.0
+2,合并器(右),2,2,
+3,灯,4,2,3.0

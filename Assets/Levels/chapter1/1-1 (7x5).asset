@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bac425c755aa1264ab3b5bf26cbf6f2e, type: 3}
+  m_Name: 1-1 (7x5)
+  m_EditorClassIdentifier: 
+  width: 8
+  height: 5
+  spawnRuntimeFloor: 1
+  floorPrefab: {fileID: 0}
+  wireLimit: 0
+  csvData: {fileID: 4900000, guid: baf5dbf69958e3f488ad46d383b7baed, type: 3}
+  useInlineItems: 0
+  items:
+  - elementId: 0
+    position: {x: 2, y: 2}
+    type: 2
+    signalStrength: 5
+    requiredStrength: 0
+    amplifyValue: 0
+    activateThreshold: 0
+    phaseColor: {r: 0, g: 0, b: 0, a: 0}
+    connections: 
+  - elementId: 1
+    position: {x: 5, y: 2}
+    type: 4
+    signalStrength: 1
+    requiredStrength: 0
+    amplifyValue: 0
+    activateThreshold: 0
+    phaseColor: {r: 0, g: 0, b: 0, a: 0}
+    connections: 
