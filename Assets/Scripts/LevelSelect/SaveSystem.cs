@@ -85,8 +85,10 @@ public static class SaveSystem {
 
     /// <summary>查询某章节是否已通关（独立工具函数，方便不持有 LevelFlowManager 的代码使用）</summary>
     public static bool IsChapterCompleted(int chapterIndex) {
+        if (chapterIndex < 0) return false;
         var data = Load();
-        if (chapterIndex < 0 || chapterIndex >= data.chapterCompleted.Count) return false;
+        if (data == null || data.chapterCompleted == null) return false;
+        if (chapterIndex >= data.chapterCompleted.Count) return false;
         return data.chapterCompleted[chapterIndex];
     }
 }

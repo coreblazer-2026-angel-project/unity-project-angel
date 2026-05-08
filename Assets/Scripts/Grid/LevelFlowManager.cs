@@ -227,6 +227,7 @@ public class LevelFlowManager : MonoBehaviour {
     /// <summary>读取接口：指定章节索引是否已通关</summary>
     public bool IsChapterCompleted(int chapterIndex) {
         if (_saveData == null) _saveData = SaveSystem.Load();
+        if (_saveData.chapterCompleted == null) return false;
         if (chapterIndex < 0 || chapterIndex >= _saveData.chapterCompleted.Count) return false;
         return _saveData.chapterCompleted[chapterIndex];
     }
@@ -241,6 +242,7 @@ public class LevelFlowManager : MonoBehaviour {
     public void SetChapterCompleted(int chapterIndex, bool completed = true) {
         if (chapterIndex < 0) return;
         if (_saveData == null) _saveData = SaveSystem.Load();
+        if (_saveData.chapterCompleted == null) _saveData.chapterCompleted = new List<bool>();
         while (_saveData.chapterCompleted.Count <= chapterIndex)
             _saveData.chapterCompleted.Add(false);
         _saveData.chapterCompleted[chapterIndex] = completed;

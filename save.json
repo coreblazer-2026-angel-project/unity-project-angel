@@ -1,9 +1,9 @@
 {
     "currentChapterIndex": 0,
-    "currentLevelIndex": 0,
-    "maxUnlockedLevel": 2,
-    "hope": 1,
-    "hasPendingLevelSelection": true,
+    "currentLevelIndex": 5,
+    "maxUnlockedLevel": 6,
+    "hope": 5,
+    "hasPendingLevelSelection": false,
     "pendingChapterIndex": 0,
     "pendingLevelIndex": 0,
     "pendingLevelNumber": 1,

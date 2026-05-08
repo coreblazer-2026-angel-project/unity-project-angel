@@ -201,6 +201,8 @@ public class WirePlacer : MonoBehaviour {
             return;
         }
 
+        bool placedAny = false;
+
         // 没有创建任何预览：说明只是点击（未离开起点），在起点直接放置电线
         if (previewObjects.Count == 0) {
             GridV2 startCell = gmv2.GetGrid(dragStartGridPos.x, dragStartGridPos.y);
@@ -211,7 +213,9 @@ public class WirePlacer : MonoBehaviour {
                     var sr = wire.GetComponent<SpriteRenderer>();
                     if (sr != null) sr.enabled = false;
                 }
+                placedAny = true;
             }
+            if (placedAny) em?.PlayWirePlaceSound();
             return;
         }
 
@@ -229,10 +233,13 @@ public class WirePlacer : MonoBehaviour {
                     var sr = wire.GetComponent<SpriteRenderer>();
                     if (sr != null) sr.enabled = false;
                 }
+                placedAny = true;
             }
         }
 
         previewObjects.Clear();
+
+        if (placedAny) em?.PlayWirePlaceSound();
     }
 
     void ClearPreviews() {
