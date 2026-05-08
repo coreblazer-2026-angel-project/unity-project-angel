@@ -96,7 +96,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
     Color[] _originalRendererColors;
     bool _lastUnlocked;
     bool _lastCompleted;
-
+    
     void Awake()
     {
         _mainCamera = Camera.main;
