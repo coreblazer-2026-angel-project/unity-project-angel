@@ -15,6 +15,13 @@ namespace Game.Story {
         [Header("角色预设")]
         public List<CharacterPreset> presets = new List<CharacterPreset>();
 
+        [Header("动态角色资源")]
+        [Tooltip("Resources 下的角色 prefab 文件夹。Prefab 上挂 StoryCharacter。")]
+        public string characterResourceFolder = "Story/Characters";
+
+        [Tooltip("找不到角色 mount 时自动创建一个 UI mount。")]
+        public bool autoCreateMissingMount = true;
+
         [Serializable]
         public class CharacterPreset {
             public string characterId;
@@ -86,8 +93,12 @@ namespace Game.Story {
 
             var preset = presets.Find(p => p.characterId == characterId);
             if (preset == null) {
-                Debug.LogWarning($"[StoryCharacterManager] Preset not found: '{characterId}'");
-                return;
+                if (!autoCreateMissingMount) {
+                    Debug.LogWarning($"[StoryCharacterManager] Preset not found: '{characterId}'");
+                    return;
+                }
+
+                preset = CreatePreset(characterId);
             }
 
             // 布局 mount
@@ -101,32 +112,7 @@ namespace Game.Story {
                 Screen.width * horizontalOffset,
                 Screen.height * screenBottomPercent);
 
-            // 查找 Sprite
-            Sprite sprite = null;
-            var allChars = FindObjectsOfType<StoryCharacter>();
-            Debug.Log($"[DEBUG] FindObjectsOfType<StoryCharacter> count: {allChars.Length}");
-            foreach (var sc in allChars) {
-                Debug.Log($"[DEBUG] Found StoryCharacter: id='{sc.characterId}', expressions={sc.expressions.Count}");
-                if (sc.characterId != characterId) continue;
-                foreach (var e in sc.expressions) {
-                    Debug.Log($"[DEBUG]   expression: name='{e.name}', sprite={(e.sprite != null ? e.sprite.name : "null")}");
-                    if (e.name.Equals(expressionName, StringComparison.OrdinalIgnoreCase)) {
-                        sprite = e.sprite;
-                        break;
-                    }
-                }
-                if (sprite != null) break;
-            }
-
-            // fallback 到 defaultSprite
-            if (sprite == null) {
-                foreach (var sc in allChars) {
-                    if (sc.characterId == characterId && sc.defaultSprite != null) {
-                        sprite = sc.defaultSprite;
-                        break;
-                    }
-                }
-            }
+            Sprite sprite = FindSprite(characterId, expressionName);
 
             if (sprite == null) {
                 Debug.LogWarning($"[StoryCharacterManager] Sprite not found: {characterId}/{expressionName}");
@@ -134,6 +120,69 @@ namespace Game.Story {
             }
 
             ApplySprite(preset, sprite);
+        }
+
+        CharacterPreset CreatePreset(string characterId) {
+            var mountObj = new GameObject($"StoryCharacterMount_{characterId}", typeof(RectTransform));
+            RectTransform parent = transform as RectTransform;
+            if (parent == null) {
+                Canvas canvas = FindObjectOfType<Canvas>();
+                parent = canvas != null ? canvas.transform as RectTransform : null;
+            }
+
+            mountObj.transform.SetParent(parent != null ? parent : transform, false);
+
+            var preset = new CharacterPreset {
+                characterId = characterId,
+                mount = mountObj.GetComponent<RectTransform>()
+            };
+            presets.Add(preset);
+            SetupMount(preset);
+            return preset;
+        }
+
+        Sprite FindSprite(string characterId, string expressionName) {
+            Sprite sprite = FindSpriteInCharacters(FindObjectsOfType<StoryCharacter>(), characterId, expressionName);
+            if (sprite != null)
+                return sprite;
+
+            GameObject[] prefabs = Resources.LoadAll<GameObject>(characterResourceFolder);
+            for (int i = 0; i < prefabs.Length; i++) {
+                StoryCharacter character = prefabs[i].GetComponent<StoryCharacter>();
+                if (character == null)
+                    character = prefabs[i].GetComponentInChildren<StoryCharacter>(true);
+
+                sprite = FindSpriteInCharacter(character, characterId, expressionName);
+                if (sprite != null)
+                    return sprite;
+            }
+
+            return null;
+        }
+
+        Sprite FindSpriteInCharacters(StoryCharacter[] characters, string characterId, string expressionName) {
+            for (int i = 0; i < characters.Length; i++) {
+                Sprite sprite = FindSpriteInCharacter(characters[i], characterId, expressionName);
+                if (sprite != null)
+                    return sprite;
+            }
+            return null;
+        }
+
+        Sprite FindSpriteInCharacter(StoryCharacter character, string characterId, string expressionName) {
+            if (character == null || character.characterId != characterId)
+                return null;
+
+            for (int i = 0; i < character.expressions.Count; i++) {
+                var expression = character.expressions[i];
+                if (expression.sprite == null)
+                    continue;
+
+                if (expression.name.Equals(expressionName, StringComparison.OrdinalIgnoreCase))
+                    return expression.sprite;
+            }
+
+            return character.defaultSprite;
         }
 
         void ApplySprite(CharacterPreset preset, Sprite sprite) {

@@ -31,6 +31,8 @@ public class LevelSelectNpcOverlay : MonoBehaviour
     [Header("NPC 外观")]
     public SpriteRenderer bodyRenderer;
     public bool affectChildRenderers = true;
+    [Tooltip("解锁后才显示的脚下影子或装饰。未解锁剪影状态会隐藏这些对象。")]
+    public GameObject[] showOnlyWhenUnlocked;
     public Color lockedSilhouetteColor = new Color32(22, 29, 42, 225);
     public Color completedTintColor = new Color32(255, 255, 255, 255);
 
@@ -92,6 +94,8 @@ public class LevelSelectNpcOverlay : MonoBehaviour
     float _targetAlpha;
     SpriteRenderer[] _visualRenderers;
     Color[] _originalRendererColors;
+    bool _lastUnlocked;
+    bool _lastCompleted;
 
     void Awake()
     {
@@ -129,6 +133,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
             _mainCamera = Camera.main;
 
         ResolveRuntimeReferences();
+        RefreshVisualIfProgressChanged();
         UpdatePlayerNear();
 
         if (_playerNear) {
@@ -187,6 +192,8 @@ public class LevelSelectNpcOverlay : MonoBehaviour
 
         bool unlocked = LevelProgress.IsUnlocked(levelNumber);
         bool completed = LevelProgress.IsCompleted(levelNumber);
+        _lastUnlocked = unlocked;
+        _lastCompleted = completed;
 
         for (int i = 0; i < _visualRenderers.Length; i++) {
             if (_visualRenderers[i] == null) continue;
@@ -199,6 +206,17 @@ public class LevelSelectNpcOverlay : MonoBehaviour
                 ? (completed ? MultiplyColor(baseColor, completedTintColor) : baseColor)
                 : lockedSilhouetteColor;
         }
+
+        SetUnlockedOnlyObjects(unlocked);
+    }
+
+    void RefreshVisualIfProgressChanged()
+    {
+        bool unlocked = LevelProgress.IsUnlocked(levelNumber);
+        bool completed = LevelProgress.IsCompleted(levelNumber);
+
+        if (unlocked != _lastUnlocked || completed != _lastCompleted)
+            RefreshVisual();
     }
 
     void ClonePromptForThisNpc()
@@ -257,6 +275,17 @@ public class LevelSelectNpcOverlay : MonoBehaviour
         return new Color(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
     }
 
+    void SetUnlockedOnlyObjects(bool unlocked)
+    {
+        if (showOnlyWhenUnlocked == null)
+            return;
+
+        for (int i = 0; i < showOnlyWhenUnlocked.Length; i++) {
+            if (showOnlyWhenUnlocked[i] != null)
+                showOnlyWhenUnlocked[i].SetActive(unlocked);
+        }
+    }
+
     void ShowPrompt()
     {
         bool unlocked = LevelProgress.IsUnlocked(levelNumber);
@@ -276,7 +305,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
 
         if (leftArrowText != null) {
             leftArrowText.gameObject.SetActive(true);
-            leftArrowText.text = "<";
+            leftArrowText.text = ">";
         }
 
         if (titleText != null) {
@@ -286,7 +315,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
 
         if (rightArrowText != null) {
             rightArrowText.gameObject.SetActive(true);
-            rightArrowText.text = ">";
+            rightArrowText.text = "<";
         }
 
         if (statusText != null) {

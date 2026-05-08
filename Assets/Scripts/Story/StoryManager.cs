@@ -65,6 +65,11 @@ namespace Game.Story {
                 _characterManager = FindObjectOfType<StoryCharacterManager>();
             }
 
+            if (_storyPlayer != null) {
+                _storyPlayer.dialoguePanel = _dialoguePanel;
+                _storyPlayer.choicePanel = _choicePanel;
+            }
+
             // 订阅事件
             if (_storyPlayer != null) {
                 _storyPlayer.OnStoryStart += HandleStoryStart;
@@ -94,6 +99,55 @@ namespace Game.Story {
             }
 
             _storyPlayer.Play(knot);
+        }
+
+        /// <summary>
+        /// 用 Resources 路径开始剧情。
+        /// 示例：PlayStory("Story/story1", "start")。
+        /// 传入 "story1.json" 时会自动去掉 .json 后缀。
+        /// </summary>
+        public void PlayStory(string storyResourcePath, string knot = "") {
+            if (string.IsNullOrWhiteSpace(storyResourcePath)) {
+                PlayStory((TextAsset)null, knot);
+                return;
+            }
+
+            string path = NormalizeResourcePath(storyResourcePath);
+            TextAsset inkJson = LoadStoryResource(path);
+            if (inkJson == null) {
+                Debug.LogError($"[StoryManager] Story resource not found: {storyResourcePath}. Put the ink json under Assets/Resources/Story and call PlayStory(\"{path}\", \"{knot}\").");
+                return;
+            }
+
+            PlayStory(inkJson, knot);
+        }
+
+        TextAsset LoadStoryResource(string path) {
+            TextAsset inkJson = Resources.Load<TextAsset>(path);
+            if (inkJson != null)
+                return inkJson;
+
+            if (!path.Contains("/"))
+                inkJson = Resources.Load<TextAsset>($"Story/{path}");
+
+            return inkJson;
+        }
+
+        string NormalizeResourcePath(string path) {
+            path = path.Replace('\\', '/').Trim();
+
+            const string resourcesPrefix = "Resources/";
+            int resourcesIndex = path.IndexOf(resourcesPrefix, StringComparison.OrdinalIgnoreCase);
+            if (resourcesIndex >= 0)
+                path = path.Substring(resourcesIndex + resourcesPrefix.Length);
+
+            if (path.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+                path = path.Substring("Assets/".Length);
+
+            if (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                path = path.Substring(0, path.Length - ".json".Length);
+
+            return path;
         }
 
         /// <summary>

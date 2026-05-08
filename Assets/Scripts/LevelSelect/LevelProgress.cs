@@ -8,6 +8,8 @@ public static class LevelProgress
 {
     const string MaxUnlockedKey = "LevelSelect.MaxUnlockedLevel";
     const string HopeKey = "LevelSelect.Hope";
+    const string LegacyMaxUnlockedKey = "LevelProgress_MaxUnlockedLevel";
+    const string LegacyHopeKey = "LevelProgress_Hope";
 
     public static int MaxUnlockedLevel
     {
@@ -29,6 +31,11 @@ public static class LevelProgress
         }
     }
 
+    public static int CompletedLevelCount
+    {
+        get => Hope;
+    }
+
     public static bool IsUnlocked(int levelNumber)
     {
         return levelNumber <= MaxUnlockedLevel;
@@ -36,13 +43,13 @@ public static class LevelProgress
 
     public static bool IsCompleted(int levelNumber)
     {
-        return levelNumber < MaxUnlockedLevel;
+        return levelNumber <= Hope;
     }
 
     public static void CompleteLevel(int levelNumber)
     {
         if (!IsCompleted(levelNumber))
-            Hope += 1;
+            Hope = Mathf.Max(Hope, levelNumber);
 
         if (levelNumber >= MaxUnlockedLevel)
             MaxUnlockedLevel = levelNumber + 1;
@@ -50,8 +57,29 @@ public static class LevelProgress
 
     public static void ResetProgress()
     {
-        PlayerPrefs.DeleteKey(MaxUnlockedKey);
-        PlayerPrefs.DeleteKey(HopeKey);
+        ResetToFirstLevelIncomplete();
+    }
+
+    public static void ResetToFirstLevelIncomplete()
+    {
+        PlayerPrefs.SetInt(MaxUnlockedKey, 1);
+        PlayerPrefs.SetInt(HopeKey, 0);
+        PlayerPrefs.DeleteKey(LegacyMaxUnlockedKey);
+        PlayerPrefs.DeleteKey(LegacyHopeKey);
         PlayerPrefs.Save();
+    }
+
+    public static void ResetHope()
+    {
+        PlayerPrefs.SetInt(HopeKey, 0);
+        PlayerPrefs.DeleteKey(LegacyHopeKey);
+        PlayerPrefs.Save();
+    }
+
+    public static void SetCompletedLevelCount(int completedCount)
+    {
+        completedCount = Mathf.Max(0, completedCount);
+        Hope = completedCount;
+        MaxUnlockedLevel = Mathf.Max(1, completedCount + 1);
     }
 }
