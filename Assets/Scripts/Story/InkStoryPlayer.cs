@@ -180,6 +180,11 @@ namespace Game.Story {
             foreach (var tag in tags) {
                 if (tag.StartsWith("ch ")) characterId = tag.Substring(3).Trim();
                 else if (tag.StartsWith("expr ")) exprName = tag.Substring(5).Trim();
+                else if (tag.StartsWith("action ")) {
+                    // 处理动作标签: #action jump, #action enter_left, #action flash
+                    string actionStr = tag.Substring(7).Trim();
+                    ProcessActionTag(actionStr);
+                }
                 else if (tag == "choice") {
                     ShowChoices(_story.currentChoices);
                     return;
@@ -294,6 +299,110 @@ namespace Game.Story {
             if (speaker.Length > 0 && speaker[0] == '#') return true;
             if (string.IsNullOrEmpty(text) || text.Trim() == "#" + speaker) return true;
             return false;
+        }
+
+        /// <summary>
+        /// 处理动作标签
+        /// 格式: #action jump, #action jump_3, #action enter_left, #action flash_0.5
+        /// 支持: jump, bounce, shake, flash, pulse, enter_left, enter_right, exit_left, exit_right, lean_left, lean_right, fadein, fadeout
+        /// </summary>
+        void ProcessActionTag(string actionStr) {
+            if (StoryCharacterManager.Instance == null) return;
+
+            // 解析动作名称和参数
+            string[] parts = actionStr.Split('_');
+            string actionName = parts[0].ToLower().Trim();
+            float intensity = 1f;
+            if (parts.Length > 1 && float.TryParse(parts[1], out float parsed)) {
+                intensity = parsed;
+            }
+
+            // 获取当前显示的角色 preset
+            var preset = StoryCharacterManager.Instance.GetActivePreset();
+            if (preset?.image == null) {
+                Debug.LogWarning($"[InkStoryPlayer] No active character to perform action: {actionName}");
+                return;
+            }
+
+            // 确保角色有 StoryActionPlayer 组件
+            var actionPlayer = preset.image.GetComponent<StoryActionPlayer>();
+            if (actionPlayer == null) {
+                actionPlayer = preset.image.gameObject.AddComponent<StoryActionPlayer>();
+                actionPlayer.targetImage = preset.image;
+            }
+
+            // 根据动作名称执行对应动作
+            ActionParams action = ActionParams.Default;
+            action.intensity = intensity;
+
+            switch (actionName) {
+                // 基础动作
+                case "jump":
+                    action.type = CharacterActionType.Jump;
+                    action.duration = 0.4f;
+                    break;
+                case "bounce":
+                    action.type = CharacterActionType.Bounce;
+                    action.duration = 0.5f;
+                    break;
+                case "shake":
+                    action.type = CharacterActionType.Shake;
+                    action.duration = 0.3f;
+                    break;
+                case "flash":
+                    action.type = CharacterActionType.Flash;
+                    action.duration = 0.15f;
+                    break;
+                case "pulse":
+                    action.type = CharacterActionType.Pulse;
+                    action.duration = 0.6f;
+                    break;
+                // 移动动作
+                case "enter_left":
+                    action.type = CharacterActionType.EnterFromLeft;
+                    action.duration = 0.5f;
+                    break;
+                case "enter_right":
+                    action.type = CharacterActionType.EnterFromRight;
+                    action.duration = 0.5f;
+                    break;
+                case "exit_left":
+                    action.type = CharacterActionType.ExitToLeft;
+                    action.duration = 0.5f;
+                    break;
+                case "exit_right":
+                    action.type = CharacterActionType.ExitToRight;
+                    action.duration = 0.5f;
+                    break;
+                // 倾斜动作
+                case "lean_left":
+                case "tilt_left":
+                    action.type = CharacterActionType.LeanLeft;
+                    action.duration = 0.3f;
+                    break;
+                case "lean_right":
+                case "tilt_right":
+                    action.type = CharacterActionType.LeanRight;
+                    action.duration = 0.3f;
+                    break;
+                // 淡入淡出
+                case "fadein":
+                case "fade_in":
+                    action.type = CharacterActionType.FadeIn;
+                    action.duration = 0.3f;
+                    break;
+                case "fadeout":
+                case "fade_out":
+                    action.type = CharacterActionType.FadeOut;
+                    action.duration = 0.3f;
+                    break;
+                default:
+                    Debug.LogWarning($"[InkStoryPlayer] Unknown action: {actionName}");
+                    return;
+            }
+
+            Debug.Log($"[InkStoryPlayer] Play action: {action.type}, intensity={intensity}");
+            actionPlayer.Play(action);
         }
 
         public InkStory GetStory() => _story;
