@@ -7,6 +7,9 @@ using UnityEngine.Events;
 /// 自动清理当前关卡并加载下一关。可以独立加载某一章。
 /// </summary>
 public class LevelFlowManager : MonoBehaviour {
+    const string PendingChapterKey = "LevelSelect.PendingChapterIndex";
+    const string PendingLevelKey = "LevelSelect.PendingLevelIndex";
+    const string PendingLevelNumberKey = "LevelSelect.PendingLevelNumber";
 
     [System.Serializable]
     public class Chapter {
@@ -58,8 +61,10 @@ public class LevelFlowManager : MonoBehaviour {
     }
 
     void Start() {
-        if (autoStart && chapters.Count > 0)
+        if (autoStart && chapters.Count > 0) {
+            ApplyPendingLevelSelection();
             LoadCurrent();
+        }
     }
 
     void Update() {
@@ -93,6 +98,7 @@ public class LevelFlowManager : MonoBehaviour {
     /// <summary>推进到下一关（章节内）</summary>
     public void Advance() {
         _advancing = false;
+        LevelProgress.CompleteLevel(GetCurrentLevelNumber());
         currentLevelIndex++;
 
         if (currentChapterIndex < 0 || currentChapterIndex >= chapters.Count) return;
@@ -123,6 +129,10 @@ public class LevelFlowManager : MonoBehaviour {
         }
         currentChapterIndex = chapterIndex;
         currentLevelIndex = Mathf.Clamp(startLevel, 0, Mathf.Max(0, chapters[chapterIndex].levels.Count - 1));
+        PlayerPrefs.SetInt(PendingChapterKey, currentChapterIndex);
+        PlayerPrefs.SetInt(PendingLevelKey, currentLevelIndex);
+        PlayerPrefs.SetInt(PendingLevelNumberKey, GetCurrentLevelNumber());
+        PlayerPrefs.Save();
         LoadCurrent();
     }
 
@@ -198,4 +208,25 @@ public class LevelFlowManager : MonoBehaviour {
 
     [ContextMenu("Load Chapter 2")]
     public void LoadChapter2() => LoadChapter(1);
+
+    void ApplyPendingLevelSelection() {
+        if (!PlayerPrefs.HasKey(PendingChapterKey) || !PlayerPrefs.HasKey(PendingLevelKey))
+            return;
+
+        int pendingChapter = PlayerPrefs.GetInt(PendingChapterKey, currentChapterIndex);
+        int pendingLevel = PlayerPrefs.GetInt(PendingLevelKey, currentLevelIndex);
+
+        if (pendingChapter < 0 || pendingChapter >= chapters.Count)
+            return;
+
+        currentChapterIndex = pendingChapter;
+        currentLevelIndex = Mathf.Clamp(pendingLevel, 0, Mathf.Max(0, chapters[pendingChapter].levels.Count - 1));
+    }
+
+    int GetCurrentLevelNumber() {
+        if (PlayerPrefs.HasKey(PendingLevelNumberKey))
+            return PlayerPrefs.GetInt(PendingLevelNumberKey, currentLevelIndex + 1);
+
+        return currentLevelIndex + 1;
+    }
 }
