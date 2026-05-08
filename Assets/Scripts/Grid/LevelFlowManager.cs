@@ -7,10 +7,6 @@ using UnityEngine.Events;
 /// 自动清理当前关卡并加载下一关。可以独立加载某一章。
 /// </summary>
 public class LevelFlowManager : MonoBehaviour {
-    const string PendingChapterKey = "LevelSelect.PendingChapterIndex";
-    const string PendingLevelKey = "LevelSelect.PendingLevelIndex";
-    const string PendingLevelNumberKey = "LevelSelect.PendingLevelNumber";
-
     [System.Serializable]
     public class Chapter {
         [Tooltip("章节名称（用于 LoadChapter(string) 查找）")]
@@ -56,6 +52,7 @@ public class LevelFlowManager : MonoBehaviour {
     bool _advancing;
     float _checkTimer;
     SaveData _saveData;
+    int _currentLevelNumber = -1;
 
     void Awake() {
         _lm = FindObjectOfType<LevelManager>();
@@ -70,7 +67,7 @@ public class LevelFlowManager : MonoBehaviour {
 
     void Start() {
         if (autoStart && chapters.Count > 0) {
-            // PlayerPrefs 的 pending 关卡选择优先于 JSON 存档（场景间跳关用）
+            // 关卡选择场景传入的 pending 关卡优先于 JSON 当前进度。
             ApplyPendingLevelSelection();
             LoadCurrent();
         }
@@ -141,10 +138,8 @@ public class LevelFlowManager : MonoBehaviour {
         }
         currentChapterIndex = chapterIndex;
         currentLevelIndex = Mathf.Clamp(startLevel, 0, Mathf.Max(0, chapters[chapterIndex].levels.Count - 1));
-        PlayerPrefs.SetInt(PendingChapterKey, currentChapterIndex);
-        PlayerPrefs.SetInt(PendingLevelKey, currentLevelIndex);
-        PlayerPrefs.SetInt(PendingLevelNumberKey, GetCurrentLevelNumber());
-        PlayerPrefs.Save();
+        _currentLevelNumber = currentLevelIndex + 1;
+        LevelProgress.SetPendingLevelSelection(currentChapterIndex, currentLevelIndex, _currentLevelNumber);
         LoadCurrent();
     }
 
@@ -254,9 +249,15 @@ public class LevelFlowManager : MonoBehaviour {
 
     /// <summary>把当前 currentChapterIndex / currentLevelIndex 同步到存档并写盘</summary>
     public void SaveProgress() {
-        if (_saveData == null) _saveData = new SaveData();
-        _saveData.currentChapterIndex = currentChapterIndex;
-        _saveData.currentLevelIndex = currentLevelIndex;
+        SaveData latest = SaveSystem.Load();
+
+        if (_saveData != null && _saveData.chapterCompleted != null)
+            latest.chapterCompleted = _saveData.chapterCompleted;
+
+        latest.currentChapterIndex = currentChapterIndex;
+        latest.currentLevelIndex = currentLevelIndex;
+
+        _saveData = latest;
         SaveSystem.Save(_saveData);
     }
 
@@ -270,22 +271,20 @@ public class LevelFlowManager : MonoBehaviour {
     }
 
     void ApplyPendingLevelSelection() {
-        if (!PlayerPrefs.HasKey(PendingChapterKey) || !PlayerPrefs.HasKey(PendingLevelKey))
+        if (!LevelProgress.TryConsumePendingLevelSelection(out int pendingChapter, out int pendingLevel, out int pendingLevelNumber))
             return;
-
-        int pendingChapter = PlayerPrefs.GetInt(PendingChapterKey, currentChapterIndex);
-        int pendingLevel = PlayerPrefs.GetInt(PendingLevelKey, currentLevelIndex);
 
         if (pendingChapter < 0 || pendingChapter >= chapters.Count)
             return;
 
         currentChapterIndex = pendingChapter;
         currentLevelIndex = Mathf.Clamp(pendingLevel, 0, Mathf.Max(0, chapters[pendingChapter].levels.Count - 1));
+        _currentLevelNumber = Mathf.Max(1, pendingLevelNumber);
     }
 
     int GetCurrentLevelNumber() {
-        if (PlayerPrefs.HasKey(PendingLevelNumberKey))
-            return PlayerPrefs.GetInt(PendingLevelNumberKey, currentLevelIndex + 1);
+        if (_currentLevelNumber > 0)
+            return _currentLevelNumber;
 
         return currentLevelIndex + 1;
     }

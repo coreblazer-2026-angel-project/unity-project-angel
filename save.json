@@ -1,0 +1,11 @@
+{
+    "currentChapterIndex": 0,
+    "currentLevelIndex": 0,
+    "maxUnlockedLevel": 2,
+    "hope": 1,
+    "hasPendingLevelSelection": true,
+    "pendingChapterIndex": 0,
+    "pendingLevelIndex": 0,
+    "pendingLevelNumber": 1,
+    "chapterCompleted": []
+}

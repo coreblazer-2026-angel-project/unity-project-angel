@@ -13,6 +13,19 @@ public class SaveData {
     [Tooltip("当前章节内的关卡索引")]
     public int currentLevelIndex = 0;
 
+    [Tooltip("已解锁到第几关。1 表示第一关已解锁但未通关。")]
+    public int maxUnlockedLevel = 1;
+
+    [Tooltip("希望值/已通关关卡数。0 表示第一关未收集。")]
+    public int hope = 0;
+
+    [Tooltip("是否有从关卡选择场景传入的待加载关卡。")]
+    public bool hasPendingLevelSelection = false;
+
+    public int pendingChapterIndex = 0;
+    public int pendingLevelIndex = 0;
+    public int pendingLevelNumber = 1;
+
     [Tooltip("每个章节是否通过的 flag，索引对应章节索引")]
     public List<bool> chapterCompleted = new();
 }

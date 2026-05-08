@@ -530,10 +530,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
             return;
         }
 
-        PlayerPrefs.SetInt("LevelSelect.PendingChapterIndex", chapterIndex);
-        PlayerPrefs.SetInt("LevelSelect.PendingLevelIndex", levelIndex);
-        PlayerPrefs.SetInt("LevelSelect.PendingLevelNumber", levelNumber);
-        PlayerPrefs.Save();
+        LevelProgress.SetPendingLevelSelection(chapterIndex, levelIndex, levelNumber);
 
         SceneManager.LoadScene(levelSceneName);
     }
