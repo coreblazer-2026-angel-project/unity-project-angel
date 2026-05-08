@@ -55,13 +55,22 @@ public class LevelFlowManager : MonoBehaviour {
     LevelManager _lm;
     bool _advancing;
     float _checkTimer;
+    SaveData _saveData;
 
     void Awake() {
         _lm = FindObjectOfType<LevelManager>();
+
+        // 启动时从 JSON 存档恢复进度和章节通关 flag
+        _saveData = SaveSystem.Load();
+        if (_saveData != null) {
+            currentChapterIndex = _saveData.currentChapterIndex;
+            currentLevelIndex = _saveData.currentLevelIndex;
+        }
     }
 
     void Start() {
         if (autoStart && chapters.Count > 0) {
+            // PlayerPrefs 的 pending 关卡选择优先于 JSON 存档（场景间跳关用）
             ApplyPendingLevelSelection();
             LoadCurrent();
         }
@@ -105,19 +114,22 @@ public class LevelFlowManager : MonoBehaviour {
         var chapter = chapters[currentChapterIndex];
 
         if (currentLevelIndex >= chapter.levels.Count) {
-            // 当前章节完成 —— 触发完成事件
+            // 当前章节完成 —— 设置通关 flag、触发完成事件并保存
             Debug.Log($"LevelFlowManager: 章节 [{chapter.name}] 已完成！");
+            SetChapterCompleted(currentChapterIndex, true);
             onChapterCompleted?.Invoke(currentChapterIndex, chapter.name);
             OnChapterCompleted?.Invoke(currentChapterIndex, chapter.name);
 
             if (autoAdvanceToNextChapter && currentChapterIndex + 1 < chapters.Count) {
                 currentChapterIndex++;
                 currentLevelIndex = 0;
+                SaveProgress();
                 LoadCurrent();
             }
             return;
         }
 
+        SaveProgress();
         LoadCurrent();
     }
 
@@ -208,6 +220,54 @@ public class LevelFlowManager : MonoBehaviour {
 
     [ContextMenu("Load Chapter 2")]
     public void LoadChapter2() => LoadChapter(1);
+
+    // ================ 存档读取/写入接口 ================
+
+    /// <summary>读取接口：获取当前内存中的 SaveData 副本（首次会自动 Load）</summary>
+    public SaveData GetSaveData() {
+        if (_saveData == null) _saveData = SaveSystem.Load();
+        return _saveData;
+    }
+
+    /// <summary>读取接口：指定章节索引是否已通关</summary>
+    public bool IsChapterCompleted(int chapterIndex) {
+        if (_saveData == null) _saveData = SaveSystem.Load();
+        if (chapterIndex < 0 || chapterIndex >= _saveData.chapterCompleted.Count) return false;
+        return _saveData.chapterCompleted[chapterIndex];
+    }
+
+    /// <summary>读取接口：当前章节索引（来自存档/内存）</summary>
+    public int GetCurrentChapterIndex() => currentChapterIndex;
+
+    /// <summary>读取接口：当前章节内的关卡索引（来自存档/内存）</summary>
+    public int GetCurrentLevelIndex() => currentLevelIndex;
+
+    /// <summary>设置章节通关 flag 并立即写入存档</summary>
+    public void SetChapterCompleted(int chapterIndex, bool completed = true) {
+        if (chapterIndex < 0) return;
+        if (_saveData == null) _saveData = SaveSystem.Load();
+        while (_saveData.chapterCompleted.Count <= chapterIndex)
+            _saveData.chapterCompleted.Add(false);
+        _saveData.chapterCompleted[chapterIndex] = completed;
+        SaveProgress();
+    }
+
+    /// <summary>把当前 currentChapterIndex / currentLevelIndex 同步到存档并写盘</summary>
+    public void SaveProgress() {
+        if (_saveData == null) _saveData = new SaveData();
+        _saveData.currentChapterIndex = currentChapterIndex;
+        _saveData.currentLevelIndex = currentLevelIndex;
+        SaveSystem.Save(_saveData);
+    }
+
+    /// <summary>清除存档（重新开始游戏）</summary>
+    [ContextMenu("Delete Save")]
+    public void DeleteSave() {
+        SaveSystem.Delete();
+        _saveData = new SaveData();
+        currentChapterIndex = 0;
+        currentLevelIndex = 0;
+    }
 
     void ApplyPendingLevelSelection() {
         if (!PlayerPrefs.HasKey(PendingChapterKey) || !PlayerPrefs.HasKey(PendingLevelKey))
