@@ -159,14 +159,12 @@ namespace Game.Story {
             preset.image.sprite = sprite;
             preset.image.enabled = true;
             var rt = preset.image.rectTransform;
-            // 水平翻转（只在还没设置过翻转时设置，避免覆盖动画期间的 scale 变化）
-            if (Mathf.Abs(rt.localScale.x) < 0.001f) {
-                rt.localScale = new Vector3(-1, 1, 1);
-            }
+            // 始终设置翻转方向（角色默认朝左）
+            rt.localScale = new Vector3(-1, 1, 1);
             if (preset.aspectFitter != null)
                 preset.aspectFitter.aspectRatio = sprite.rect.width / sprite.rect.height;
 
-            // 确保 StoryActionPlayer 在正确的翻转 scale 下记录默认状态
+            // 翻转后重新记录默认状态，确保动画基于正确的 scale 工作
             var actionPlayer = preset.image.GetComponent<StoryActionPlayer>();
             if (actionPlayer != null) {
                 actionPlayer.RecordDefaultState();

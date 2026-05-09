@@ -404,7 +404,7 @@ namespace Game.Story {
                 yield return null;
             }
 
-            transform.localRotation = Quaternion.Euler(0, 0, startAngle + targetAngle);
+            transform.localRotation = Quaternion.Euler(0, 0, startAngle);
         }
     }
 }
