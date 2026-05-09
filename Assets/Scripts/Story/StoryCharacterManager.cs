@@ -15,13 +15,6 @@ namespace Game.Story {
         [Header("角色预设")]
         public List<CharacterPreset> presets = new List<CharacterPreset>();
 
-        [Header("动态角色资源")]
-        [Tooltip("Resources 下的角色 prefab 文件夹。Prefab 上挂 StoryCharacter。")]
-        public string characterResourceFolder = "Story/Characters";
-
-        [Tooltip("找不到角色 mount 时自动创建一个 UI mount。")]
-        public bool autoCreateMissingMount = true;
-
         [Serializable]
         public class CharacterPreset {
             public string characterId;
@@ -82,37 +75,67 @@ namespace Game.Story {
                 preset.aspectFitter = preset.mount.GetComponent<AspectRatioFitter>();
                 if (preset.aspectFitter == null) preset.aspectFitter = preset.mount.gameObject.AddComponent<AspectRatioFitter>();
             }
-            preset.aspectFitter.aspectMode = AspectRatioFitter.AspectMode.WidthControlsHeight;
+            preset.aspectFitter.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
         }
 
         /// <summary>显示角色立绘</summary>
+        /// <param name="characterId">角色ID</param>
+        /// <param name="expressionName">表情名称</param>
+        /// <param name="heightPercent">立绘高度占屏幕高度的比例（0.0-1.0），默认 0.8</param>
+        /// <param name="bottomOffset">底部偏移（像素），默认 20</param>
+        /// <param name="horizontalOffset">水平偏移（像素），默认 0</param>
         public void ShowCharacter(string characterId, string expressionName,
-                float screenWidthPercent = 0.4f,
-                float screenBottomPercent = 0.15f,
+                float heightPercent = 0.8f,
+                float bottomOffset = 20f,
                 float horizontalOffset = 0f) {
 
             var preset = presets.Find(p => p.characterId == characterId);
-            if (preset == null) {
-                if (!autoCreateMissingMount) {
-                    Debug.LogWarning($"[StoryCharacterManager] Preset not found: '{characterId}'");
-                    return;
-                }
+            if (preset == null) return;
 
-                preset = CreatePreset(characterId);
+            if (preset.mount == null) return;
+
+            // 检查 mount 是否已被销毁（通过尝试访问 transform）
+            try {
+                var _ = preset.mount.transform;
+            } catch (MissingReferenceException) {
+                return;
             }
 
-            // 布局 mount
-            float targetWidth = Screen.width * screenWidthPercent;
+            // 布局 mount - 基于高度的大小计算
+            float targetHeight = Screen.height * heightPercent;
             var rect = preset.mount.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0);
+            if (rect == null) {
+                Debug.LogWarning($"[StoryCharacterManager] Mount has no RectTransform: '{characterId}'");
+                return;
+            }
             rect.anchorMax = new Vector2(0.5f, 0);
             rect.pivot = new Vector2(0.5f, 0);
-            rect.sizeDelta = new Vector2(targetWidth, 0);
-            rect.anchoredPosition = new Vector2(
-                Screen.width * horizontalOffset,
-                Screen.height * screenBottomPercent);
+            rect.anchoredPosition = new Vector2(horizontalOffset, bottomOffset);
+            rect.sizeDelta = new Vector2(0, targetHeight);
 
-            Sprite sprite = FindSprite(characterId, expressionName);
+            // 查找 Sprite
+            Sprite sprite = null;
+            var allChars = FindObjectsOfType<StoryCharacter>();
+            foreach (var sc in allChars) {
+                if (sc.characterId != characterId) continue;
+                foreach (var e in sc.expressions) {
+                    if (e.name.Equals(expressionName, StringComparison.OrdinalIgnoreCase)) {
+                        sprite = e.sprite;
+                        break;
+                    }
+                }
+                if (sprite != null) break;
+            }
+
+            // fallback 到 defaultSprite
+            if (sprite == null) {
+                foreach (var sc in allChars) {
+                    if (sc.characterId == characterId && sc.defaultSprite != null) {
+                        sprite = sc.defaultSprite;
+                        break;
+                    }
+                }
+            }
 
             if (sprite == null) {
                 Debug.LogWarning($"[StoryCharacterManager] Sprite not found: {characterId}/{expressionName}");
@@ -122,73 +145,13 @@ namespace Game.Story {
             ApplySprite(preset, sprite);
         }
 
-        CharacterPreset CreatePreset(string characterId) {
-            var mountObj = new GameObject($"StoryCharacterMount_{characterId}", typeof(RectTransform));
-            RectTransform parent = transform as RectTransform;
-            if (parent == null) {
-                Canvas canvas = FindObjectOfType<Canvas>();
-                parent = canvas != null ? canvas.transform as RectTransform : null;
-            }
-
-            mountObj.transform.SetParent(parent != null ? parent : transform, false);
-
-            var preset = new CharacterPreset {
-                characterId = characterId,
-                mount = mountObj.GetComponent<RectTransform>()
-            };
-            presets.Add(preset);
-            SetupMount(preset);
-            return preset;
-        }
-
-        Sprite FindSprite(string characterId, string expressionName) {
-            Sprite sprite = FindSpriteInCharacters(FindObjectsOfType<StoryCharacter>(), characterId, expressionName);
-            if (sprite != null)
-                return sprite;
-
-            GameObject[] prefabs = Resources.LoadAll<GameObject>(characterResourceFolder);
-            for (int i = 0; i < prefabs.Length; i++) {
-                StoryCharacter character = prefabs[i].GetComponent<StoryCharacter>();
-                if (character == null)
-                    character = prefabs[i].GetComponentInChildren<StoryCharacter>(true);
-
-                sprite = FindSpriteInCharacter(character, characterId, expressionName);
-                if (sprite != null)
-                    return sprite;
-            }
-
-            return null;
-        }
-
-        Sprite FindSpriteInCharacters(StoryCharacter[] characters, string characterId, string expressionName) {
-            for (int i = 0; i < characters.Length; i++) {
-                Sprite sprite = FindSpriteInCharacter(characters[i], characterId, expressionName);
-                if (sprite != null)
-                    return sprite;
-            }
-            return null;
-        }
-
-        Sprite FindSpriteInCharacter(StoryCharacter character, string characterId, string expressionName) {
-            if (character == null || character.characterId != characterId)
-                return null;
-
-            for (int i = 0; i < character.expressions.Count; i++) {
-                var expression = character.expressions[i];
-                if (expression.sprite == null)
-                    continue;
-
-                if (expression.name.Equals(expressionName, StringComparison.OrdinalIgnoreCase))
-                    return expression.sprite;
-            }
-
-            return character.defaultSprite;
-        }
-
         void ApplySprite(CharacterPreset preset, Sprite sprite) {
             if (preset.image == null || sprite == null) return;
             preset.image.sprite = sprite;
             preset.image.enabled = true;
+            // 水平反转
+            var rt = preset.image.rectTransform;
+            rt.localScale = new Vector3(-1, 1, 1);
             if (preset.aspectFitter != null)
                 preset.aspectFitter.aspectRatio = sprite.rect.width / sprite.rect.height;
         }

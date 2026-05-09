@@ -6,11 +6,16 @@ namespace Game.Story {
     /// <summary>
     /// 剧情系统管理器
     /// 作为剧情模块的入口点，提供统一的 API 给其他系统调用
-    /// 
-    /// 使用方式：
-    /// 1. 将 StoryManager.prefab 拖入场景（只需一个）
-    /// 2. 配置 InkStoryPlayer 的默认剧情资源
-    /// 3. 其他脚本通过 StoryManager API 触发剧情
+    ///
+    /// 使用方式（一行代码播放剧情）：
+    ///   StoryManager.Play("SampleStory");                    // 播放默认 start 节点
+    ///   StoryManager.Play("SampleStory", "chapter2");       // 播放指定节点
+    ///   StoryManager.Play("SampleStory", OnStoryEnd);       // 带回调
+    ///
+    /// 或者通过实例：
+    ///   StoryManager.Instance.Play("SampleStory");
+    ///
+    /// 运行时如果 StoryManager 不存在，会自动实例化 StoryManager.prefab
     /// </summary>
     public class StoryManager : MonoBehaviour {
         public static StoryManager Instance { get; private set; }
@@ -23,6 +28,13 @@ namespace Game.Story {
 
         [Header("剧情配置")]
         [SerializeField] private bool _pauseGameDuringStory = true;
+
+        [Header("自动实例化配置")]
+        [Tooltip("运行时如果不存在，是否自动实例化 prefab（留空则不自动实例化）")]
+        [SerializeField] private StoryManager _prefabForAutoInstantiate;
+
+        private static StoryManager PrefabForAutoInstantiate => Instance?._prefabForAutoInstantiate;
+        private static bool _autoInstantiateEnabled = false;
 
         // 事件
         public event Action OnStoryStarted;
@@ -50,24 +62,22 @@ namespace Game.Story {
             // 查找或创建子组件
             if (_storyPlayer == null) {
                 _storyPlayer = GetComponent<InkStoryPlayer>();
-                if (_storyPlayer == null) _storyPlayer = gameObject.AddComponent<InkStoryPlayer>();
+                if (_storyPlayer == null) _storyPlayer = GetComponentInChildren<InkStoryPlayer>();
             }
 
             if (_dialoguePanel == null) {
-                _dialoguePanel = FindObjectOfType<StoryDialoguePanel>();
+                _dialoguePanel = GetComponent<StoryDialoguePanel>();
+                if (_dialoguePanel == null) _dialoguePanel = GetComponentInChildren<StoryDialoguePanel>();
             }
 
             if (_choicePanel == null) {
-                _choicePanel = FindObjectOfType<StoryChoicePanel>();
+                _choicePanel = GetComponent<StoryChoicePanel>();
+                if (_choicePanel == null) _choicePanel = GetComponentInChildren<StoryChoicePanel>();
             }
 
             if (_characterManager == null) {
-                _characterManager = FindObjectOfType<StoryCharacterManager>();
-            }
-
-            if (_storyPlayer != null) {
-                _storyPlayer.dialoguePanel = _dialoguePanel;
-                _storyPlayer.choicePanel = _choicePanel;
+                _characterManager = GetComponent<StoryCharacterManager>();
+                if (_characterManager == null) _characterManager = GetComponentInChildren<StoryCharacterManager>();
             }
 
             // 订阅事件
@@ -77,14 +87,200 @@ namespace Game.Story {
             }
         }
 
-        // ==================== 公共 API ====================
+        // ==================== 静态便捷 API ====================
 
         /// <summary>
-        /// 开始剧情
+        /// 一行代码播放剧情（最简方式）
+        /// 自动在 Resources/Story/ 目录下查找文件
         /// </summary>
-        /// <param name="inkJson">Ink JSON 资源（可选，为空使用默认配置）</param>
-        /// <param name="knot">从哪个节点开始（可选，默认 start）</param>
-        public void PlayStory(TextAsset inkJson = null, string knot = "") {
+        /// <param name="storyFileName">剧情文件名（不含扩展名），如 "SampleStory"</param>
+        /// <param name="knot">起始节点（可选，默认 "start"）</param>
+        public static void Play(string storyFileName, string knot = "") {
+            EnsureInstance().PlayStoryInternal(storyFileName, knot, null);
+        }
+
+        /// <summary>
+        /// 一行代码播放剧情（带回调）
+        /// </summary>
+        /// <param name="storyFileName">剧情文件名（不含扩展名）</param>
+        /// <param name="knot">起始节点（可选，默认 "start"）</param>
+        /// <param name="onComplete">剧情结束回调（可选）</param>
+        public static void Play(string storyFileName, string knot, Action onComplete) {
+            EnsureInstance().PlayStoryInternal(storyFileName, knot, onComplete);
+        }
+
+        /// <summary>
+        /// 一行代码播放剧情（带开始回调和结束回调）
+        /// </summary>
+        /// <param name="storyFileName">剧情文件名（不含扩展名）</param>
+        /// <param name="onStart">剧情开始回调（可选）</param>
+        /// <param name="onComplete">剧情结束回调（可选）</param>
+        public static void Play(string storyFileName, Action onStart, Action onComplete) {
+            EnsureInstance().PlayStoryInternal(storyFileName, "", onComplete, onStart);
+        }
+
+        /// <summary>
+        /// 一行代码播放剧情（指定节点 + 回调）
+        /// </summary>
+        /// <param name="storyFileName">剧情文件名（不含扩展名）</param>
+        /// <param name="knot">起始节点</param>
+        /// <param name="onStart">剧情开始回调（可选）</param>
+        /// <param name="onComplete">剧情结束回调（可选）</param>
+        public static void Play(string storyFileName, string knot, Action onStart, Action onComplete) {
+            EnsureInstance().PlayStoryInternal(storyFileName, knot, onComplete, onStart);
+        }
+
+        /// <summary>
+        /// 停止当前剧情
+        /// </summary>
+        public static void Stop() {
+            Instance?.StopStory();
+        }
+
+        /// <summary>
+        /// 继续剧情（模拟点击/空格）
+        /// </summary>
+        public static void Continue() {
+            Instance?.DoContinue();
+        }
+
+        /// <summary>
+        /// 选择选项
+        /// </summary>
+        public static void SelectChoice(int index) {
+            Instance?.DoSelectChoice(index);
+        }
+
+        /// <summary>
+        /// 显示角色
+        /// </summary>
+        public static void ShowCharacter(string characterId, string expression = "",
+                float heightPercent = 0.8f, float bottomOffset = 20f, float horizontalOffset = 0f) {
+            Instance?.DoShowCharacter(characterId, expression, heightPercent, bottomOffset, horizontalOffset);
+        }
+
+        /// <summary>
+        /// 隐藏角色
+        /// </summary>
+        public static void HideCharacter(string characterId = "") {
+            Instance?.DoHideCharacter(characterId);
+        }
+
+        /// <summary>
+        /// 检查剧情文件是否存在
+        /// </summary>
+        public static bool StoryExists(string fileName) {
+            return StoryLoader.Instance.Exists(fileName);
+        }
+
+        /// <summary>
+        /// 设置运行时自动实例化（启用后，即使场景中没有 StoryManager，也会自动创建）
+        /// </summary>
+        /// <param name="enabled">是否启用</param>
+        /// <param name="prefab">实例化用的 prefab（可选，从 Instance 获取）</param>
+        public static void SetAutoInstantiate(bool enabled, StoryManager prefab = null) {
+            _autoInstantiateEnabled = enabled;
+            if (prefab != null && Instance != null) {
+                Instance._prefabForAutoInstantiate = prefab;
+            }
+        }
+
+        /// <summary>
+        /// 确保 StoryManager 实例存在
+        /// </summary>
+        static StoryManager EnsureInstance() {
+            if (Instance != null) return Instance;
+
+            if (_autoInstantiateEnabled && PrefabForAutoInstantiate != null) {
+                var go = Instantiate(PrefabForAutoInstantiate.gameObject);
+                // 确保是根对象
+                if (go.transform.parent != null) {
+                    go.transform.SetParent(null);
+                }
+                DontDestroyOnLoad(go);
+                return Instance;
+            }
+
+            // 尝试从 Resources 加载（支持两种路径）
+            var prefab = Resources.Load<StoryManager>("Story/Dialog");
+            if (prefab == null) {
+                prefab = Resources.Load<StoryManager>("Story/StoryManager");
+            }
+            if (prefab == null) {
+                prefab = Resources.Load<StoryManager>("Dialog");
+            }
+            if (prefab == null) {
+                prefab = Resources.Load<StoryManager>("StoryManager");
+            }
+            if (prefab != null) {
+                var go = Instantiate(prefab.gameObject);
+                if (go.transform.parent != null) {
+                    go.transform.SetParent(null);
+                }
+                DontDestroyOnLoad(go);
+                return Instance;
+            }
+
+            // 尝试查找场景中的
+            var existing = FindObjectOfType<StoryManager>();
+            if (existing != null) return existing;
+
+            Debug.LogError("[StoryManager] No StoryManager found in scene and cannot auto-instantiate. " +
+                "Please add StoryManager.prefab to your scene, place it in Resources/Story/ folder, " +
+                "or call SetAutoInstantiate(true, prefab).");
+            return null;
+        }
+
+        // ==================== 实例方法（供静态方法调用） ====================
+
+        void PlayStoryInternal(string storyFileName, string knot, Action onComplete, Action onStart = null) {
+            if (_storyPlayer == null) {
+                Debug.LogError("[StoryManager] InkStoryPlayer not found!");
+                return;
+            }
+
+            // 加载剧情文件
+            TextAsset inkJson = StoryLoader.Instance.LoadInkJson(storyFileName);
+            if (inkJson == null) {
+                Debug.LogError($"[StoryManager] Failed to load story: '{storyFileName}'");
+                return;
+            }
+
+            // 设置回调
+            _pendingOnStart = onStart;
+            _pendingOnComplete = onComplete;
+
+            _storyPlayer.inkJsonAsset = inkJson;
+
+            if (_pauseGameDuringStory) {
+                Time.timeScale = 0f;
+            }
+
+            _storyPlayer.Play(knot);
+        }
+
+        private Action _pendingOnStart;
+        private Action _pendingOnComplete;
+
+        void HandleStoryStart() {
+            _pendingOnStart?.Invoke();
+            OnStoryStarted?.Invoke();
+            _pendingOnStart = null;
+        }
+
+        void HandleStoryEnd() {
+            Time.timeScale = 1f;
+            _pendingOnComplete?.Invoke();
+            OnStoryEnded?.Invoke();
+            _pendingOnComplete = null;
+        }
+
+        /// <summary>
+        /// 直接使用 TextAsset 播放剧情（实例方法）
+        /// </summary>
+        /// <param name="inkJson">Ink JSON 资源</param>
+        /// <param name="knot">起始节点（可选）</param>
+        public void PlayStory(TextAsset inkJson, string knot = "") {
             if (_storyPlayer == null) {
                 Debug.LogError("[StoryManager] InkStoryPlayer not found!");
                 return;
@@ -101,96 +297,31 @@ namespace Game.Story {
             _storyPlayer.Play(knot);
         }
 
-        /// <summary>
-        /// 用 Resources 路径开始剧情。
-        /// 示例：PlayStory("Story/story1", "start")。
-        /// 传入 "story1.json" 时会自动去掉 .json 后缀。
-        /// </summary>
-        public void PlayStory(string storyResourcePath, string knot = "") {
-            if (string.IsNullOrWhiteSpace(storyResourcePath)) {
-                PlayStory((TextAsset)null, knot);
-                return;
-            }
-
-            string path = NormalizeResourcePath(storyResourcePath);
-            TextAsset inkJson = LoadStoryResource(path);
-            if (inkJson == null) {
-                Debug.LogError($"[StoryManager] Story resource not found: {storyResourcePath}. Put the ink json under Assets/Resources/Story and call PlayStory(\"{path}\", \"{knot}\").");
-                return;
-            }
-
-            PlayStory(inkJson, knot);
-        }
-
-        TextAsset LoadStoryResource(string path) {
-            TextAsset inkJson = Resources.Load<TextAsset>(path);
-            if (inkJson != null)
-                return inkJson;
-
-            if (!path.Contains("/"))
-                inkJson = Resources.Load<TextAsset>($"Story/{path}");
-
-            return inkJson;
-        }
-
-        string NormalizeResourcePath(string path) {
-            path = path.Replace('\\', '/').Trim();
-
-            const string resourcesPrefix = "Resources/";
-            int resourcesIndex = path.IndexOf(resourcesPrefix, StringComparison.OrdinalIgnoreCase);
-            if (resourcesIndex >= 0)
-                path = path.Substring(resourcesIndex + resourcesPrefix.Length);
-
-            if (path.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
-                path = path.Substring("Assets/".Length);
-
-            if (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-                path = path.Substring(0, path.Length - ".json".Length);
-
-            return path;
-        }
-
-        /// <summary>
-        /// 停止剧情
-        /// </summary>
-        public void StopStory() {
+        void StopStory() {
             if (_storyPlayer != null) {
                 _storyPlayer.Stop();
             }
-
             Time.timeScale = 1f;
         }
 
-        /// <summary>
-        /// 继续剧情（模拟点击）
-        /// </summary>
-        public void Continue() {
+        void DoContinue() {
             if (_storyPlayer != null) {
                 _storyPlayer.OnInteract();
             }
         }
 
-        /// <summary>
-        /// 选择选项
-        /// </summary>
-        public void SelectChoice(int index) {
+        void DoSelectChoice(int index) {
             if (_storyPlayer != null) {
                 _storyPlayer.SelectChoice(index);
             }
         }
 
-        /// <summary>
-        /// 显示指定角色立绘
-        /// </summary>
-        public void ShowCharacter(string characterId, string expression = "", 
-                float screenWidthPercent = 0.4f, float screenBottomPercent = 0.15f) {
-            _characterManager?.ShowCharacter(characterId, expression, screenWidthPercent, screenBottomPercent);
+        void DoShowCharacter(string characterId, string expression,
+                float heightPercent, float bottomOffset, float horizontalOffset) {
+            _characterManager?.ShowCharacter(characterId, expression, heightPercent, bottomOffset, horizontalOffset);
         }
 
-        /// <summary>
-        /// 隐藏角色立绘
-        /// </summary>
-        public void HideCharacter(string characterId = "") {
+        void DoHideCharacter(string characterId) {
             if (string.IsNullOrEmpty(characterId)) {
                 _characterManager?.HideAllCharacters();
             } else {
@@ -198,21 +329,20 @@ namespace Game.Story {
             }
         }
 
-        // ==================== 事件处理 ====================
-
-        void HandleStoryStart() {
-            OnStoryStarted?.Invoke();
-        }
-
-        void HandleStoryEnd() {
-            Time.timeScale = 1f;
-            OnStoryEnded?.Invoke();
-        }
-
 #if UNITY_EDITOR
-        [ContextMenu("Test Play Story")]
-        void TestPlayStory() {
-            PlayStory();
+        [ContextMenu("Test Play Story (Static API)")]
+        void TestPlayStoryStatic() {
+            Play("SampleStory");
+        }
+
+        [ContextMenu("Test Play Story with Callback")]
+        void TestPlayStoryWithCallback() {
+            Play("SampleStory", () => Debug.Log("Story started!"), () => Debug.Log("Story ended!"));
+        }
+
+        [ContextMenu("Test Play Story with Knot")]
+        void TestPlayStoryWithKnot() {
+            Play("SampleStory", "check_glitter");
         }
 #endif
     }
