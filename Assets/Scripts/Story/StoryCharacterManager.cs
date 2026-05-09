@@ -156,11 +156,15 @@ namespace Game.Story {
         void ApplySprite(CharacterPreset preset, Sprite sprite) {
             Debug.Log($"[StoryCharacterManager] ApplySprite: preset='{preset.characterId}', sprite='{sprite.name}', preset.image={(preset.image != null ? "exists" : "null")}");
             if (preset.image == null || sprite == null) return;
-            preset.image.sprite = sprite;
+            // 确保 GameObject 激活，并重置透明度
+            preset.image.gameObject.SetActive(true);
             preset.image.enabled = true;
+            var color = preset.image.color;
+            preset.image.color = new Color(color.r, color.g, color.b, 1f);
             var rt = preset.image.rectTransform;
             // 始终设置翻转方向（角色默认朝左）
             rt.localScale = new Vector3(-1, 1, 1);
+            preset.image.sprite = sprite;
             if (preset.aspectFitter != null)
                 preset.aspectFitter.aspectRatio = sprite.rect.width / sprite.rect.height;
 
@@ -174,19 +178,19 @@ namespace Game.Story {
         /// <summary>隐藏角色</summary>
         public void HideCharacter(string characterId) {
             var preset = presets.Find(p => p.characterId == characterId);
-            if (preset?.image != null) preset.image.enabled = false;
+            if (preset?.image != null) preset.image.gameObject.SetActive(false);
         }
 
         /// <summary>隐藏所有角色</summary>
         public void HideAllCharacters() {
             foreach (var p in presets)
-                if (p.image != null) p.image.enabled = false;
+                if (p.image != null) p.image.gameObject.SetActive(false);
         }
 
         /// <summary>获取当前显示的角色预设</summary>
         public CharacterPreset GetActivePreset() {
             foreach (var p in presets) {
-                if (p.image != null && p.image.enabled) {
+                if (p.image != null && p.image.enabled && p.image.gameObject.activeSelf) {
                     Debug.Log($"[StoryCharacterManager] GetActivePreset: returning preset for '{p.characterId}', image.enabled={p.image.enabled}, image.gameObject.activeSelf={p.image.gameObject.activeSelf}");
                     return p;
                 }
@@ -198,6 +202,17 @@ namespace Game.Story {
         /// <summary>获取指定ID的角色预设</summary>
         public CharacterPreset GetPreset(string characterId) {
             return presets.Find(p => p.characterId == characterId);
+        }
+
+        /// <summary>根据角色ID获取显示名字</summary>
+        public string GetCharacterDisplayName(string characterId) {
+            var allChars = FindObjectsOfType<StoryCharacter>();
+            foreach (var sc in allChars) {
+                if (sc.characterId == characterId && !string.IsNullOrEmpty(sc.displayName)) {
+                    return sc.displayName;
+                }
+            }
+            return characterId;
         }
     }
 }

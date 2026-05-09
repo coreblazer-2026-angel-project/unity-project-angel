@@ -197,6 +197,9 @@ namespace Game.Story {
                 }
             }
 
+            Debug.Log($"[InkStoryPlayer] ProcessLine: raw='{line}', speaker='{speaker}', text='{text}', dialoguePanel={(dialoguePanel != null ? "exists" : "null")}");
+            Debug.Log($"[InkStoryPlayer] SetSpeaker: speakerText={(dialoguePanel?.speakerText != null ? "exists" : "null")}, speakerTextPro={(dialoguePanel?.speakerTextPro != null ? "exists" : "null")}");
+
             // 读取当前行的 Ink tag（用于驱动立绘/表情）
             var tags = _story.currentTags ?? new List<string>();
             string characterId = "";
@@ -261,6 +264,10 @@ namespace Game.Story {
             if (!string.IsNullOrEmpty(characterId)) {
                 Debug.Log($"[InkStoryPlayer] ProcessLine: calling ShowCharacter('{characterId}', '{exprName}')");
                 StoryCharacterManager.Instance?.ShowCharacter(characterId, exprName, heightPercent, bottomOffset, horizontalOffset);
+                // Ink 用 #ch tag 标识说话者，从角色ID查到 display name 作为 speaker
+                if (string.IsNullOrEmpty(speaker)) {
+                    speaker = StoryCharacterManager.Instance?.GetCharacterDisplayName(characterId) ?? characterId;
+                }
             }
 
             // 显示文字

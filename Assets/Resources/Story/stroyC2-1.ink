@@ -7,7 +7,7 @@ VAR collected_hope_2 = false
 // 交互后触发对话
 
 #ch 主角
-#expr 难过
+#expr 主角难过
 那个，你、你还好吗？
 
 #ch 初中生
@@ -17,7 +17,7 @@ VAR collected_hope_2 = false
 我，嗯...我正在旅游，最近会在这里停留一阵
 
 #ch 主角
-#expr 难过
+#expr 主角难过
 我看你好像很难过的样子，是遇到什么事情了吗？
 
 #ch 初中生
@@ -33,12 +33,12 @@ VAR collected_hope_2 = false
 我是不是...是不是根本就不适合学习啊...
 
 #ch 主角
-#expr 惊讶
+#expr 主角惊讶
 #action flash
 不是这样的！
 
 #ch 主角
-#expr 开心
+#expr 主角开心
 只是一次考试对吧？这可不能代表你的能力
 
 #ch 初中生
@@ -47,7 +47,7 @@ VAR collected_hope_2 = false
 （好强的失落感，这就是需要修复的负面情绪吧）
 
 #ch 主角
-#expr 惊讶
+#expr 主角惊讶
 （该进行心理维修了...）
 
 -> END
