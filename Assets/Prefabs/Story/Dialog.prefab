@@ -532,6 +532,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterId: "\u4E3B\u89D2"
+  displayName: 
   defaultSprite: {fileID: 21300000, guid: 69a7a4bb4f2d77642b8528deedfd9809, type: 3}
   expressions:
   - name: "\u4E3B\u89D2\u60CA\u8BB6"
@@ -618,8 +619,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: de268b46e139cfd408302f18f6833ada, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -813,6 +814,8 @@ MonoBehaviour:
   dialoguePanel: {fileID: 8747389359342592277}
   choicePanel: {fileID: 2644402468499556303}
   typewriterSpeed: 0.04
+  advanceClip: {fileID: 0}
+  choiceClip: {fileID: 0}
 --- !u!1 &7663311493943377499
 GameObject:
   m_ObjectHideFlags: 0
@@ -898,4 +901,7 @@ MonoBehaviour:
   speakerTextPro: {fileID: 0}
   dialogueText: {fileID: 2935240263463642468}
   dialogueTextPro: {fileID: 0}
+  backgroundRect: {fileID: 0}
+  minHeight: 120
+  paddingTopBottom: 60
   continueIndicator: {fileID: 0}

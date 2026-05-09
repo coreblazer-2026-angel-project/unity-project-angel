@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -17,13 +16,15 @@ namespace Game.Story {
         public Text dialogueText;
         public TMP_Text dialogueTextPro;
 
-        [Header("对话框背景（自适应高度用）")]
+        [Header("对话框背景（留空则自动查找文字的父级 Image）")]
         public RectTransform backgroundRect;
         public float minHeight = 120f;
-        public float paddingTopBottom = 40f;
+        public float paddingTopBottom = 60f;
 
         [Header("继续提示")]
         public Image continueIndicator;
+
+        RectTransform _textRect;
 
         public void Show() {
             if (root != null) root.SetActive(true);
@@ -47,6 +48,16 @@ namespace Game.Story {
         public void SetText(string text) {
             if (dialogueText != null) dialogueText.text = text ?? "";
             if (dialogueTextPro != null) dialogueTextPro.text = text ?? "";
+
+            // 等一帧让文字先布局完再算高度
+            if (_textRect == null) {
+                if (dialogueTextPro != null) _textRect = dialogueTextPro.rectTransform;
+                else if (dialogueText != null) _textRect = dialogueText.rectTransform;
+            }
+            if (_textRect != null) {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_textRect);
+            }
+
             ResizeBackground();
         }
 
@@ -55,17 +66,30 @@ namespace Game.Story {
         }
 
         void ResizeBackground() {
+            // 自动查找：文字往上找第一个带 Image 的父物体
+            if (backgroundRect == null && _textRect != null) {
+                var parent = _textRect.parent;
+                while (parent != null) {
+                    if (parent.GetComponent<Image>() != null) {
+                        backgroundRect = parent as RectTransform;
+                        break;
+                    }
+                    parent = parent.parent;
+                }
+            }
+
             if (backgroundRect == null) return;
 
             float preferredH = 0f;
             if (dialogueTextPro != null) {
                 dialogueTextPro.ForceMeshUpdate();
-                preferredH = dialogueTextPro.renderedHeight;
+                preferredH = dialogueTextPro.GetPreferredValues(
+                    dialogueTextPro.text,
+                    dialogueTextPro.rectTransform.rect.width,
+                    0f).y;
             } else if (dialogueText != null) {
-                var generator = dialogueText.cachedTextGenerator;
                 var settings = dialogueText.GetGenerationSettings(dialogueText.rectTransform.rect.size);
-                generator.Populate(dialogueText.text, settings);
-                preferredH = generator.GetPreferredHeight(dialogueText.text, settings);
+                preferredH = dialogueText.cachedTextGeneratorForLayout.GetPreferredHeight(dialogueText.text, settings) / dialogueText.pixelsPerUnit;
             }
 
             float targetH = Mathf.Max(minHeight, preferredH + paddingTopBottom);

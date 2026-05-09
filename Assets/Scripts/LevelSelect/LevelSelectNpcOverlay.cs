@@ -563,8 +563,14 @@ public class LevelSelectNpcOverlay : MonoBehaviour
     {
         if (!_transitioning && !_completionDialogMode) return;
 
+        // 关闭 NPC 自己的 dialogPanel
         if (dialogPanel != null)
             dialogPanel.SetActive(false);
+
+        // 关闭 StoryManager 的 dialog 根节点（InkStoryPlayer 的父物体）
+        var isp = InkStoryPlayer.Instance;
+        if (isp != null && isp.transform.parent != null)
+            isp.transform.parent.gameObject.SetActive(false);
 
         // 完成对话模式：播完就结束，不进关卡
         if (_completionDialogMode)
