@@ -4,6 +4,10 @@ using System.Collections.Generic;
 
 public class LevelManager : MonoBehaviour {
 
+    [Header("背景")]
+    [Tooltip("场景中的背景 SpriteRenderer。LoadLevel 时把 LevelData.background 设到它上面。留空则不切换背景。")]
+    public SpriteRenderer backgroundRenderer;
+
     public void LoadLevel(LevelData levelData) {
         var gmv2 = GridManagerV2.Instance;
         if (gmv2 == null) {
@@ -13,6 +17,11 @@ public class LevelManager : MonoBehaviour {
 
         // 切换关卡前先清空所有旧元件和 tilemap 状态，避免上一关的电强残留
         ElectricManager.Instance?.ClearAll();
+
+        // 切换关卡背景（LevelData.background 为 null 时保留上一关背景）
+        if (backgroundRenderer != null && levelData.background != null) {
+            backgroundRenderer.sprite = levelData.background;
+        }
 
         // 若配置了 CSV 且未勾选 useInlineItems，从 CSV 解析 items
         levelData.ParseCSV();
