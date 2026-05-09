@@ -177,7 +177,7 @@ namespace Spine {
 					ClearNext(current);
 					continue;
 				}
-				if (current.mixingFrom != null && UpdateMixingFrom(current, delta)) {
+				if (current.mixingFrom != null && UpdateMixingFrom(current, delta, 1)) {
 					// End mixing from entries once all have completed.
 					TrackEntry from = current.mixingFrom;
 					current.mixingFrom = null;
@@ -195,11 +195,12 @@ namespace Spine {
 		}
 
 		/// <summary>Returns true when all mixing from entries are complete.</summary>
-		private bool UpdateMixingFrom (TrackEntry to, float delta) {
+		private bool UpdateMixingFrom (TrackEntry to, float delta, int depth = 0) {
+			if (depth > 100) return true;
 			TrackEntry from = to.mixingFrom;
 			if (from == null) return true;
 
-			bool finished = UpdateMixingFrom(from, delta);
+			bool finished = UpdateMixingFrom(from, delta, depth + 1);
 
 			from.animationLast = from.nextAnimationLast;
 			from.trackLast = from.nextTrackLast;
@@ -243,7 +244,7 @@ namespace Spine {
 				// Apply mixing from entries first.
 				float mix = current.alpha;
 				if (current.mixingFrom != null)
-					mix *= ApplyMixingFrom(current, skeleton, blend);
+					mix *= ApplyMixingFrom(current, skeleton, blend, 1);
 				else if (current.trackTime >= current.trackEnd && current.next == null) //
 					mix = 0; // Set to setup pose the last time the entry will be applied.
 
@@ -326,7 +327,7 @@ namespace Spine {
 				applied = true;
 
 				// Apply mixing from entries first.
-				if (current.mixingFrom != null) ApplyMixingFromEventTimelinesOnly(current, skeleton, issueEvents);
+				if (current.mixingFrom != null) ApplyMixingFromEventTimelinesOnly(current, skeleton, issueEvents, 1);
 
 				// Apply current entry.
 				float animationLast = current.animationLast, animationTime = current.AnimationTime;
@@ -351,9 +352,10 @@ namespace Spine {
 			return applied;
 		}
 
-		private float ApplyMixingFrom (TrackEntry to, Skeleton skeleton, MixBlend blend) {
+		private float ApplyMixingFrom (TrackEntry to, Skeleton skeleton, MixBlend blend, int depth = 0) {
+			if (depth > 100) return 0f;
 			TrackEntry from = to.mixingFrom;
-			if (from.mixingFrom != null) ApplyMixingFrom(from, skeleton, blend);
+			if (from.mixingFrom != null) ApplyMixingFrom(from, skeleton, blend, depth + 1);
 
 			float mix;
 			if (to.mixDuration == 0) { // Single frame mix to undo mixingFrom changes.
@@ -446,9 +448,10 @@ namespace Spine {
 		/// EventTimelines for lightweight off-screen updates.</summary>
 		/// <param name="issueEvents">When set to false, only animation times of TrackEntries are updated.</param>
 		// Note: This method is not part of the libgdx reference implementation.
-		private float ApplyMixingFromEventTimelinesOnly (TrackEntry to, Skeleton skeleton, bool issueEvents) {
+		private float ApplyMixingFromEventTimelinesOnly (TrackEntry to, Skeleton skeleton, bool issueEvents, int depth = 0) {
+			if (depth > 100) return 0f;
 			TrackEntry from = to.mixingFrom;
-			if (from.mixingFrom != null) ApplyMixingFromEventTimelinesOnly(from, skeleton, issueEvents);
+			if (from.mixingFrom != null) ApplyMixingFromEventTimelinesOnly(from, skeleton, issueEvents, depth + 1);
 
 
 			float mix;
