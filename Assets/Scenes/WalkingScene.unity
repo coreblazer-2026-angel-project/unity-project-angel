@@ -631,6 +631,9 @@ MonoBehaviour:
   levelIndex: 0
   npcName: "\u5C0F\u7537\u5B69"
   levelSceneName: Levels
+  interactSound: {fileID: 8300000, guid: e58775e995f9d52469d5b7e6b03e3287, type: 3}
+  audioSource: {fileID: 442667454}
+  transitionDelay: 0.8
   player: {fileID: 1966512178}
   interactHorizontalRange: 3
   interactVerticalRange: 2.4
@@ -710,9 +713,9 @@ AudioSource:
   m_GameObject: {fileID: 442667447}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: -65672615109936607, guid: 28cbd53dacbcbb94e80a92e73c5102da, type: 2}
-  m_audioClip: {fileID: 8300000, guid: e58775e995f9d52469d5b7e6b03e3287, type: 3}
-  m_PlayOnAwake: 0
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -1480,6 +1483,9 @@ MonoBehaviour:
   levelIndex: 0
   npcName: "\u521D\u4E2D\u751F"
   levelSceneName: Levels
+  interactSound: {fileID: 8300000, guid: e58775e995f9d52469d5b7e6b03e3287, type: 3}
+  audioSource: {fileID: 721615484}
+  transitionDelay: 0.4
   player: {fileID: 1966512178}
   interactHorizontalRange: 3
   interactVerticalRange: 2.4
@@ -1560,9 +1566,9 @@ AudioSource:
   m_GameObject: {fileID: 721615477}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: -65672615109936607, guid: 28cbd53dacbcbb94e80a92e73c5102da, type: 2}
-  m_audioClip: {fileID: 8300000, guid: e58775e995f9d52469d5b7e6b03e3287, type: 3}
-  m_PlayOnAwake: 0
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
   Loop: 0

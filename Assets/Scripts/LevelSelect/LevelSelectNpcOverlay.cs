@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
@@ -17,6 +18,10 @@ public class LevelSelectNpcOverlay : MonoBehaviour
 
     [Header("进入关卡")]
     public string levelSceneName = "Levels";
+    public AudioClip interactSound;
+    public AudioSource audioSource;
+    [Tooltip("按 F 后音效播放多久再切换场景（秒）。设 0 则立即切换。")]
+    public float transitionDelay = 0.4f;
 
     [Header("交互")]
     public Transform player;
@@ -149,7 +154,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
         FollowNpcOnScreen();
         UpdateFade();
 
-        if (_playerNear && Input.GetKeyDown(interactKey))
+        if (_playerNear && !_transitioning && Input.GetKeyDown(interactKey))
             TryEnterLevel();
     }
 
@@ -523,15 +528,35 @@ public class LevelSelectNpcOverlay : MonoBehaviour
             promptRoot.gameObject.SetActive(visible);
     }
 
+    bool _transitioning;
+
     void TryEnterLevel()
     {
+        if (_transitioning) return;
+
         if (!LevelProgress.IsUnlocked(levelNumber)) {
             ShowPrompt();
             return;
         }
 
-        LevelProgress.SetPendingLevelSelection(chapterIndex, levelIndex, levelNumber);
+        _transitioning = true;
 
+        if (interactSound != null) {
+            if (audioSource != null)
+                audioSource.PlayOneShot(interactSound);
+            else
+                AudioSource.PlayClipAtPoint(interactSound, transform.position);
+        }
+
+        StartCoroutine(LoadSceneAfterDelay());
+    }
+
+    IEnumerator LoadSceneAfterDelay()
+    {
+        if (transitionDelay > 0f)
+            yield return new WaitForSeconds(transitionDelay);
+
+        LevelProgress.SetPendingLevelSelection(chapterIndex, levelIndex, levelNumber);
         SceneManager.LoadScene(levelSceneName);
     }
 
