@@ -158,7 +158,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
         ResolvePlayerOnce();
         CheckProgressChanged();
 
-        bool storyPlaying = StoryAPI.IsPlaying;
+        bool storyPlaying = StoryManager.Instance != null && StoryManager.Instance.IsPlaying;
         bool near = !storyPlaying && IsPlayerNear();
 
         if (near != _playerNear)
@@ -494,7 +494,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
 
     void TryEnterLevel()
     {
-        if (_transitioning || StoryAPI.IsPlaying) return;
+        if (_transitioning || StoryManager.Instance != null && StoryManager.Instance.IsPlaying) return;
 
         if (!_lastUnlocked) return;
 
@@ -502,7 +502,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
         if (!_storyPlayed && !string.IsNullOrEmpty(storyFile))
         {
             PlaySound();
-            StoryAPI.PlayStory(storyFile);
+            StoryManager.Play(storyFile);
             return;
         }
 

@@ -134,28 +134,26 @@ namespace Game.Story {
         }
 
         void Advance() {
-            Debug.Log($"[InkStoryPlayer] Advance: canContinue={_story.canContinue}, choices={_story.currentChoices.Count}");
             if (!_story.canContinue) {
                 if (_story.currentChoices.Count > 0) {
-                    Debug.Log("[InkStoryPlayer] Show choices");
                     ShowChoices(_story.currentChoices);
                     return;
                 }
-                Debug.Log("[InkStoryPlayer] No more content, stopping");
                 Stop();
                 return;
             }
 
             string rawLine = _story.Continue().Trim();
-            Debug.Log($"[InkStoryPlayer] Continue: '{rawLine}', tags: [{string.Join(", ", _story.currentTags ?? new List<string>())}]");
             ProcessLine(rawLine);
         }
 
         void ProcessLine(string line) {
-            Debug.Log($"[InkStoryPlayer] ProcessLine: '{line}'");
             if (string.IsNullOrEmpty(line)) {
-                Debug.Log("[InkStoryPlayer] Empty line, recursing Advance");
-                Advance();
+                // 空行直接前进，但限制递归深度防止无限循环
+                if (_story.canContinue) {
+                    _story.Continue();
+                    ProcessLine(_story.currentText?.Trim() ?? "");
+                }
                 return;
             }
 
@@ -177,11 +175,22 @@ namespace Game.Story {
             string characterId = "";
             string exprName = "";
 
+            // 解析 #ch 标签，支持格式: #ch 角色ID, 高度比例, 底部偏移(像素), 水平偏移(像素)
+            float heightPercent = 0.8f;
+            float bottomOffset = 20f;
+            float horizontalOffset = 0f;
+
             foreach (var tag in tags) {
-                if (tag.StartsWith("ch ")) characterId = tag.Substring(3).Trim();
+                if (tag.StartsWith("ch ")) {
+                    characterId = tag.Substring(3).Trim();
+                    string[] parts = characterId.Split(',');
+                    if (parts.Length >= 1) characterId = parts[0].Trim();
+                    if (parts.Length >= 2 && float.TryParse(parts[1].Trim(), out float h)) heightPercent = h;
+                    if (parts.Length >= 3 && float.TryParse(parts[2].Trim(), out float b)) bottomOffset = b;
+                    if (parts.Length >= 4 && float.TryParse(parts[3].Trim(), out float ho)) horizontalOffset = ho;
+                }
                 else if (tag.StartsWith("expr ")) exprName = tag.Substring(5).Trim();
                 else if (tag.StartsWith("action ")) {
-                    // 处理动作标签: #action jump, #action enter_left, #action flash
                     string actionStr = tag.Substring(7).Trim();
                     ProcessActionTag(actionStr);
                 }
@@ -192,31 +201,37 @@ namespace Game.Story {
                 else if (tag == "hide") {
                     string id = tag.Length > 5 ? tag.Substring(5).Trim() : "";
                     if (!string.IsNullOrEmpty(id)) StoryCharacterManager.Instance?.HideCharacter(id);
-                    Advance();
+                    if (_story.canContinue) {
+                        _story.Continue();
+                        ProcessLine(_story.currentText?.Trim() ?? "");
+                    }
                     return;
                 }
             }
 
-            // 跳过纯 tag 行
+            // 跳过纯 tag 行（继续下一行）
             if (IsPureTagLine(line, speaker, text)) {
-                Debug.Log("[InkStoryPlayer] Skipping pure tag line");
-                Advance();
+                if (_story.canContinue) {
+                    _story.Continue();
+                    ProcessLine(_story.currentText?.Trim() ?? "");
+                }
                 return;
             }
 
             // 隐藏角色（#-player）
             if (characterId.StartsWith("-")) {
-                Debug.Log($"[InkStoryPlayer] Hiding character: {characterId}");
                 string id = characterId.Substring(1);
                 StoryCharacterManager.Instance?.HideCharacter(id);
-                Advance();
+                if (_story.canContinue) {
+                    _story.Continue();
+                    ProcessLine(_story.currentText?.Trim() ?? "");
+                }
                 return;
             }
 
             // 显示/切换角色
             if (!string.IsNullOrEmpty(characterId)) {
-                Debug.Log($"[InkStoryPlayer] Show character: {characterId}, expr: {exprName}");
-                StoryCharacterManager.Instance?.ShowCharacter(characterId, exprName, 0.4f, 0.15f, 0f);
+                StoryCharacterManager.Instance?.ShowCharacter(characterId, exprName, heightPercent, bottomOffset, horizontalOffset);
             }
 
             // 显示文字
