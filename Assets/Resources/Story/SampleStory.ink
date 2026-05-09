@@ -21,7 +21,7 @@ VAR player_name = "天使"
 VAR flag_met_spirit = false
 
 === start ===
-#ch 主角
+#ch 主角, 0.8, 0.2, 0
 #expr 主角惊讶
 哇，这里就是目的地吗？
 

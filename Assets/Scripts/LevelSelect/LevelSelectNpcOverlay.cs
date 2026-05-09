@@ -1,6 +1,4 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using TMPro;
 using Game.Story;
 
@@ -13,17 +11,12 @@ public class LevelSelectNpcOverlay : MonoBehaviour
     public string npcName = "摔掉糖果的小男孩";
 
     [Header("进入关卡")]
-    public string levelSceneName = "Levels";
     public AudioClip interactSound;
     public AudioSource audioSource;
-    [Tooltip("按 F 后音效播放多久再切换场景（秒）。设 0 则立即切换。")]
-    public float transitionDelay = 0.4f;
 
     [Header("剧情")]
-    [Tooltip("对应 Ink 剧情的 Resources 路径，如 Chapter1_LittleBoy（不含 .json）。留空则跳过剧情直接进入。")]
+    [Tooltip("Ink 剧情文件名（不含 .json），如 storyC1-1")]
     public string storyFile = "";
-    [Tooltip("剧情播完后是否自动进入关卡。false 则需要再按一次 F。")]
-    public bool autoEnterAfterStory = false;
 
     [Header("交互")]
     public Transform player;
@@ -490,7 +483,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
 
     #endregion
 
-    #region Story & Level Entry
+    #region Story & Interact
 
     void TryEnterLevel()
     {
@@ -498,30 +491,17 @@ public class LevelSelectNpcOverlay : MonoBehaviour
 
         if (!_lastUnlocked) return;
 
-        // 有剧情且未播放 → 先播放剧情
-        if (!_storyPlayed && !string.IsNullOrEmpty(storyFile))
-        {
-            PlaySound();
-            StoryAPI.PlayStory(storyFile);
-            return;
-        }
+        if (string.IsNullOrEmpty(storyFile)) return;
 
-        // 剧情已播完或无剧情 → 进入关卡
         _transitioning = true;
         PlaySound();
-        StartCoroutine(LoadSceneAfterDelay());
+        StoryAPI.PlayStory(storyFile);
     }
 
     void OnStoryEnded()
     {
         _storyPlayed = true;
-
-        if (autoEnterAfterStory)
-        {
-            _transitioning = true;
-            PlaySound();
-            StartCoroutine(LoadSceneAfterDelay());
-        }
+        _transitioning = false;
     }
 
     void PlaySound()
@@ -529,15 +509,6 @@ public class LevelSelectNpcOverlay : MonoBehaviour
         if (interactSound == null) return;
         if (audioSource != null) audioSource.PlayOneShot(interactSound);
         else AudioSource.PlayClipAtPoint(interactSound, transform.position);
-    }
-
-    IEnumerator LoadSceneAfterDelay()
-    {
-        if (transitionDelay > 0f)
-            yield return new WaitForSeconds(transitionDelay);
-
-        LevelProgress.SetPendingLevelSelection(chapterIndex, levelIndex, levelNumber);
-        SceneTransition.Load(levelSceneName);
     }
 
     #endregion

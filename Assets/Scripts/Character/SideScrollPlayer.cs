@@ -133,7 +133,7 @@ public class SideScrollPlayer : MonoBehaviour
     {
         _facingRight = facingRight;
 
-        if (skeletonAnimation != null)
+        if (skeletonAnimation != null && skeletonAnimation.skeleton != null)
             skeletonAnimation.skeleton.ScaleX = facingRight ? 1 : -1;
 
         _shadowTargetLocalPosition = facingRight

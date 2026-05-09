@@ -17,12 +17,9 @@ VAR boss_defeated = false
 这里是...
 
 #ch 莉拉
-#expr 严肃
-#action shake
 信号就是从这里传来的，非常强烈...
 
 #ch 莉拉
-#expr 担忧
 小心点。这种程度的负面情绪，可能会比之前的都要危险。
 
 #ch 主角
@@ -39,20 +36,14 @@ VAR boss_defeated = false
 // 一个身影缓缓抬起头
 
 #ch ????
-#expr ????
-#action shake
 ...
 
 （这个人...身上缠绕着好重的负面情绪）
 
 #ch 莉拉
-#expr 警告
-#action pulse
 这个负面情绪...已经形成了某种形态。
 
 #ch 莉拉
-#expr 严肃
-#action shake
 它不是单纯的悲伤，而是...恐惧、自责、绝望混合在一起的东西。
 
 #ch 主角
@@ -78,23 +69,19 @@ VAR boss_defeated = false
 // 负面情绪形成的黑影开始剧烈波动
 
 #ch ????
-#expr ????
-#action shake
-#action shake
 不要...不要过来...
 
 #ch ????
-#expr ????
-#action shake
 都是我的错...都是我的错...
 
 （这是...需要修复的灵魂吗）
 
 #ch 莉拉
-#expr 指引
 尝试进入它的内心。那里面应该有被困住的灵魂。
 
 // 进入第三关 - 内心世界
+
+-> level_3_start
 
 === level_3_start ===
 // 第三关开始 - 进入负面情绪的内心世界
@@ -108,12 +95,12 @@ VAR boss_defeated = false
 这里是...
 
 #ch 莉拉
-#expr 解释
 这是她内心深处的世界。所有的痛苦、恐惧、绝望...都凝聚在这里。
 
 #ch 莉拉
-#expr 指引
 找到核心，解开她的心结。
+
+-> level_3_complete
 
 === level_3_complete ===
 // 第三关全部解谜面通关
@@ -125,7 +112,6 @@ VAR boss_defeated = false
 没事的，已经没事了。
 
 #ch ????
-#expr 释然
 ...真的吗？
 
 #ch 主角
@@ -134,7 +120,6 @@ VAR boss_defeated = false
 嗯，真的。
 
 #ch ????
-#expr 感激
 谢谢你...天使姐姐...
 
 // 女孩身上的黑影逐渐消散，身边蹦出了大量闪闪发光的"希望"
@@ -142,12 +127,9 @@ VAR boss_defeated = false
 （这次收集到的希望...好多）
 
 #ch 莉拉
-#expr 欣慰
-#action bounce
 干得漂亮，主角。
 
 #ch 莉拉
-#expr 鼓励
 人间的负面情绪确实很复杂...但你做得很好。
 
 #ch 主角
@@ -158,11 +140,9 @@ VAR boss_defeated = false
 （话说回来，那个小女孩到底经历了什么...）
 
 #ch 莉拉
-#expr 解释
 每个人都有自己的故事。有些伤痛，需要时间来愈合。
 
 #ch 莉拉
-#expr 鼓励
 重要的是，有人在她最需要的时候伸出了手。
 
 #ch 主角
@@ -171,25 +151,5 @@ VAR boss_defeated = false
 嗯...我会继续努力的。
 
 // 场景切换回小镇
-
-#scene 小镇_傍晚
-// 夕阳西下，主角站在小镇的广场上
-
-今天收集了好多希望呢...
-
-#ch 莉拉
-#expr 鼓励
-辛苦了，休息一下吧。
-
-#ch 莉拉
-#expr 期待
-明天，还有更多的人需要你的帮助。
-
-#ch 主角
-#expr 开心
-#action bounce
-嗯！
-
-// 第一天的冒险结束
 
 -> END
