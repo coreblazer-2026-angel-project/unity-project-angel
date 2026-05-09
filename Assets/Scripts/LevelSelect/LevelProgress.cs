@@ -1,32 +1,35 @@
 using UnityEngine;
 
 /// <summary>
-/// 关卡选择进度。先用 Unity 原生 PlayerPrefs 存最小进度：
-/// 已解锁到第几关、已经收集多少希望。
+/// 关卡选择进度接口。实际存档统一走 SaveSystem/save.json。
 /// </summary>
 public static class LevelProgress
 {
-    const string MaxUnlockedKey = "LevelSelect.MaxUnlockedLevel";
-    const string HopeKey = "LevelSelect.Hope";
-
     public static int MaxUnlockedLevel
     {
-        get => PlayerPrefs.GetInt(MaxUnlockedKey, 1);
+        get => Mathf.Max(1, SaveSystem.Load().maxUnlockedLevel);
         set
         {
-            PlayerPrefs.SetInt(MaxUnlockedKey, Mathf.Max(1, value));
-            PlayerPrefs.Save();
+            SaveData data = SaveSystem.Load();
+            data.maxUnlockedLevel = Mathf.Max(1, value);
+            SaveSystem.Save(data);
         }
     }
 
     public static int Hope
     {
-        get => PlayerPrefs.GetInt(HopeKey, 0);
+        get => Mathf.Max(0, SaveSystem.Load().hope);
         set
         {
-            PlayerPrefs.SetInt(HopeKey, Mathf.Max(0, value));
-            PlayerPrefs.Save();
+            SaveData data = SaveSystem.Load();
+            data.hope = Mathf.Max(0, value);
+            SaveSystem.Save(data);
         }
+    }
+
+    public static int CompletedLevelCount
+    {
+        get => Hope;
     }
 
     public static bool IsUnlocked(int levelNumber)
@@ -36,22 +39,72 @@ public static class LevelProgress
 
     public static bool IsCompleted(int levelNumber)
     {
-        return levelNumber < MaxUnlockedLevel;
+        return levelNumber <= Hope;
     }
 
     public static void CompleteLevel(int levelNumber)
     {
-        if (!IsCompleted(levelNumber))
-            Hope += 1;
+        SaveData data = SaveSystem.Load();
+        int completedLevel = Mathf.Max(1, levelNumber);
 
-        if (levelNumber >= MaxUnlockedLevel)
-            MaxUnlockedLevel = levelNumber + 1;
+        data.hope = Mathf.Max(data.hope, completedLevel);
+        data.maxUnlockedLevel = Mathf.Max(1, data.maxUnlockedLevel, completedLevel + 1);
+        SaveSystem.Save(data);
     }
 
     public static void ResetProgress()
     {
-        PlayerPrefs.DeleteKey(MaxUnlockedKey);
-        PlayerPrefs.DeleteKey(HopeKey);
-        PlayerPrefs.Save();
+        ResetToFirstLevelIncomplete();
+    }
+
+    public static void ResetToFirstLevelIncomplete()
+    {
+        SaveData data = SaveSystem.Load();
+        data.maxUnlockedLevel = 1;
+        data.hope = 0;
+        data.hasPendingLevelSelection = false;
+        data.pendingChapterIndex = 0;
+        data.pendingLevelIndex = 0;
+        data.pendingLevelNumber = 1;
+        SaveSystem.Save(data);
+    }
+
+    public static void ResetHope()
+    {
+        SaveData data = SaveSystem.Load();
+        data.hope = 0;
+        SaveSystem.Save(data);
+    }
+
+    public static void SetCompletedLevelCount(int completedCount)
+    {
+        completedCount = Mathf.Max(0, completedCount);
+        Hope = completedCount;
+        MaxUnlockedLevel = Mathf.Max(1, completedCount + 1);
+    }
+
+    public static void SetPendingLevelSelection(int chapterIndex, int levelIndex, int levelNumber)
+    {
+        SaveData data = SaveSystem.Load();
+        data.hasPendingLevelSelection = true;
+        data.pendingChapterIndex = Mathf.Max(0, chapterIndex);
+        data.pendingLevelIndex = Mathf.Max(0, levelIndex);
+        data.pendingLevelNumber = Mathf.Max(1, levelNumber);
+        SaveSystem.Save(data);
+    }
+
+    public static bool TryConsumePendingLevelSelection(out int chapterIndex, out int levelIndex, out int levelNumber)
+    {
+        SaveData data = SaveSystem.Load();
+        chapterIndex = data.pendingChapterIndex;
+        levelIndex = data.pendingLevelIndex;
+        levelNumber = Mathf.Max(1, data.pendingLevelNumber);
+
+        if (!data.hasPendingLevelSelection)
+            return false;
+
+        data.hasPendingLevelSelection = false;
+        SaveSystem.Save(data);
+        return true;
     }
 }

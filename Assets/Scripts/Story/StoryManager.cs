@@ -80,6 +80,11 @@ namespace Game.Story {
                 if (_characterManager == null) _characterManager = GetComponentInChildren<StoryCharacterManager>();
             }
 
+            if (_storyPlayer != null) {
+                _storyPlayer.dialoguePanel = _dialoguePanel;
+                _storyPlayer.choicePanel = _choicePanel;
+            }
+
             // 订阅事件
             if (_storyPlayer != null) {
                 _storyPlayer.OnStoryStart += HandleStoryStart;

@@ -29,6 +29,7 @@ public class LevelSelectNpc : MonoBehaviour
     public TextMesh lockedText;
 
     bool _playerNear;
+    bool _lastUnlocked;
 
     void Reset()
     {
@@ -62,6 +63,10 @@ public class LevelSelectNpc : MonoBehaviour
     {
         UpdatePlayerNear();
 
+        bool unlocked = LevelProgress.IsUnlocked(levelNumber);
+        if (unlocked != _lastUnlocked)
+            RefreshVisual();
+
         if (!_playerNear) {
             HidePrompt();
             return;
@@ -88,6 +93,7 @@ public class LevelSelectNpc : MonoBehaviour
         if (bodyRenderer == null) return;
 
         bool unlocked = LevelProgress.IsUnlocked(levelNumber);
+        _lastUnlocked = unlocked;
         bodyRenderer.color = unlocked ? Color.white : Color.black;
     }
 
@@ -129,10 +135,7 @@ public class LevelSelectNpc : MonoBehaviour
             return;
         }
 
-        PlayerPrefs.SetInt("LevelSelect.PendingChapterIndex", chapterIndex);
-        PlayerPrefs.SetInt("LevelSelect.PendingLevelIndex", levelIndex);
-        PlayerPrefs.SetInt("LevelSelect.PendingLevelNumber", levelNumber);
-        PlayerPrefs.Save();
+        LevelProgress.SetPendingLevelSelection(chapterIndex, levelIndex, levelNumber);
 
         SceneManager.LoadScene(levelSceneName);
     }
