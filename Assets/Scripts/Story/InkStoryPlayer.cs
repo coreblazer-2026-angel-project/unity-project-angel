@@ -166,13 +166,19 @@ namespace Game.Story {
             string speaker = "";
             string text = line;
 
+            // Ink JSON 的文本内容以 ^ 开头，需要去掉
+            if (text.StartsWith("^")) text = text.Substring(1);
+
             // 解析 speaker: 格式
-            if (line.Contains(":")) {
-                int idx = line.IndexOf(':');
-                string head = line.Substring(0, idx).Trim();
-                if (!head.StartsWith("->") && !head.StartsWith("*")) {
-                    speaker = head;
-                    text = line.Substring(idx + 1).Trim();
+            if (line.StartsWith("^") || text.Contains(":")) {
+                string raw = line.StartsWith("^") ? line.Substring(1) : line;
+                if (raw.Contains(":")) {
+                    int idx = raw.IndexOf(':');
+                    string head = raw.Substring(0, idx).Trim();
+                    if (!head.StartsWith("->") && !head.StartsWith("*")) {
+                        speaker = head;
+                        text = raw.Substring(idx + 1).Trim();
+                    }
                 }
             }
 
@@ -285,7 +291,7 @@ namespace Game.Story {
             foreach (char c in _currentFullText) {
                 display += c;
                 if (dialoguePanel != null) dialoguePanel.SetText(display);
-                yield return new WaitForSeconds(typewriterSpeed);
+                yield return new WaitForSecondsRealtime(typewriterSpeed);
             }
 
             _isTyping = false;
