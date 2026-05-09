@@ -175,8 +175,20 @@ namespace Game.Story {
             string characterId = "";
             string exprName = "";
 
+            // 解析 #ch 标签，支持格式: #ch 角色ID, 高度比例, 底部偏移(像素), 水平偏移(像素)
+            float heightPercent = 0.8f;
+            float bottomOffset = 20f;
+            float horizontalOffset = 0f;
+
             foreach (var tag in tags) {
-                if (tag.StartsWith("ch ")) characterId = tag.Substring(3).Trim();
+                if (tag.StartsWith("ch ")) {
+                    characterId = tag.Substring(3).Trim();
+                    string[] parts = characterId.Split(',');
+                    if (parts.Length >= 1) characterId = parts[0].Trim();
+                    if (parts.Length >= 2 && float.TryParse(parts[1].Trim(), out float h)) heightPercent = h;
+                    if (parts.Length >= 3 && float.TryParse(parts[2].Trim(), out float b)) bottomOffset = b;
+                    if (parts.Length >= 4 && float.TryParse(parts[3].Trim(), out float ho)) horizontalOffset = ho;
+                }
                 else if (tag.StartsWith("expr ")) exprName = tag.Substring(5).Trim();
                 else if (tag.StartsWith("action ")) {
                     string actionStr = tag.Substring(7).Trim();
@@ -189,7 +201,10 @@ namespace Game.Story {
                 else if (tag == "hide") {
                     string id = tag.Length > 5 ? tag.Substring(5).Trim() : "";
                     if (!string.IsNullOrEmpty(id)) StoryCharacterManager.Instance?.HideCharacter(id);
-                    Advance();
+                    if (_story.canContinue) {
+                        _story.Continue();
+                        ProcessLine(_story.currentText?.Trim() ?? "");
+                    }
                     return;
                 }
             }
@@ -216,8 +231,7 @@ namespace Game.Story {
 
             // 显示/切换角色
             if (!string.IsNullOrEmpty(characterId)) {
-                Debug.Log($"[InkStoryPlayer] Show character: {characterId}, expr: {exprName}");
-                StoryCharacterManager.Instance?.ShowCharacter(characterId, exprName, 0.4f, 0.15f, 0f);
+                StoryCharacterManager.Instance?.ShowCharacter(characterId, exprName, heightPercent, bottomOffset, horizontalOffset);
             }
 
             // 显示文字

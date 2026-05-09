@@ -155,8 +155,8 @@ namespace Game.Story {
         /// 显示角色
         /// </summary>
         public static void ShowCharacter(string characterId, string expression = "",
-                float screenWidthPercent = 0.4f, float screenBottomPercent = 0.15f) {
-            Instance?.DoShowCharacter(characterId, expression, screenWidthPercent, screenBottomPercent);
+                float heightPercent = 0.8f, float bottomOffset = 20f, float horizontalOffset = 0f) {
+            Instance?.DoShowCharacter(characterId, expression, heightPercent, bottomOffset, horizontalOffset);
         }
 
         /// <summary>
@@ -317,8 +317,8 @@ namespace Game.Story {
         }
 
         void DoShowCharacter(string characterId, string expression,
-                float screenWidthPercent, float screenBottomPercent) {
-            _characterManager?.ShowCharacter(characterId, expression, screenWidthPercent, screenBottomPercent);
+                float heightPercent, float bottomOffset, float horizontalOffset) {
+            _characterManager?.ShowCharacter(characterId, expression, heightPercent, bottomOffset, horizontalOffset);
         }
 
         void DoHideCharacter(string characterId) {

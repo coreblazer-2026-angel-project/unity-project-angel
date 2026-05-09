@@ -587,8 +587,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 793, y: 407.5}
-  m_SizeDelta: {x: 1586, y: 815}
+  m_AnchoredPosition: {x: 0.00012207031, y: 0.000061035156}
+  m_SizeDelta: {x: 246.80444, y: 126.82568}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8162744449665442540
 CanvasRenderer:
@@ -640,12 +640,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab55c36563afe07429b6307806dcf13f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _storyPlayer: {fileID: 0}
-  _dialoguePanel: {fileID: 0}
+  _storyPlayer: {fileID: 4333872512276904068}
+  _dialoguePanel: {fileID: 8747389359342592277}
   _choicePanel: {fileID: 0}
-  _characterManager: {fileID: 0}
+  _characterManager: {fileID: 1211009596284023168}
   _pauseGameDuringStory: 1
-  _prefabForAutoInstantiate: {fileID: 0}
+  _prefabForAutoInstantiate: {fileID: 7566611963831760309, guid: 57ea96b2349bebb44af10f9b5a18b53f, type: 3}
 --- !u!1 &6859763734666176031
 GameObject:
   m_ObjectHideFlags: 0
@@ -845,7 +845,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 36, y: -64}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &8308923630721777106

@@ -75,13 +75,18 @@ namespace Game.Story {
                 preset.aspectFitter = preset.mount.GetComponent<AspectRatioFitter>();
                 if (preset.aspectFitter == null) preset.aspectFitter = preset.mount.gameObject.AddComponent<AspectRatioFitter>();
             }
-            preset.aspectFitter.aspectMode = AspectRatioFitter.AspectMode.WidthControlsHeight;
+            preset.aspectFitter.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
         }
 
         /// <summary>显示角色立绘</summary>
+        /// <param name="characterId">角色ID</param>
+        /// <param name="expressionName">表情名称</param>
+        /// <param name="heightPercent">立绘高度占屏幕高度的比例（0.0-1.0），默认 0.8</param>
+        /// <param name="bottomOffset">底部偏移（像素），默认 20</param>
+        /// <param name="horizontalOffset">水平偏移（像素），默认 0</param>
         public void ShowCharacter(string characterId, string expressionName,
-                float screenWidthPercent = 0.4f,
-                float screenBottomPercent = 0.15f,
+                float heightPercent = 0.8f,
+                float bottomOffset = 20f,
                 float horizontalOffset = 0f) {
 
             var preset = presets.Find(p => p.characterId == characterId);
@@ -96,8 +101,8 @@ namespace Game.Story {
                 return;
             }
 
-            // 布局 mount
-            float targetWidth = Screen.width * screenWidthPercent;
+            // 布局 mount - 基于高度的大小计算
+            float targetHeight = Screen.height * heightPercent;
             var rect = preset.mount.GetComponent<RectTransform>();
             if (rect == null) {
                 Debug.LogWarning($"[StoryCharacterManager] Mount has no RectTransform: '{characterId}'");
@@ -105,10 +110,8 @@ namespace Game.Story {
             }
             rect.anchorMax = new Vector2(0.5f, 0);
             rect.pivot = new Vector2(0.5f, 0);
-            rect.sizeDelta = new Vector2(targetWidth, 0);
-            rect.anchoredPosition = new Vector2(
-                Screen.width * horizontalOffset,
-                Screen.height * screenBottomPercent);
+            rect.anchoredPosition = new Vector2(horizontalOffset, bottomOffset);
+            rect.sizeDelta = new Vector2(0, targetHeight);
 
             // 查找 Sprite
             Sprite sprite = null;
@@ -146,6 +149,9 @@ namespace Game.Story {
             if (preset.image == null || sprite == null) return;
             preset.image.sprite = sprite;
             preset.image.enabled = true;
+            // 水平反转
+            var rt = preset.image.rectTransform;
+            rt.localScale = new Vector3(-1, 1, 1);
             if (preset.aspectFitter != null)
                 preset.aspectFitter.aspectRatio = sprite.rect.width / sprite.rect.height;
         }
