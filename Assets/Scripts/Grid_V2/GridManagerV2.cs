@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,11 +7,29 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
     public int column = 5;
     [SerializeField] GridV2 gridPrefab;
 
+    [Header("屏幕适配")]
+    [Range(0.3f, 1f)]
+    public float screenFillRatio = 0.7f;
+
+    [Header("居中偏移（相对于摄像机可视区域的百分比）")]
+    [Tooltip("正值向右，负值向左")]
+    [Range(-0.5f, 0.5f)]
+    public float centerOffsetXRatio = 0.084f;
+    [Tooltip("正值向上，负值向下")]
+    [Range(-0.5f, 0.5f)]
+    public float centerOffsetYRatio = -0.25f;
+
     private GridV2[,] grids;
     bool _levelLoaded;
 
+    public float ScaledGridSize { get; private set; }
+
+    // 网格左上角的世界偏移（tilemap 对齐用）
+    public Vector3 GridOrigin { get; private set; }
+
     protected override void Awake() {
         base.Awake();
+        ScaledGridSize = gridSize;
         CollectExistingGrids();
         SetGridVisible(false);
     }
@@ -27,8 +44,6 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
         SetGridVisible(true);
     }
 
-    /// <summary>根据关卡尺寸构建 grid 数组。会销毁场景中已存在的 GridV2 子物体并重新生成。
-    /// 通过 Instantiate(gridPrefab) 实例化预制体，保留预制体上挂载的所有组件。</summary>
     public void BuildGridForLevel(int width, int height) {
         if (width <= 0 || height <= 0) {
             Debug.LogWarning($"GridManagerV2.BuildGridForLevel: 无效尺寸 {width}x{height}，跳过");
@@ -50,20 +65,45 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
                 DestroyImmediate(child.gameObject);
         }
 
-        // 设置新尺寸并实例化预制体
         column = width;
         row = height;
         grids = new GridV2[row, column];
+
+        // 计算适配屏幕的 gridSize
+        Camera cam = Camera.main;
+        float camShiftX = 0f, camShiftY = 0f;
+        if (cam != null && cam.orthographic) {
+            float camH = cam.orthographicSize * 2f;
+            float camW = camH * cam.aspect;
+            float availW = camW * screenFillRatio;
+            float availH = camH * screenFillRatio;
+            ScaledGridSize = Mathf.Min(availW / column, availH / row);
+
+            // 动态偏移（百分比 × 摄像机可视区域）
+            camShiftX = camW * centerOffsetXRatio;
+            camShiftY = camH * centerOffsetYRatio;
+        } else {
+            ScaledGridSize = gridSize;
+        }
+
+        // 居中 + 动态偏移
+        float totalW = column * ScaledGridSize;
+        float totalH = row * ScaledGridSize;
+        float offsetX = -totalW / 2f + camShiftX;
+        float offsetY = totalH / 2f + camShiftY;
+
+        GridOrigin = new Vector3(offsetX - ScaledGridSize / 2f, offsetY - ScaledGridSize / 2f, 0f);
 
         for (int y = 0; y < row; ++y) {
             for (int x = 0; x < column; ++x) {
                 GridV2 grid = Instantiate(gridPrefab, transform);
                 grid.name = $"Grid_{x}_{y}";
-                grid.transform.localPosition = new Vector3(x * gridSize, -y * gridSize, 0);
+                grid.transform.localPosition = new Vector3(
+                    offsetX + x * ScaledGridSize,
+                    offsetY - y * ScaledGridSize, 0);
                 grid.x = x;
                 grid.y = y;
 
-                // 重置预制体上序列化遗留的状态，避免 PutElement 时误判
                 grid.holdObjects.Clear();
                 grid.holdObject = null;
                 grid.noPlace = false;
@@ -71,6 +111,10 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
                 grids[y, x] = grid;
             }
         }
+
+        // 同步 tilemap 的 cellSize 和位置
+        var em = ElectricManager.Instance;
+        if (em != null) em.SyncTilemapGrid();
     }
 
     void CollectExistingGrids() {
@@ -98,10 +142,8 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
     }
 
     public GridV2 GetGrid(int x, int y) {
-        if (x < 0 || x >= column || y < 0 || y >= row) {
-            Debug.LogWarning($"Grid out of range: ({x},{y})");
-            return null;
-        }
+        if (grids == null) return null;
+        if (x < 0 || x >= column || y < 0 || y >= row) return null;
         return grids[y, x];
     }
 }

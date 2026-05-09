@@ -84,23 +84,26 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         SyncTilemapGrid();
     }
 
-    void SyncTilemapGrid() {
+    public void SyncTilemapGrid() {
         if (wireTilemap == null) return;
         _tilemapGrid = wireTilemap.layoutGrid;
         if (_tilemapGrid == null) return;
 
-        float gs = GridManagerV2.Instance != null ? GridManagerV2.Instance.gridSize : 0.32f;
+        var gm = GridManagerV2.Instance;
+        float gs = gm != null ? gm.ScaledGridSize : 0.32f;
+        Vector3 origin = gm != null ? gm.GridOrigin : new Vector3(-gs / 2f, -gs / 2f, 0f);
+
         _tilemapGrid.cellSize = new Vector3(gs, gs, 1f);
-        _tilemapGrid.transform.position = new Vector3(-gs / 2f, -gs / 2f, 0f);
+        _tilemapGrid.transform.position = origin;
 
         if (elementTilemap != null && elementTilemap.layoutGrid != null) {
             elementTilemap.layoutGrid.cellSize = new Vector3(gs, gs, 1f);
-            elementTilemap.layoutGrid.transform.position = new Vector3(-gs / 2f, -gs / 2f, 0f);
+            elementTilemap.layoutGrid.transform.position = origin;
         }
 
         if (previewTilemap != null && previewTilemap.layoutGrid != null) {
             previewTilemap.layoutGrid.cellSize = new Vector3(gs, gs, 1f);
-            previewTilemap.layoutGrid.transform.position = new Vector3(-gs / 2f, -gs / 2f, 0f);
+            previewTilemap.layoutGrid.transform.position = origin;
         }
     }
 

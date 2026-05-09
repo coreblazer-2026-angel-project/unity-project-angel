@@ -17,8 +17,11 @@ public class DragManager : MonoBehaviour {
     [Tooltip("松开后是否吸附到网格")]
     public bool snapToGridOnRelease = false;
 
-    [Tooltip("吸附网格大小（与 GridManagerV2 保持一致）")]
-    public float gridSize = 0.32f;
+    [Tooltip("吸附网格大小（留空自动从 GridManagerV2 读取）")]
+    public float gridSize = 0f;
+
+    float EffectiveGridSize => gridSize > 0 ? gridSize :
+        (GridManagerV2.Instance != null ? GridManagerV2.Instance.ScaledGridSize : 0.32f);
 
     Camera Cam => cam != null ? cam : Camera.main;
 
@@ -97,9 +100,10 @@ public class DragManager : MonoBehaviour {
 
         // 网格吸附
         if (snapToGridOnRelease) {
+            float gs = EffectiveGridSize;
             Vector3 pos = _currentDragObject.transform.position;
-            pos.x = Mathf.Round(pos.x / gridSize) * gridSize;
-            pos.y = Mathf.Round(pos.y / gridSize) * gridSize;
+            pos.x = Mathf.Round(pos.x / gs) * gs;
+            pos.y = Mathf.Round(pos.y / gs) * gs;
             _currentDragObject.transform.position = pos;
         }
 
@@ -126,7 +130,7 @@ public class DragManager : MonoBehaviour {
         // 2. 回退：按距离检测（不需要 Collider2D，阈值约一个格子大小）
         float minSqrDistance = float.MaxValue;
         GameObject closest = null;
-        float thresholdSqr = gridSize * gridSize; // 放宽到整格范围
+        float thresholdSqr = EffectiveGridSize * EffectiveGridSize;
 
         foreach (var obj in draggableObjects) {
             if (obj == null) continue;
@@ -141,8 +145,10 @@ public class DragManager : MonoBehaviour {
         // 3. 最终回退：通过网格坐标查找（适合 Tilemap 渲染且无 Collider2D 的元件）
         var gmv2 = GridManagerV2.Instance;
         if (gmv2 != null) {
-            int gx = Mathf.RoundToInt(worldPos.x / gmv2.gridSize);
-            int gy = Mathf.RoundToInt(-worldPos.y / gmv2.gridSize);
+            Vector3 origin = gmv2.GridOrigin;
+            float gs = gmv2.ScaledGridSize;
+            int gx = Mathf.FloorToInt((worldPos.x - origin.x) / gs);
+            int gy = Mathf.FloorToInt((origin.y + gs - worldPos.y) / gs);
             GridV2 cell = gmv2.GetGrid(gx, gy);
             if (cell != null) {
                 foreach (var obj in cell.holdObjects) {

@@ -33,7 +33,7 @@ public class GridV2 : MonoBehaviour {
 
     /// <summary>在自身位置画一个 gridSize × gridSize 的方框（中心对齐）</summary>
     void CreateBorder() {
-        float size = GridManagerV2.Instance != null ? GridManagerV2.Instance.gridSize : 0.32f;
+        float size = GridManagerV2.Instance != null ? GridManagerV2.Instance.ScaledGridSize : 0.32f;
         float half = size / 2f;
 
         var go = new GameObject("Border");
@@ -44,8 +44,9 @@ public class GridV2 : MonoBehaviour {
         lr.useWorldSpace = false;
         lr.loop = false;
         lr.positionCount = 5;
-        lr.startWidth = borderWidth;
-        lr.endWidth = borderWidth;
+        float scaledWidth = borderWidth * (size / 0.32f);
+        lr.startWidth = scaledWidth;
+        lr.endWidth = scaledWidth;
         lr.startColor = borderColor;
         lr.endColor = borderColor;
         lr.material = new Material(Shader.Find("Sprites/Default"));
@@ -114,6 +115,15 @@ public class GridV2 : MonoBehaviour {
         }
 
         GameObject spawnGameObject = Instantiate(prefab, transform);
+
+        // 缩放物件以匹配动态网格大小
+        var gm = GridManagerV2.Instance;
+        if (gm != null && gm.gridSize > 0) {
+            float s = gm.ScaledGridSize / gm.gridSize;
+            spawnGameObject.transform.localScale = Vector3.Scale(
+                spawnGameObject.transform.localScale, new Vector3(s, s, 1f));
+        }
+
         holdObjects.Add(spawnGameObject);
         if (holdObject == null) holdObject = spawnGameObject;
 

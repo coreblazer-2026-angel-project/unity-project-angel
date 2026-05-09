@@ -524,13 +524,13 @@ public class LevelSelectNpcOverlay : MonoBehaviour
     void OnStoryEnded()
     {
         _storyPlayed = true;
+        _transitioning = false;
 
-        if (autoEnterAfterStory)
-        {
-            _transitioning = true;
-            PlaySound();
-            StartCoroutine(LoadSceneAfterDelay());
-        }
+        if (dialogPanel != null)
+            dialogPanel.SetActive(false);
+
+        LevelProgress.SetPendingLevelSelection(chapterIndex, levelIndex, levelNumber);
+        SceneTransition.Load(levelSceneName);
     }
 
     void PlaySound()

@@ -94,7 +94,7 @@ public class WirePlacer : MonoBehaviour {
         var gmv2 = GridManagerV2.Instance;
         if (gmv2 == null) return;
 
-        Vector2Int gridPos = WorldToGrid(world, gmv2.gridSize);
+        Vector2Int gridPos = WorldToGrid(world, gmv2.ScaledGridSize);
         dragStartGridPos = gridPos;
         lastGridPos = gridPos;
 
@@ -128,7 +128,7 @@ public class WirePlacer : MonoBehaviour {
         var gmv2 = GridManagerV2.Instance;
         if (gmv2 == null) return;
 
-        Vector2Int gridPos = WorldToGrid(world, gmv2.gridSize);
+        Vector2Int gridPos = WorldToGrid(world, gmv2.ScaledGridSize);
         if (lastGridPos.HasValue && gridPos == lastGridPos.Value) return;
 
         // 阈值：还没有任何预览时，只有离开起点格子才开始显示预览
@@ -179,6 +179,13 @@ public class WirePlacer : MonoBehaviour {
             go = new GameObject("PreviewWire");
             go.transform.SetParent(cell.transform);
             go.transform.localPosition = Vector3.zero;
+
+            // 缩放预览精灵以匹配网格
+            var gm = GridManagerV2.Instance;
+            if (gm != null && gm.gridSize > 0) {
+                float s = gm.ScaledGridSize / gm.gridSize;
+                go.transform.localScale = new Vector3(s, s, 1f);
+            }
 
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = wireSprite;
@@ -285,7 +292,7 @@ public class WirePlacer : MonoBehaviour {
         var gmv2 = GridManagerV2.Instance;
         if (gmv2 == null) return;
 
-        Vector2Int gridPos = WorldToGrid(world, gmv2.gridSize);
+        Vector2Int gridPos = WorldToGrid(world, gmv2.ScaledGridSize);
 
         // 避免同一帧重复处理同一格子
         if (lastEraseGridPos.HasValue && gridPos == lastEraseGridPos.Value) return;
@@ -339,9 +346,17 @@ public class WirePlacer : MonoBehaviour {
     }
 
     static Vector2Int WorldToGrid(Vector3 world, float gridSize) {
-        int gx = Mathf.RoundToInt(world.x / gridSize);
-        int gy = Mathf.RoundToInt(-world.y / gridSize);
-        return new Vector2Int(gx, gy);
+        var gmv2 = GridManagerV2.Instance;
+        if (gmv2 != null) {
+            Vector3 origin = gmv2.GridOrigin;
+            float gs = gmv2.ScaledGridSize;
+            int gx = Mathf.FloorToInt((world.x - origin.x) / gs);
+            int gy = Mathf.FloorToInt((origin.y + gs - world.y) / gs);
+            return new Vector2Int(gx, gy);
+        }
+        int gx2 = Mathf.RoundToInt(world.x / gridSize);
+        int gy2 = Mathf.RoundToInt(-world.y / gridSize);
+        return new Vector2Int(gx2, gy2);
     }
 
     // Bresenham 线段算法：返回从 from 到 to 经过的所有整数坐标点
