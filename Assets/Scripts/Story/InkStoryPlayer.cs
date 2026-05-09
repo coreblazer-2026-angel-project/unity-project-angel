@@ -41,6 +41,8 @@ namespace Game.Story {
         private Coroutine _typewriterCoroutine;
         private string _currentFullText;
         private bool _waitingForChoice;
+        private bool _actionPlaying;
+        private StoryActionPlayer _currentActionPlayer;
         private List<InkChoice> _currentChoices = new List<InkChoice>();
 
         public event Action OnStoryStart;
@@ -125,8 +127,20 @@ namespace Game.Story {
             if (_waitingForChoice) return;
             if (_isTyping) {
                 SkipTypewriter();
+            } else if (_actionPlaying) {
+                SkipCurrentAction();
             } else {
                 Advance();
+            }
+        }
+
+        /// <summary>跳过当前正在播放的动作</summary>
+        private void SkipCurrentAction() {
+            if (_currentActionPlayer != null) {
+                _currentActionPlayer.Stop();
+                _actionPlaying = false;
+                _currentActionPlayer = null;
+                Debug.Log("[InkStoryPlayer] Action skipped by user.");
             }
         }
 
@@ -140,6 +154,7 @@ namespace Game.Story {
         }
 
         void Advance() {
+            if (_actionPlaying) return;
             if (!_story.canContinue) {
                 if (_story.currentChoices.Count > 0) {
                     ShowChoices(_story.currentChoices);
@@ -351,11 +366,23 @@ namespace Game.Story {
             }
 
             // 解析动作名称和参数
+            // 支持两种格式：
+            //   jump, bounce, flash, shake       → 单动作名
+            //   bounce_2, flash_0.5            → 动作名_强度
+            //   lean_left, enter_right          → 复合动作名（不拆开）
             string[] parts = actionStr.Split('_');
             string actionName = parts[0].ToLower().Trim();
             float intensity = 1f;
-            if (parts.Length > 1 && float.TryParse(parts[1], out float parsed)) {
-                intensity = parsed;
+
+            if (parts.Length >= 2) {
+                // 如果第二个下划线部分是数字，就是强度；否则是复合动作名
+                if (float.TryParse(parts[1], out float parsed)) {
+                    intensity = parsed;
+                } else if (parts.Length == 2) {
+                    // 复合动作名（如 lean_left），还原为完整名称
+                    actionName = actionStr.ToLower().Trim();
+                }
+                // parts.Length > 2 时忽略额外部分
             }
 
             // 获取当前显示的角色 preset
@@ -445,7 +472,12 @@ namespace Game.Story {
             }
 
             Debug.Log($"[InkStoryPlayer] Play action: {action.type}, intensity={intensity}");
-            actionPlayer.Play(action);
+            _actionPlaying = true;
+            _currentActionPlayer = actionPlayer;
+            actionPlayer.Play(action, () => {
+                _actionPlaying = false;
+                _currentActionPlayer = null;
+            });
         }
 
         public InkStory GetStory() => _story;

@@ -77,9 +77,9 @@ namespace Game.Story {
                 _currentCoroutine = null;
             }
             _isPlaying = false;
-            // 恢复默认状态
-            transform.localScale = _defaultLocalScale;
-            transform.localRotation = Quaternion.Euler(0, 0, _defaultRotation);
+            // 恢复默认状态，scale 固定为翻转方向，动画只改 position/rotation
+            transform.localScale = new Vector3(-1f, 1f, 1f);
+            transform.localRotation = Quaternion.Euler(0, 0, 0);
         }
 
         /// <summary>
@@ -172,6 +172,8 @@ namespace Game.Story {
             }
 
             _isPlaying = false;
+            // 动画结束后恢复翻转方向，避免动画 scale 干扰角色朝向
+            transform.localScale = new Vector3(-1f, 1f, 1f);
             onComplete?.Invoke();
             action.onComplete?.Invoke();
         }
@@ -191,7 +193,7 @@ namespace Game.Story {
                 float elapsed = 0f;
                 while (!completed && elapsed < timeout) {
                     yield return null;
-                    elapsed += Time.deltaTime;
+                    elapsed += Time.unscaledDeltaTime;
                 }
             }
 
@@ -217,7 +219,7 @@ namespace Game.Story {
                 float height = Mathf.Sin(t * Mathf.PI) * jumpHeight;
                 rect.anchoredPosition = startPos + Vector2.up * height;
 
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
@@ -248,7 +250,7 @@ namespace Game.Story {
                 }
 
                 transform.localScale = startScale * scale;
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
@@ -267,7 +269,7 @@ namespace Game.Story {
                 float angle = Mathf.Sin(elapsed * speed) * shakeAngle * decay;
                 transform.localRotation = Quaternion.Euler(startRot.x, startRot.y, startRot.z + angle);
 
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
@@ -283,7 +285,7 @@ namespace Game.Story {
                 float t = defaultEase.Evaluate(elapsed / duration);
                 SetAlpha(Mathf.Lerp(fromAlpha, toAlpha, t));
 
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
@@ -311,7 +313,7 @@ namespace Game.Story {
                 float t = defaultEase.Evaluate(elapsed / duration);
                 rect.anchoredPosition = Vector2.Lerp(enterPos, startPos, t);
 
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
@@ -335,7 +337,7 @@ namespace Game.Story {
                 float t = defaultEase.Evaluate(elapsed / duration);
                 rect.anchoredPosition = Vector2.Lerp(startPos, exitPos, t);
 
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
@@ -354,9 +356,9 @@ namespace Game.Story {
 
             while (elapsed < duration) {
                 Color target = toWhite ? flashColor : originalColor;
-                targetImage.color = Color.Lerp(targetImage.color, target, Time.deltaTime * 10f);
+                targetImage.color = Color.Lerp(targetImage.color, target, Time.unscaledDeltaTime * 10f);
 
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 if (elapsed >= duration / 2f && toWhite) {
                     toWhite = false;
                 }
@@ -381,7 +383,7 @@ namespace Game.Story {
                 float scale = Mathf.Lerp(1f, maxScale, pulse);
 
                 transform.localScale = startScale * scale;
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
@@ -398,7 +400,7 @@ namespace Game.Story {
                 float angle = Mathf.Lerp(startAngle, startAngle + targetAngle, t);
                 transform.localRotation = Quaternion.Euler(0, 0, angle);
 
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 

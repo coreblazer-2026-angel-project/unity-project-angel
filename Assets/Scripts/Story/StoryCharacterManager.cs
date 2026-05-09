@@ -33,12 +33,19 @@ namespace Game.Story {
                 return;
             }
             Instance = this;
-        }
-
-        void Start() {
+            // 尽早初始化，确保任何 PlayStory 调用前 mount 已准备好
             _lastScreenWidth = Screen.width;
             _lastScreenHeight = Screen.height;
             SetupAllMounts();
+        }
+
+        void Start() {
+            // 已在 Awake 中初始化，此处仅处理屏幕尺寸变化
+            if (Screen.width != _lastScreenWidth || Screen.height != _lastScreenHeight) {
+                _lastScreenWidth = Screen.width;
+                _lastScreenHeight = Screen.height;
+                SetupAllMounts();
+            }
         }
 
         void Update() {
@@ -151,11 +158,19 @@ namespace Game.Story {
             if (preset.image == null || sprite == null) return;
             preset.image.sprite = sprite;
             preset.image.enabled = true;
-            // 水平反转
             var rt = preset.image.rectTransform;
-            rt.localScale = new Vector3(-1, 1, 1);
+            // 水平翻转（只在还没设置过翻转时设置，避免覆盖动画期间的 scale 变化）
+            if (Mathf.Abs(rt.localScale.x) < 0.001f) {
+                rt.localScale = new Vector3(-1, 1, 1);
+            }
             if (preset.aspectFitter != null)
                 preset.aspectFitter.aspectRatio = sprite.rect.width / sprite.rect.height;
+
+            // 确保 StoryActionPlayer 在正确的翻转 scale 下记录默认状态
+            var actionPlayer = preset.image.GetComponent<StoryActionPlayer>();
+            if (actionPlayer != null) {
+                actionPlayer.RecordDefaultState();
+            }
         }
 
         /// <summary>隐藏角色</summary>
