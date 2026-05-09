@@ -206,6 +206,9 @@ namespace Game.Story {
 
         /// <summary>根据角色ID获取显示名字</summary>
         public string GetCharacterDisplayName(string characterId) {
+            // 特殊映射：Ink 中的角色ID → 对话框显示名
+            if (characterId == "主角") return "诺艾尔";
+
             var allChars = FindObjectsOfType<StoryCharacter>();
             foreach (var sc in allChars) {
                 if (sc.characterId == characterId && !string.IsNullOrEmpty(sc.displayName)) {

@@ -25,7 +25,7 @@ VAR collected_hope_1 = false
 怎么没人告诉我传送点在天上啊喂！
 
 #ch 主角
-#expr 主角难过
+#expr 主角难过闭眼
 #action bounce
 #action bounce
 唉...没想到第一天收集"希望"就栽了个跟头啊
@@ -36,7 +36,7 @@ VAR collected_hope_1 = false
 话说回来这里是...？
 
 #ch 主角
-#expr 主角开心
+#expr 主角开心闭眼
 #action jump
 这里就是人类的小镇吗？
 
@@ -78,7 +78,7 @@ VAR collected_hope_1 = false
 难道要当面问吗...？
 
 #ch 主角
-#expr 主角难过
+#expr 主角难过闭眼
 #action shake
 不行不行，这也太尴尬了
 
@@ -98,7 +98,7 @@ VAR collected_hope_1 = false
 // 主角走向前去
 
 #ch 主角
-#expr 主角难过
+#expr 主角难过闭眼
 那个...小朋友？你怎么了吗？
 
 #ch 小男孩
@@ -115,7 +115,7 @@ VAR collected_hope_1 = false
 （怎么办怎么办我最不擅长对付这种小孩子了啊...）
 
 #ch 主角
-#expr 主角惊讶
+#expr 主角无语
 （要，要不然趁现在试一下吧）
 
 #ch 主角

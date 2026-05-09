@@ -12,7 +12,7 @@ VAR boss_defeated = false
 // 屋内昏暗，隐约可以看到一个身影蜷缩在角落
 
 #ch 主角
-#expr 主角惊讶
+#expr 主角难过闭眼
 #action flash
 这里是...
 
@@ -30,7 +30,7 @@ VAR boss_defeated = false
 // 主角慢慢走近那个身影
 
 #ch 主角
-#expr 主角难过
+#expr 主角难过闭眼
 那个...请问你还好吗？
 
 // 一个身影缓缓抬起头
@@ -47,7 +47,7 @@ VAR boss_defeated = false
 它不是单纯的悲伤，而是...恐惧、自责、绝望混合在一起的东西。
 
 #ch 主角
-#expr 主角惊讶
+#expr 主角无语
 不管是什么，我都要试试。
 
 // 主角伸出手
@@ -90,7 +90,7 @@ VAR boss_defeated = false
 // 可以看到一个年轻女孩的身影蜷缩在中央
 
 #ch 主角
-#expr 主角惊讶
+#expr 主角难过闭眼
 #action flash
 这里是...
 
@@ -108,14 +108,14 @@ VAR boss_defeated = false
 // 灰暗的空间开始出现光芒，破碎的镜子开始重组
 
 #ch 主角
-#expr 主角开心
+#expr 主角开心闭眼
 没事的，已经没事了。
 
 #ch ????
 ...真的吗？
 
 #ch 主角
-#expr 主角开心
+#expr 主角开心闭眼
 #action jump
 嗯，真的。
 
@@ -133,7 +133,7 @@ VAR boss_defeated = false
 人间的负面情绪确实很复杂...但你做得很好。
 
 #ch 主角
-#expr 主角开心
+#expr 主角无语
 #action jump
 嘿嘿...
 

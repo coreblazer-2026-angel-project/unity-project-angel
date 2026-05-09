@@ -7,7 +7,7 @@ VAR collected_hope_2 = false
 // 交互后触发对话
 
 #ch 主角
-#expr 主角难过
+#expr 主角难过闭眼
 那个，你、你还好吗？
 
 #ch 初中生
@@ -38,7 +38,7 @@ VAR collected_hope_2 = false
 不是这样的！
 
 #ch 主角
-#expr 主角开心
+#expr 主角无语
 只是一次考试对吧？这可不能代表你的能力
 
 #ch 初中生

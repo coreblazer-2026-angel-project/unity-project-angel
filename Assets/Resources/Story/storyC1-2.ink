@@ -59,7 +59,7 @@
 这应该就是希望了吧？
 
 #ch 主角
-#expr 主角开心
+#expr 主角无语
 #action bounce
 #action bounce
 这么看这份工作好像也没有那么难呢
@@ -89,9 +89,8 @@
 刚下到人间就收集到希望了啊
 
 #ch 主角
-#expr 主角开心
-#action bounce
-#action bounce
+#expr 主角开心闭眼
+#action jump
 哼哼~
 
 #ch 莉拉
@@ -101,7 +100,7 @@
 别大意哦，人间的负面情绪可比学校里教的复杂多啦。
 
 #ch 主角
-#expr 主角难过
+#expr 主角难过闭眼
 #action lean_left
 知道啦知道啦
 
