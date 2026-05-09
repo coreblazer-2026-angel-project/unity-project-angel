@@ -94,12 +94,25 @@ public class LevelFlowManager : MonoBehaviour {
 #endif
     }
 
-    [ContextMenu("快速通过")]
+    [ContextMenu("快速通过整个章节")]
     public void QuickPass() {
-        if (_advancing) return;
-        Debug.Log($"LevelFlowManager: 快速通过 → 章节 {currentChapterIndex} 关卡 {currentLevelIndex}");
-        _advancing = true;
-        Advance();
+        if (currentChapterIndex < 0 || currentChapterIndex >= chapters.Count) return;
+
+        var chapter = chapters[currentChapterIndex];
+        Debug.Log($"LevelFlowManager: 快速通过整个章节 → {chapter.name}");
+
+        // 标记本章节所有关卡为已完成
+        for (int i = 0; i < chapter.levels.Count; i++) {
+            LevelProgress.CompleteLevel(i + 1);
+        }
+
+        // 直接触发章节完成
+        currentLevelIndex = chapter.levels.Count;
+        SetChapterCompleted(currentChapterIndex, true);
+        onChapterCompleted?.Invoke(currentChapterIndex, chapter.name);
+        OnChapterCompleted?.Invoke(currentChapterIndex, chapter.name);
+        SaveChapterReturn(chapter.name);
+        SceneTransition.Load(walkingSceneName);
     }
 
     /// <summary>胜利条件：场上至少有一个 Light，且所有 Light 都被点亮（intensity >= workIntensity）</summary>

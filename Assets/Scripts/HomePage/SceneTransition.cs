@@ -6,7 +6,7 @@ public class SceneTransition : MonoBehaviour
 {
     public static SceneTransition Instance { get; private set; }
 
-    [SerializeField] private float fadeDuration = 0.4f;
+    [SerializeField] private float fadeDuration = 0.2f;
 
     private Canvas _canvas;
     private CanvasGroup _group;
@@ -26,6 +26,9 @@ public class SceneTransition : MonoBehaviour
         if (_canvas == null) _canvas = gameObject.AddComponent<Canvas>();
         _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         _canvas.sortingOrder = 9999;
+
+        if (GetComponent<UnityEngine.UI.CanvasScaler>() == null)
+            gameObject.AddComponent<UnityEngine.UI.CanvasScaler>();
 
         _group = GetComponent<CanvasGroup>();
         if (_group == null) _group = gameObject.AddComponent<CanvasGroup>();

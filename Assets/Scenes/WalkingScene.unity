@@ -500,6 +500,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4333872512276904068, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
+      propertyPath: advanceClip
+      value: 
+      objectReference: {fileID: 8300000, guid: e58775e995f9d52469d5b7e6b03e3287, type: 3}
     - target: {fileID: 5469095664890936773, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
       propertyPath: m_Name
       value: Dialog
@@ -2131,7 +2135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1025852762
 MonoBehaviour:
   m_ObjectHideFlags: 0

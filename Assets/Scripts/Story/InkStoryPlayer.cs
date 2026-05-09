@@ -35,6 +35,11 @@ namespace Game.Story {
         [Header("打字机（设为0禁用）")]
         public float typewriterSpeed = 0.04f;
 
+        [Header("音效")]
+        public AudioClip advanceClip;
+        public AudioClip choiceClip;
+        private AudioSource _audioSource;
+
         // Runtime state
         private InkStory _story;
         private bool _isTyping;
@@ -61,20 +66,17 @@ namespace Game.Story {
         void ResolveReferences() {
             if (dialoguePanel == null) dialoguePanel = FindObjectOfType<StoryDialoguePanel>();
             if (choicePanel == null) choicePanel = FindObjectOfType<StoryChoicePanel>();
+            if (_audioSource == null) _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null) {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+                _audioSource.playOnAwake = false;
+            }
         }
 
         void Update() {
             if (!IsPlaying) return;
             if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) {
                 OnInteract();
-            }
-        }
-
-        void OnGUI() {
-            Event e = Event.current;
-            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.T && !IsPlaying) {
-                Debug.Log("[InkStoryPlayer] Play button pressed");
-                Play();
             }
         }
 
@@ -127,10 +129,13 @@ namespace Game.Story {
             if (_waitingForChoice) return;
             if (_isTyping) {
                 SkipTypewriter();
+                PlayClip(advanceClip);
             } else if (_actionPlaying) {
                 SkipCurrentAction();
+                PlayClip(advanceClip);
             } else {
                 Advance();
+                PlayClip(advanceClip);
             }
         }
 
@@ -151,6 +156,7 @@ namespace Game.Story {
             if (choicePanel != null) choicePanel.Hide();
             _story.ChooseChoiceIndex(index);
             Advance();
+            PlayClip(choiceClip);
         }
 
         void Advance() {
@@ -196,9 +202,6 @@ namespace Game.Story {
                     }
                 }
             }
-
-            Debug.Log($"[InkStoryPlayer] ProcessLine: raw='{line}', speaker='{speaker}', text='{text}', dialoguePanel={(dialoguePanel != null ? "exists" : "null")}");
-            Debug.Log($"[InkStoryPlayer] SetSpeaker: speakerText={(dialoguePanel?.speakerText != null ? "exists" : "null")}, speakerTextPro={(dialoguePanel?.speakerTextPro != null ? "exists" : "null")}");
 
             // 读取当前行的 Ink tag（用于驱动立绘/表情）
             var tags = _story.currentTags ?? new List<string>();
@@ -501,5 +504,10 @@ namespace Game.Story {
         }
 
         public InkStory GetStory() => _story;
+
+        void PlayClip(AudioClip clip) {
+            if (clip == null || _audioSource == null) return;
+            _audioSource.PlayOneShot(clip);
+        }
     }
 }
