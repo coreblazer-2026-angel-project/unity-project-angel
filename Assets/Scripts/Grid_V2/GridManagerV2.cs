@@ -9,7 +9,11 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
 
     [Header("屏幕适配")]
     [Range(0.3f, 1f)]
-    public float screenFillRatio = 0.7f;
+    public float screenFillRatio = 0.85f;
+
+    [Header("整体缩放倍率")]
+    [Range(0.5f, 3f)]
+    public float gridScale = 1.2f;
 
     [Header("居中偏移（相对于摄像机可视区域的百分比）")]
     [Tooltip("正值向右，负值向左")]
@@ -77,7 +81,7 @@ public class GridManagerV2 : ManagerBase<GridManagerV2> {
             float camW = camH * cam.aspect;
             float availW = camW * screenFillRatio;
             float availH = camH * screenFillRatio;
-            ScaledGridSize = Mathf.Min(availW / column, availH / row);
+            ScaledGridSize = Mathf.Min(availW / column, availH / row) * gridScale;
 
             // 动态偏移（百分比 × 摄像机可视区域）
             camShiftX = camW * centerOffsetXRatio;

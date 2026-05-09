@@ -21,6 +21,11 @@ public class TipManager : ManagerBase<TipManager> {
 
         TipPanel.gameObject.SetActive(true);
 
+        // 跟随 Grid 整体缩放倍率放大 TipPanel
+        var gm = GridManagerV2.Instance;
+        float s = gm != null ? gm.gridScale : 1f;
+        _tipRect.localScale = new Vector3(s, s, 1f);
+
         // 将 element 的世界坐标转换为屏幕坐标
         Vector3 worldPos = element.transform.position;
         Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(uiCamera, worldPos);

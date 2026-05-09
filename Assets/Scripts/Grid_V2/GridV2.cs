@@ -19,7 +19,7 @@ public class GridV2 : MonoBehaviour {
     [Tooltip("勾选后在 Start 时生成 32x32（gridSize）的方框边线")]
     public bool showBorder = true;
     [Tooltip("边线宽度（世界单位）")]
-    public float borderWidth = 0.01f;
+    public float borderWidth = 0.02f;
     [Tooltip("边线颜色")]
     public Color borderColor = Color.white;
 

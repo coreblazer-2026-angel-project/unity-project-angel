@@ -91,20 +91,15 @@ public class ElectricManager : ManagerBase<ElectricManager> {
 
         var gm = GridManagerV2.Instance;
         float gs = gm != null ? gm.ScaledGridSize : 0.32f;
-        Vector3 origin = gm != null ? gm.GridOrigin : new Vector3(-gs / 2f, -gs / 2f, 0f);
+        if (gs <= 0f) return;
 
-        _tilemapGrid.cellSize = new Vector3(gs, gs, 1f);
+        Vector3 origin = gm.GridOrigin;
+        float scale = gs / 0.32f;
+
+        // 保持 cellSize 不变，用 localScale 整体放大 tilemap（确保 tile 精灵视觉填满格子）
+        _tilemapGrid.cellSize = new Vector3(0.32f, 0.32f, 1f);
+        _tilemapGrid.transform.localScale = new Vector3(scale, scale, 1f);
         _tilemapGrid.transform.position = origin;
-
-        if (elementTilemap != null && elementTilemap.layoutGrid != null) {
-            elementTilemap.layoutGrid.cellSize = new Vector3(gs, gs, 1f);
-            elementTilemap.layoutGrid.transform.position = origin;
-        }
-
-        if (previewTilemap != null && previewTilemap.layoutGrid != null) {
-            previewTilemap.layoutGrid.cellSize = new Vector3(gs, gs, 1f);
-            previewTilemap.layoutGrid.transform.position = origin;
-        }
     }
 
     public Vector3Int GetTilePos(int x, int y) => new Vector3Int(x, -y, 0);
