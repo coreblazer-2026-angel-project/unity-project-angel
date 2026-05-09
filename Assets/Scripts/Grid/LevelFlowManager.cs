@@ -171,23 +171,6 @@ public class LevelFlowManager : MonoBehaviour {
             return;
         }
         _lm.LoadLevel(chapter.levels[currentLevelIndex]);
-
-        // 当 currentLevelIndex 在 [1, 8] 范围（即第 2 ~ 第 9 关）时，调整主摄像头
-        AdjustCameraForCurrentLevel();
-    }
-
-    /// <summary>关卡 2~9（索引 1~8）时把主相机移动到 (2, 1.75)，正交大小调到 5.5</summary>
-    void AdjustCameraForCurrentLevel() {
-        Camera cam = Camera.main;
-        if (cam == null) return;
-
-        if (currentLevelIndex >= 1 && currentLevelIndex <= 8) {
-            Vector3 pos = cam.transform.position;
-            pos.x = 2f;
-            pos.y = -1.75f;
-            cam.transform.position = pos;
-            cam.orthographicSize = 5.5f;
-        }
     }
 
     [ContextMenu("Manually Advance")]
@@ -227,6 +210,7 @@ public class LevelFlowManager : MonoBehaviour {
     /// <summary>读取接口：指定章节索引是否已通关</summary>
     public bool IsChapterCompleted(int chapterIndex) {
         if (_saveData == null) _saveData = SaveSystem.Load();
+        if (_saveData.chapterCompleted == null) return false;
         if (chapterIndex < 0 || chapterIndex >= _saveData.chapterCompleted.Count) return false;
         return _saveData.chapterCompleted[chapterIndex];
     }
@@ -241,6 +225,7 @@ public class LevelFlowManager : MonoBehaviour {
     public void SetChapterCompleted(int chapterIndex, bool completed = true) {
         if (chapterIndex < 0) return;
         if (_saveData == null) _saveData = SaveSystem.Load();
+        if (_saveData.chapterCompleted == null) _saveData.chapterCompleted = new List<bool>();
         while (_saveData.chapterCompleted.Count <= chapterIndex)
             _saveData.chapterCompleted.Add(false);
         _saveData.chapterCompleted[chapterIndex] = completed;

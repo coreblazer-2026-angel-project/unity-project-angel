@@ -42,6 +42,10 @@ public class LevelData : ScriptableObject
     [Tooltip("若勾选，运行时不再解析 CSV，直接使用下方 items 列表")]
     public bool useInlineItems = false;
 
+    [Header("背景")]
+    [Tooltip("关卡背景 Sprite（由 LevelManager 在加载时设置到场景里指定的 SpriteRenderer 上）。留空则保留上一关的背景。")]
+    public Sprite background;
+
     [HideInInspector]
     public List<LevelItem> items;
 
