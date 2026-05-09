@@ -171,23 +171,6 @@ public class LevelFlowManager : MonoBehaviour {
             return;
         }
         _lm.LoadLevel(chapter.levels[currentLevelIndex]);
-
-        // 当 currentLevelIndex 在 [1, 8] 范围（即第 2 ~ 第 9 关）时，调整主摄像头
-        AdjustCameraForCurrentLevel();
-    }
-
-    /// <summary>关卡 2~9（索引 1~8）时把主相机移动到 (2, 1.75)，正交大小调到 5.5</summary>
-    void AdjustCameraForCurrentLevel() {
-        Camera cam = Camera.main;
-        if (cam == null) return;
-
-        if (currentLevelIndex >= 1 && currentLevelIndex <= 8) {
-            Vector3 pos = cam.transform.position;
-            pos.x = 2f;
-            pos.y = -1.75f;
-            cam.transform.position = pos;
-            cam.orthographicSize = 5.5f;
-        }
     }
 
     [ContextMenu("Manually Advance")]

@@ -623,7 +623,7 @@ MonoBehaviour:
   wirePlaceClip: {fileID: 8300000, guid: 96e78d31c234fba4492a95ebf27814c1, type: 3}
   wireRemoveClip: {fileID: 8300000, guid: a3031e182bae5fa4ba8391d82ea42acd, type: 3}
   boosterTriggerClip: {fileID: 8300000, guid: 3f2dbcac7e2e731498cb63b4f99f2385, type: 3}
-  amplifierTriggerClip: {fileID: 0}
+  amplifierTriggerClip: {fileID: 8300000, guid: 8b1e2ce10438b2540b53805770cb4f27, type: 3}
   audioSource: {fileID: 0}
 --- !u!4 &177546393
 Transform:
@@ -2830,7 +2830,7 @@ Transform:
   m_GameObject: {fileID: 1494849919}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2, y: -1, z: -10}
+  m_LocalPosition: {x: -1, y: -1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
