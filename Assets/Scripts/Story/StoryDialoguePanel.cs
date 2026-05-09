@@ -36,13 +36,19 @@ namespace Game.Story {
 
         /// <summary>设置说话者名字</summary>
         public void SetSpeaker(string name) {
+            Debug.Log($"[StoryDialoguePanel] SetSpeaker called: name='{name}', speakerText={(speakerText != null ? "exists" : "null")}, speakerTextPro={(speakerTextPro != null ? "exists" : "null")}");
             if (speakerText != null) {
                 speakerText.text = name ?? "";
                 speakerText.gameObject.SetActive(!string.IsNullOrEmpty(name));
+                Debug.Log($"[StoryDialoguePanel] SetSpeaker: speakerText.text='{speakerText.text}', gameObject.activeSelf={speakerText.gameObject.activeSelf}, root.activeSelf={(root != null ? root.activeSelf : "null")}");
             }
             if (speakerTextPro != null) {
                 speakerTextPro.text = name ?? "";
                 speakerTextPro.gameObject.SetActive(!string.IsNullOrEmpty(name));
+                Debug.Log($"[StoryDialoguePanel] SetSpeaker: speakerTextPro.text='{speakerTextPro.text}', gameObject.activeSelf={speakerTextPro.gameObject.activeSelf}");
+            }
+            if (!string.IsNullOrEmpty(name)) {
+                Debug.Log($"[StoryDialoguePanel] SetSpeaker: name is not empty — ensure root is active. root={(root != null ? root.activeSelf.ToString() : "null")}");
             }
         }
 

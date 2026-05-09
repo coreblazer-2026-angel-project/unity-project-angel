@@ -41,6 +41,8 @@ namespace Game.Story {
         private Coroutine _typewriterCoroutine;
         private string _currentFullText;
         private bool _waitingForChoice;
+        private bool _actionPlaying;
+        private StoryActionPlayer _currentActionPlayer;
         private List<InkChoice> _currentChoices = new List<InkChoice>();
 
         public event Action OnStoryStart;
@@ -125,8 +127,20 @@ namespace Game.Story {
             if (_waitingForChoice) return;
             if (_isTyping) {
                 SkipTypewriter();
+            } else if (_actionPlaying) {
+                SkipCurrentAction();
             } else {
                 Advance();
+            }
+        }
+
+        /// <summary>跳过当前正在播放的动作</summary>
+        private void SkipCurrentAction() {
+            if (_currentActionPlayer != null) {
+                _currentActionPlayer.Stop();
+                _actionPlaying = false;
+                _currentActionPlayer = null;
+                Debug.Log("[InkStoryPlayer] Action skipped by user.");
             }
         }
 
@@ -140,6 +154,7 @@ namespace Game.Story {
         }
 
         void Advance() {
+            if (_actionPlaying) return;
             if (!_story.canContinue) {
                 if (_story.currentChoices.Count > 0) {
                     ShowChoices(_story.currentChoices);
@@ -166,15 +181,24 @@ namespace Game.Story {
             string speaker = "";
             string text = line;
 
+            // Ink JSON 的文本内容以 ^ 开头，需要去掉
+            if (text.StartsWith("^")) text = text.Substring(1);
+
             // 解析 speaker: 格式
-            if (line.Contains(":")) {
-                int idx = line.IndexOf(':');
-                string head = line.Substring(0, idx).Trim();
-                if (!head.StartsWith("->") && !head.StartsWith("*")) {
-                    speaker = head;
-                    text = line.Substring(idx + 1).Trim();
+            if (line.StartsWith("^") || text.Contains(":")) {
+                string raw = line.StartsWith("^") ? line.Substring(1) : line;
+                if (raw.Contains(":")) {
+                    int idx = raw.IndexOf(':');
+                    string head = raw.Substring(0, idx).Trim();
+                    if (!head.StartsWith("->") && !head.StartsWith("*")) {
+                        speaker = head;
+                        text = raw.Substring(idx + 1).Trim();
+                    }
                 }
             }
+
+            Debug.Log($"[InkStoryPlayer] ProcessLine: raw='{line}', speaker='{speaker}', text='{text}', dialoguePanel={(dialoguePanel != null ? "exists" : "null")}");
+            Debug.Log($"[InkStoryPlayer] SetSpeaker: speakerText={(dialoguePanel?.speakerText != null ? "exists" : "null")}, speakerTextPro={(dialoguePanel?.speakerTextPro != null ? "exists" : "null")}");
 
             // 读取当前行的 Ink tag（用于驱动立绘/表情）
             var tags = _story.currentTags ?? new List<string>();
@@ -198,6 +222,7 @@ namespace Game.Story {
                 else if (tag.StartsWith("expr ")) exprName = tag.Substring(5).Trim();
                 else if (tag.StartsWith("action ")) {
                     string actionStr = tag.Substring(7).Trim();
+                    Debug.Log($"[InkStoryPlayer] ProcessLine: found action tag '{actionStr}'");
                     ProcessActionTag(actionStr);
                 }
                 else if (tag == "choice") {
@@ -249,7 +274,12 @@ namespace Game.Story {
 
             // 显示/切换角色
             if (!string.IsNullOrEmpty(characterId)) {
+                Debug.Log($"[InkStoryPlayer] ProcessLine: calling ShowCharacter('{characterId}', '{exprName}')");
                 StoryCharacterManager.Instance?.ShowCharacter(characterId, exprName, heightPercent, bottomOffset, horizontalOffset);
+                // Ink 用 #ch tag 标识说话者，从角色ID查到 display name 作为 speaker
+                if (string.IsNullOrEmpty(speaker)) {
+                    speaker = StoryCharacterManager.Instance?.GetCharacterDisplayName(characterId) ?? characterId;
+                }
             }
 
             // 显示文字
@@ -297,7 +327,7 @@ namespace Game.Story {
             foreach (char c in _currentFullText) {
                 display += c;
                 if (dialoguePanel != null) dialoguePanel.SetText(display);
-                yield return new WaitForSeconds(typewriterSpeed);
+                yield return new WaitForSecondsRealtime(typewriterSpeed);
             }
 
             _isTyping = false;
@@ -334,26 +364,52 @@ namespace Game.Story {
             return false;
         }
 
+        string[] GetActiveCharacterIds() {
+            var ids = new System.Collections.Generic.List<string>();
+            if (StoryCharacterManager.Instance == null) return ids.ToArray();
+            foreach (var p in StoryCharacterManager.Instance.presets) {
+                if (p.image != null && p.image.enabled) ids.Add(p.characterId);
+            }
+            return ids.ToArray();
+        }
+
         /// <summary>
         /// 处理动作标签
         /// 格式: #action jump, #action jump_3, #action enter_left, #action flash_0.5
         /// 支持: jump, bounce, shake, flash, pulse, enter_left, enter_right, exit_left, exit_right, lean_left, lean_right, fadein, fadeout
         /// </summary>
         void ProcessActionTag(string actionStr) {
-            if (StoryCharacterManager.Instance == null) return;
+            if (StoryCharacterManager.Instance == null) {
+                Debug.LogWarning("[InkStoryPlayer] StoryCharacterManager.Instance is null!");
+                return;
+            }
 
             // 解析动作名称和参数
+            // 支持两种格式：
+            //   jump, bounce, flash, shake       → 单动作名
+            //   bounce_2, flash_0.5            → 动作名_强度
+            //   lean_left, enter_right          → 复合动作名（不拆开）
             string[] parts = actionStr.Split('_');
             string actionName = parts[0].ToLower().Trim();
             float intensity = 1f;
-            if (parts.Length > 1 && float.TryParse(parts[1], out float parsed)) {
-                intensity = parsed;
+
+            if (parts.Length >= 2) {
+                // 如果第二个下划线部分是数字，就是强度；否则是复合动作名
+                if (float.TryParse(parts[1], out float parsed)) {
+                    intensity = parsed;
+                } else if (parts.Length == 2) {
+                    // 复合动作名（如 lean_left），还原为完整名称
+                    actionName = actionStr.ToLower().Trim();
+                }
+                // parts.Length > 2 时忽略额外部分
             }
 
             // 获取当前显示的角色 preset
             var preset = StoryCharacterManager.Instance.GetActivePreset();
+            Debug.Log($"[InkStoryPlayer] ProcessActionTag: '{actionName}', preset={(preset != null ? preset.characterId : "null")}, image={(preset?.image != null ? "exists" : "null")}");
             if (preset?.image == null) {
-                Debug.LogWarning($"[InkStoryPlayer] No active character to perform action: {actionName}");
+                Debug.LogWarning($"[InkStoryPlayer] No active character to perform action: {actionName}. " +
+                    $"Active presets: {string.Join(", ", GetActiveCharacterIds())}");
                 return;
             }
 
@@ -436,7 +492,12 @@ namespace Game.Story {
             }
 
             Debug.Log($"[InkStoryPlayer] Play action: {action.type}, intensity={intensity}");
-            actionPlayer.Play(action);
+            _actionPlaying = true;
+            _currentActionPlayer = actionPlayer;
+            actionPlayer.Play(action, () => {
+                _actionPlaying = false;
+                _currentActionPlayer = null;
+            });
         }
 
         public InkStory GetStory() => _story;

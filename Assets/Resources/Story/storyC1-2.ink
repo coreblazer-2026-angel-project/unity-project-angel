@@ -5,30 +5,30 @@
 // 第一关全部解谜面通关，解谜区退出屏幕
 
 #ch 主角
-#expr 难过
+#expr 主角难过
 感觉好些了吗
 
 #ch 小男孩
 嗯...但是小车还是...
 
 #ch 主角
-#expr 开心
+#expr 主角开心
 这个小车对你一定很重要吧
 
 #ch 主角
-#expr 开心
+#expr 主角开心
 嗯...可以把它给我一下吗？
 
 #ch 小男孩
 好...姐姐你会修这个吗？
 
 #ch 主角
-#expr 惊讶
+#expr 主角惊讶
 #action lean_left
 我试试……嗯......
 
 #ch 主角
-#expr 开心
+#expr 主角开心
 #action bounce
 嗯，这样差不多了
 
@@ -39,12 +39,12 @@
 姐姐你好厉害！
 
 #ch 主角
-#expr 开心
+#expr 主角开心
 #action jump
 嘿嘿...没什么啦
 
 #ch 主角
-#expr 开心
+#expr 主角开心
 以后要小心一点呀，这可是妈妈送你的礼物。
 
 #ch 小男孩
@@ -54,12 +54,12 @@
 
 
 #ch 主角
-#expr 开心
+#expr 主角开心
 #action pulse
 这应该就是希望了吧？
 
 #ch 主角
-#expr 开心
+#expr 主角无语
 #action bounce
 #action bounce
 这么看这份工作好像也没有那么难呢
@@ -70,7 +70,7 @@
 莉拉：诺艾尔，诺艾尔？
 
 #ch 主角
-#expr 开心
+#expr 主角开心
 #action bounce
 莉拉！刚才怎么回事？
 
@@ -78,7 +78,7 @@
 刚才不知道你被传送到哪里了，这不才找到你的信号嘛
 
 #ch 主角
-#expr 开心
+#expr 主角开心
 #action jump
 你看，这是刚收集到的希望，厉害吧
 
@@ -89,9 +89,8 @@
 刚下到人间就收集到希望了啊
 
 #ch 主角
-#expr 开心
-#action bounce
-#action bounce
+#expr 主角开心闭眼
+#action jump
 哼哼~
 
 #ch 莉拉
@@ -101,12 +100,12 @@
 别大意哦，人间的负面情绪可比学校里教的复杂多啦。
 
 #ch 主角
-#expr 难过
+#expr 主角难过闭眼
 #action lean_left
 知道啦知道啦
 
 #ch 主角
-#expr 难过
+#expr 主角难过
 刚才其实是运气好，接下来还得靠你啊
 
 #ch 莉拉
@@ -116,7 +115,7 @@
 啊，你附近好像就有一位需要帮助的人哦
 
 #ch 主角
-#expr 惊讶
+#expr 主角惊讶
 #action flash
 诶？在哪里
 
