@@ -5,7 +5,13 @@ public class MainMenu : MonoBehaviour
 {
     public void OnStartClicked()
     {
-        // SceneManager.LoadScene("GameScene"); // 真正切换场景
+        LevelProgress.ResetProgress();
+        SceneTransition.Load("WalkingScene");
+    }
+
+    public void OnContinueClicked()
+    {
+        SceneTransition.Load("WalkingScene");
     }
 
     public void OnSettingsClicked()

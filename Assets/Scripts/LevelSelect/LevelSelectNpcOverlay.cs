@@ -537,7 +537,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
             yield return new WaitForSeconds(transitionDelay);
 
         LevelProgress.SetPendingLevelSelection(chapterIndex, levelIndex, levelNumber);
-        SceneManager.LoadScene(levelSceneName);
+        SceneTransition.Load(levelSceneName);
     }
 
     #endregion
