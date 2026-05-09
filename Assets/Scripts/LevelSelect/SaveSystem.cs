@@ -26,6 +26,14 @@ public class SaveData {
     public int pendingLevelIndex = 0;
     public int pendingLevelNumber = 1;
 
+    public string pendingChapterName = "";
+    public string pendingLevelName = "";
+
+    [Tooltip("关卡完成后的回传标记：返回 WalkingScene 时触发对应 NPC 的完成对话")]
+    public bool hasChapterReturn = false;
+    public string returnChapterName = "";
+    public string returnStoryFile = "";
+
     [Tooltip("每个章节是否通过的 flag，索引对应章节索引")]
     public List<bool> chapterCompleted = new();
 }

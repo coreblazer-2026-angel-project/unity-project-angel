@@ -90,6 +90,20 @@ public static class LevelProgress
         data.pendingChapterIndex = Mathf.Max(0, chapterIndex);
         data.pendingLevelIndex = Mathf.Max(0, levelIndex);
         data.pendingLevelNumber = Mathf.Max(1, levelNumber);
+        data.pendingChapterName = "";
+        data.pendingLevelName = "";
+        SaveSystem.Save(data);
+    }
+
+    public static void SetPendingLevelByName(string chapterName, string levelName, int levelNumber = 1)
+    {
+        SaveData data = SaveSystem.Load();
+        data.hasPendingLevelSelection = true;
+        data.pendingChapterName = chapterName ?? "";
+        data.pendingLevelName = levelName ?? "";
+        data.pendingLevelNumber = Mathf.Max(1, levelNumber);
+        data.pendingChapterIndex = 0;
+        data.pendingLevelIndex = 0;
         SaveSystem.Save(data);
     }
 

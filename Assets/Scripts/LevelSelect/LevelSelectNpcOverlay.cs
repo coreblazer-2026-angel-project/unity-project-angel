@@ -12,6 +12,12 @@ public class LevelSelectNpcOverlay : MonoBehaviour
     public int levelIndex = 0;
     public string npcName = "摔掉糖果的小男孩";
 
+    [Header("按名称匹配 LevelFlowManager")]
+    [Tooltip("LevelFlowManager 中 Chapter.name，留空则用 chapterIndex")]
+    public string chapterName = "";
+    [Tooltip("LevelFlowManager 中 LevelData 的资产名（ScriptableObject.name），留空则用 levelIndex")]
+    public string levelName = "";
+
     [Header("进入关卡")]
     public string levelSceneName = "Levels";
     public AudioClip interactSound;
@@ -22,6 +28,8 @@ public class LevelSelectNpcOverlay : MonoBehaviour
     [Header("剧情")]
     [Tooltip("对应 Ink 剧情的 Resources 路径，如 Chapter1_LittleBoy（不含 .json）。留空则跳过剧情直接进入。")]
     public string storyFile = "";
+    [Tooltip("通关后返回 WalkingScene 自动触发的对话。留空则不触发。")]
+    public string completionStoryFile = "";
     [Tooltip("剧情播完后是否自动进入关卡。false 则需要再按一次 F。")]
     public bool autoEnterAfterStory = false;
 
@@ -107,6 +115,7 @@ public class LevelSelectNpcOverlay : MonoBehaviour
     bool _lastCompleted;
     bool _transitioning;
     bool _storyPlayed;
+    bool _completionDialogMode;
 
     // 状态缓存（避免重复设置同一个值）
     string _lastStatusText;
@@ -137,6 +146,9 @@ public class LevelSelectNpcOverlay : MonoBehaviour
         // 初始状态：设为 -1 强制首次 Apply
         _promptState = -1;
         ApplyState(titleAlwaysVisible ? 1 : 0);
+
+        // 检测从关卡场景返回：匹配 chapterName 时自动触发完成对话
+        CheckChapterReturn();
     }
 
     void OnEnable()
@@ -157,6 +169,18 @@ public class LevelSelectNpcOverlay : MonoBehaviour
 
         ResolvePlayerOnce();
         CheckProgressChanged();
+
+        // 兜底：_transitioning 中检测故事已结束但事件没触发
+        if (_transitioning && !string.IsNullOrEmpty(storyFile))
+        {
+            var sm = StoryManager.Instance;
+            if (sm == null || !sm.IsPlaying)
+            {
+                Debug.Log("[NPC] 兜底检测：故事已结束，手动触发 OnStoryEnded");
+                OnStoryEnded();
+                return;
+            }
+        }
 
         bool storyPlaying = StoryManager.Instance != null && StoryManager.Instance.IsPlaying;
         bool near = !storyPlaying && IsPlayerNear();
@@ -499,10 +523,16 @@ public class LevelSelectNpcOverlay : MonoBehaviour
     {
         if (_transitioning) return;
         if (!_lastUnlocked) return;
-        if (string.IsNullOrEmpty(storyFile)) return;
 
         _transitioning = true;
         PlaySound();
+
+        // 无剧情文件 → 直接进关卡
+        if (string.IsNullOrEmpty(storyFile))
+        {
+            GoToLevel();
+            return;
+        }
 
         if (dialogPanel != null)
             dialogPanel.SetActive(true);
@@ -513,23 +543,97 @@ public class LevelSelectNpcOverlay : MonoBehaviour
             var inkJson = StoryLoader.Instance.LoadInkJson(storyFile);
             if (inkJson == null)
             {
-                Debug.LogError($"[NPC] StoryLoader 找不到文件: '{storyFile}'");
+                Debug.LogError($"[NPC] StoryLoader 找不到文件: '{storyFile}'，跳过剧情直接进入关卡");
+                _transitioning = false;
+                GoToLevel();
                 return;
             }
             Debug.Log($"[NPC] 加载剧情: '{inkJson.name}', 内容前50字: {inkJson.text.Substring(0, Mathf.Min(50, inkJson.text.Length))}");
             sm.PlayStory(inkJson);
         }
+        else
+        {
+            Debug.LogWarning("[NPC] StoryManager 不存在，跳过剧情直接进入关卡");
+            _transitioning = false;
+            GoToLevel();
+        }
     }
 
     void OnStoryEnded()
     {
-        _storyPlayed = true;
-        _transitioning = false;
+        if (!_transitioning && !_completionDialogMode) return;
 
         if (dialogPanel != null)
             dialogPanel.SetActive(false);
 
-        LevelProgress.SetPendingLevelSelection(chapterIndex, levelIndex, levelNumber);
+        // 完成对话模式：播完就结束，不进关卡
+        if (_completionDialogMode)
+        {
+            _completionDialogMode = false;
+            _storyPlayed = true;
+            _transitioning = false;
+            return;
+        }
+
+        _storyPlayed = true;
+        _transitioning = false;
+        GoToLevel();
+    }
+
+    void CheckChapterReturn()
+    {
+        var data = SaveSystem.Load();
+        if (data == null || !data.hasChapterReturn) return;
+
+        // 匹配当前 NPC 的 chapterName
+        if (!string.IsNullOrEmpty(data.returnChapterName)
+            && !string.IsNullOrEmpty(chapterName)
+            && data.returnChapterName != chapterName) return;
+
+        // 消费标记
+        data.hasChapterReturn = false;
+        SaveSystem.Save(data);
+
+        if (string.IsNullOrEmpty(completionStoryFile)) return;
+
+        // 延迟一帧触发，等 StoryManager 准备好
+        _completionDialogMode = true;
+        _transitioning = true;
+        StartCoroutine(PlayCompletionStoryDelayed());
+    }
+
+    IEnumerator PlayCompletionStoryDelayed()
+    {
+        yield return null;
+
+        if (dialogPanel != null)
+            dialogPanel.SetActive(true);
+
+        var sm = StoryManager.Instance;
+        if (sm != null)
+        {
+            var inkJson = StoryLoader.Instance.LoadInkJson(completionStoryFile);
+            if (inkJson != null)
+            {
+                sm.PlayStory(inkJson);
+                yield break;
+            }
+        }
+
+        // 兜底：找不到剧情就恢复正常
+        _completionDialogMode = false;
+        _transitioning = false;
+        if (dialogPanel != null)
+            dialogPanel.SetActive(false);
+    }
+
+    void GoToLevel()
+    {
+        if (!string.IsNullOrEmpty(chapterName) || !string.IsNullOrEmpty(levelName))
+            LevelProgress.SetPendingLevelByName(chapterName, levelName, levelNumber);
+        else
+            LevelProgress.SetPendingLevelSelection(chapterIndex, levelIndex, levelNumber);
+
         SceneTransition.Load(levelSceneName);
     }
 

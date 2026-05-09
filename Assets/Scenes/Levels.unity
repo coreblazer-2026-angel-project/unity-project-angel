@@ -222,12 +222,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 1
+  m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 3840, y: 2160}
+  m_ReferenceResolution: {x: 800, y: 600}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0.5
+  m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -736,8 +736,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d015afdcf6e1e064fbe3bb16c5a5e69b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  autoLoadTestLevel: 0
-  testLevel: {fileID: 11400000, guid: d997ac73866761d4eb39c982025d85c2, type: 2}
+  autoLoadTestLevel: 1
+  testLevel: {fileID: 11400000, guid: 30ab55b02f63a0e4097136a48ff34dbf, type: 2}
   levelManager: {fileID: 0}
 --- !u!4 &228908725
 Transform:
@@ -767,7 +767,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chapters:
-  - name: 
+  - name: 1
     levels:
     - {fileID: 11400000, guid: cc9c263e5f8814f45aeb3e332f61c56d, type: 2}
     - {fileID: 11400000, guid: d12b547f0ea45fa469dba351ca785977, type: 2}
@@ -778,7 +778,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: b6b0e7ab5d5b6524ea5ac21304e62552, type: 2}
     - {fileID: 11400000, guid: 19d6354f68bf9ec49906ff87e8744941, type: 2}
     - {fileID: 11400000, guid: 585a65a641cd2eb4eb5f915a11ef4a19, type: 2}
-  - name: 
+  - name: 2
     levels:
     - {fileID: 11400000, guid: d997ac73866761d4eb39c982025d85c2, type: 2}
     - {fileID: 11400000, guid: 114c8492c609b224ba75cd81e40ae8fe, type: 2}
@@ -1004,6 +1004,7 @@ MonoBehaviour:
   column: 5
   gridPrefab: {fileID: 734292871663967612, guid: 86cd428dac6a9eb4bb98f882dc8b704e, type: 3}
   screenFillRatio: 0.7
+  gridScale: 1.35
   centerOffsetXRatio: 0.084
   centerOffsetYRatio: -0.25
 --- !u!4 &428448988

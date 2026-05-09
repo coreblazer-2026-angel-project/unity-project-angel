@@ -38,6 +38,9 @@ public class LevelFlowManager : MonoBehaviour {
     [Tooltip("通关一章的最后一关后是否自动进入下一章；不勾则停在该关卡")]
     public bool autoAdvanceToNextChapter = false;
 
+    [Tooltip("章节全部通关后返回 WalkingScene")]
+    public string walkingSceneName = "WalkingScene";
+
     [Tooltip("胜利条件检测间隔（秒）")]
     public float checkInterval = 0.3f;
 
@@ -84,6 +87,19 @@ public class LevelFlowManager : MonoBehaviour {
             _advancing = true;
             Invoke(nameof(Advance), advanceDelay);
         }
+
+#if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.Keypad0) || Input.GetKeyDown(KeyCode.Alpha0))
+            QuickPass();
+#endif
+    }
+
+    [ContextMenu("快速通过")]
+    public void QuickPass() {
+        if (_advancing) return;
+        Debug.Log($"LevelFlowManager: 快速通过 → 章节 {currentChapterIndex} 关卡 {currentLevelIndex}");
+        _advancing = true;
+        Advance();
     }
 
     /// <summary>胜利条件：场上至少有一个 Light，且所有 Light 都被点亮（intensity >= workIntensity）</summary>
@@ -117,12 +133,9 @@ public class LevelFlowManager : MonoBehaviour {
             onChapterCompleted?.Invoke(currentChapterIndex, chapter.name);
             OnChapterCompleted?.Invoke(currentChapterIndex, chapter.name);
 
-            if (autoAdvanceToNextChapter && currentChapterIndex + 1 < chapters.Count) {
-                currentChapterIndex++;
-                currentLevelIndex = 0;
-                SaveProgress();
-                LoadCurrent();
-            }
+            // 写入回传标记，返回 WalkingScene 触发完成对话
+            SaveChapterReturn(chapter.name);
+            SceneTransition.Load(walkingSceneName);
             return;
         }
 
@@ -259,12 +272,55 @@ public class LevelFlowManager : MonoBehaviour {
         if (!LevelProgress.TryConsumePendingLevelSelection(out int pendingChapter, out int pendingLevel, out int pendingLevelNumber))
             return;
 
+        // 优先按名称解析
+        var save = SaveSystem.Load();
+        if (!string.IsNullOrEmpty(save.pendingChapterName) || !string.IsNullOrEmpty(save.pendingLevelName)) {
+            bool found = ResolvePendingByName(save.pendingChapterName, save.pendingLevelName);
+            if (found) {
+                _currentLevelNumber = Mathf.Max(1, pendingLevelNumber);
+                return;
+            }
+            Debug.LogWarning($"LevelFlowManager: 按名称未找到 chapter='{save.pendingChapterName}' level='{save.pendingLevelName}'，回退索引");
+        }
+
         if (pendingChapter < 0 || pendingChapter >= chapters.Count)
             return;
 
         currentChapterIndex = pendingChapter;
         currentLevelIndex = Mathf.Clamp(pendingLevel, 0, Mathf.Max(0, chapters[pendingChapter].levels.Count - 1));
         _currentLevelNumber = Mathf.Max(1, pendingLevelNumber);
+    }
+
+    bool ResolvePendingByName(string chapterName, string levelName) {
+        int ci = -1, li = -1;
+
+        for (int c = 0; c < chapters.Count; c++) {
+            bool chapterMatch = string.IsNullOrEmpty(chapterName) || chapters[c].name == chapterName;
+            if (!chapterMatch) continue;
+
+            ci = c;
+            for (int l = 0; l < chapters[c].levels.Count; l++) {
+                if (chapters[c].levels[l] != null && chapters[c].levels[l].name == levelName) {
+                    li = l;
+                    break;
+                }
+            }
+            break;
+        }
+
+        if (ci < 0) return false;
+
+        currentChapterIndex = ci;
+        currentLevelIndex = li >= 0 ? li : 0;
+        return true;
+    }
+
+    void SaveChapterReturn(string chapterName) {
+        SaveData data = SaveSystem.Load();
+        data.hasChapterReturn = true;
+        data.returnChapterName = chapterName;
+        data.returnStoryFile = "";
+        SaveSystem.Save(data);
     }
 
     int GetCurrentLevelNumber() {

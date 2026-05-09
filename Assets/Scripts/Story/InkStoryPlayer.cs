@@ -210,6 +210,10 @@ namespace Game.Story {
                     if (_story.canContinue) {
                         _story.Continue();
                         ProcessLine(_story.currentText?.Trim() ?? "");
+                    } else if (_story.currentChoices.Count > 0) {
+                        ShowChoices(_story.currentChoices);
+                    } else {
+                        Stop();
                     }
                     return;
                 }
@@ -220,6 +224,10 @@ namespace Game.Story {
                 if (_story.canContinue) {
                     _story.Continue();
                     ProcessLine(_story.currentText?.Trim() ?? "");
+                } else if (_story.currentChoices.Count > 0) {
+                    ShowChoices(_story.currentChoices);
+                } else {
+                    Stop();
                 }
                 return;
             }
@@ -231,6 +239,10 @@ namespace Game.Story {
                 if (_story.canContinue) {
                     _story.Continue();
                     ProcessLine(_story.currentText?.Trim() ?? "");
+                } else if (_story.currentChoices.Count > 0) {
+                    ShowChoices(_story.currentChoices);
+                } else {
+                    Stop();
                 }
                 return;
             }
@@ -396,6 +408,7 @@ namespace Game.Story {
                     action.duration = 0.5f;
                     break;
                 // 倾斜动作
+                case "lean":
                 case "lean_left":
                 case "tilt_left":
                     action.type = CharacterActionType.LeanLeft;
