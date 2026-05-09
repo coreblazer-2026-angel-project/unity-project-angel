@@ -85,15 +85,24 @@ namespace Game.Story {
                 float horizontalOffset = 0f) {
 
             var preset = presets.Find(p => p.characterId == characterId);
-            if (preset == null) {
-                Debug.LogWarning($"[StoryCharacterManager] Preset not found: '{characterId}'");
+            if (preset == null) return;
+
+            if (preset.mount == null) return;
+
+            // 检查 mount 是否已被销毁（通过尝试访问 transform）
+            try {
+                var _ = preset.mount.transform;
+            } catch (MissingReferenceException) {
                 return;
             }
 
             // 布局 mount
             float targetWidth = Screen.width * screenWidthPercent;
             var rect = preset.mount.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0);
+            if (rect == null) {
+                Debug.LogWarning($"[StoryCharacterManager] Mount has no RectTransform: '{characterId}'");
+                return;
+            }
             rect.anchorMax = new Vector2(0.5f, 0);
             rect.pivot = new Vector2(0.5f, 0);
             rect.sizeDelta = new Vector2(targetWidth, 0);
@@ -104,12 +113,9 @@ namespace Game.Story {
             // 查找 Sprite
             Sprite sprite = null;
             var allChars = FindObjectsOfType<StoryCharacter>();
-            Debug.Log($"[DEBUG] FindObjectsOfType<StoryCharacter> count: {allChars.Length}");
             foreach (var sc in allChars) {
-                Debug.Log($"[DEBUG] Found StoryCharacter: id='{sc.characterId}', expressions={sc.expressions.Count}");
                 if (sc.characterId != characterId) continue;
                 foreach (var e in sc.expressions) {
-                    Debug.Log($"[DEBUG]   expression: name='{e.name}', sprite={(e.sprite != null ? e.sprite.name : "null")}");
                     if (e.name.Equals(expressionName, StringComparison.OrdinalIgnoreCase)) {
                         sprite = e.sprite;
                         break;

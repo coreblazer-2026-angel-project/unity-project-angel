@@ -134,28 +134,26 @@ namespace Game.Story {
         }
 
         void Advance() {
-            Debug.Log($"[InkStoryPlayer] Advance: canContinue={_story.canContinue}, choices={_story.currentChoices.Count}");
             if (!_story.canContinue) {
                 if (_story.currentChoices.Count > 0) {
-                    Debug.Log("[InkStoryPlayer] Show choices");
                     ShowChoices(_story.currentChoices);
                     return;
                 }
-                Debug.Log("[InkStoryPlayer] No more content, stopping");
                 Stop();
                 return;
             }
 
             string rawLine = _story.Continue().Trim();
-            Debug.Log($"[InkStoryPlayer] Continue: '{rawLine}', tags: [{string.Join(", ", _story.currentTags ?? new List<string>())}]");
             ProcessLine(rawLine);
         }
 
         void ProcessLine(string line) {
-            Debug.Log($"[InkStoryPlayer] ProcessLine: '{line}'");
             if (string.IsNullOrEmpty(line)) {
-                Debug.Log("[InkStoryPlayer] Empty line, recursing Advance");
-                Advance();
+                // 空行直接前进，但限制递归深度防止无限循环
+                if (_story.canContinue) {
+                    _story.Continue();
+                    ProcessLine(_story.currentText?.Trim() ?? "");
+                }
                 return;
             }
 
@@ -181,7 +179,6 @@ namespace Game.Story {
                 if (tag.StartsWith("ch ")) characterId = tag.Substring(3).Trim();
                 else if (tag.StartsWith("expr ")) exprName = tag.Substring(5).Trim();
                 else if (tag.StartsWith("action ")) {
-                    // 处理动作标签: #action jump, #action enter_left, #action flash
                     string actionStr = tag.Substring(7).Trim();
                     ProcessActionTag(actionStr);
                 }
@@ -197,19 +194,23 @@ namespace Game.Story {
                 }
             }
 
-            // 跳过纯 tag 行
+            // 跳过纯 tag 行（继续下一行）
             if (IsPureTagLine(line, speaker, text)) {
-                Debug.Log("[InkStoryPlayer] Skipping pure tag line");
-                Advance();
+                if (_story.canContinue) {
+                    _story.Continue();
+                    ProcessLine(_story.currentText?.Trim() ?? "");
+                }
                 return;
             }
 
             // 隐藏角色（#-player）
             if (characterId.StartsWith("-")) {
-                Debug.Log($"[InkStoryPlayer] Hiding character: {characterId}");
                 string id = characterId.Substring(1);
                 StoryCharacterManager.Instance?.HideCharacter(id);
-                Advance();
+                if (_story.canContinue) {
+                    _story.Continue();
+                    ProcessLine(_story.currentText?.Trim() ?? "");
+                }
                 return;
             }
 

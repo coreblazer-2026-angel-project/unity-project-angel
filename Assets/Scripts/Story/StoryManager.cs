@@ -62,19 +62,22 @@ namespace Game.Story {
             // 查找或创建子组件
             if (_storyPlayer == null) {
                 _storyPlayer = GetComponent<InkStoryPlayer>();
-                if (_storyPlayer == null) _storyPlayer = gameObject.AddComponent<InkStoryPlayer>();
+                if (_storyPlayer == null) _storyPlayer = GetComponentInChildren<InkStoryPlayer>();
             }
 
             if (_dialoguePanel == null) {
-                _dialoguePanel = FindObjectOfType<StoryDialoguePanel>();
+                _dialoguePanel = GetComponent<StoryDialoguePanel>();
+                if (_dialoguePanel == null) _dialoguePanel = GetComponentInChildren<StoryDialoguePanel>();
             }
 
             if (_choicePanel == null) {
-                _choicePanel = FindObjectOfType<StoryChoicePanel>();
+                _choicePanel = GetComponent<StoryChoicePanel>();
+                if (_choicePanel == null) _choicePanel = GetComponentInChildren<StoryChoicePanel>();
             }
 
             if (_characterManager == null) {
-                _characterManager = FindObjectOfType<StoryCharacterManager>();
+                _characterManager = GetComponent<StoryCharacterManager>();
+                if (_characterManager == null) _characterManager = GetComponentInChildren<StoryCharacterManager>();
             }
 
             // 订阅事件
@@ -190,6 +193,31 @@ namespace Game.Story {
 
             if (_autoInstantiateEnabled && PrefabForAutoInstantiate != null) {
                 var go = Instantiate(PrefabForAutoInstantiate.gameObject);
+                // 确保是根对象
+                if (go.transform.parent != null) {
+                    go.transform.SetParent(null);
+                }
+                DontDestroyOnLoad(go);
+                return Instance;
+            }
+
+            // 尝试从 Resources 加载（支持两种路径）
+            var prefab = Resources.Load<StoryManager>("Story/Dialog");
+            if (prefab == null) {
+                prefab = Resources.Load<StoryManager>("Story/StoryManager");
+            }
+            if (prefab == null) {
+                prefab = Resources.Load<StoryManager>("Dialog");
+            }
+            if (prefab == null) {
+                prefab = Resources.Load<StoryManager>("StoryManager");
+            }
+            if (prefab != null) {
+                var go = Instantiate(prefab.gameObject);
+                if (go.transform.parent != null) {
+                    go.transform.SetParent(null);
+                }
+                DontDestroyOnLoad(go);
                 return Instance;
             }
 
@@ -197,22 +225,9 @@ namespace Game.Story {
             var existing = FindObjectOfType<StoryManager>();
             if (existing != null) return existing;
 
-            // 尝试从 Resources 加载
-            var prefab = Resources.Load<StoryManager>("Story/StoryManager");
-            if (prefab != null) {
-                var go = Instantiate(prefab.gameObject);
-                return Instance;
-            }
-
-            // 尝试从 Resources 加载更通用的路径
-            prefab = Resources.Load<StoryManager>("StoryManager");
-            if (prefab != null) {
-                var go = Instantiate(prefab.gameObject);
-                return Instance;
-            }
-
             Debug.LogError("[StoryManager] No StoryManager found in scene and cannot auto-instantiate. " +
-                "Please add StoryManager.prefab to your scene or call SetAutoInstantiate(true, prefab).");
+                "Please add StoryManager.prefab to your scene, place it in Resources/Story/ folder, " +
+                "or call SetAutoInstantiate(true, prefab).");
             return null;
         }
 
