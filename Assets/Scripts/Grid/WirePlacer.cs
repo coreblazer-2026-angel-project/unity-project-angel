@@ -215,7 +215,10 @@ public class WirePlacer : MonoBehaviour {
                 }
                 placedAny = true;
             }
-            if (placedAny) em?.PlayWirePlaceSound();
+            if (placedAny) {
+                em?.BeginSimulate();
+                em?.PlayWirePlaceSound();
+            }
             return;
         }
 
@@ -239,7 +242,12 @@ public class WirePlacer : MonoBehaviour {
 
         previewObjects.Clear();
 
-        if (placedAny) em?.PlayWirePlaceSound();
+        if (placedAny) {
+            // 主动跑一次 BeginSimulate（在播放 wire 音效前），
+            // 让 booster/amplifier 触发音效有机会设置 suppress flag。
+            em?.BeginSimulate();
+            em?.PlayWirePlaceSound();
+        }
     }
 
     void ClearPreviews() {

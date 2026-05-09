@@ -623,6 +623,7 @@ MonoBehaviour:
   wirePlaceClip: {fileID: 8300000, guid: 96e78d31c234fba4492a95ebf27814c1, type: 3}
   wireRemoveClip: {fileID: 8300000, guid: a3031e182bae5fa4ba8391d82ea42acd, type: 3}
   boosterTriggerClip: {fileID: 8300000, guid: 3f2dbcac7e2e731498cb63b4f99f2385, type: 3}
+  amplifierTriggerClip: {fileID: 0}
   audioSource: {fileID: 0}
 --- !u!4 &177546393
 Transform:

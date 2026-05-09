@@ -49,14 +49,19 @@ public class ElectricManager : ManagerBase<ElectricManager> {
     }
 
     [Header("音效")]
-    [Tooltip("电线放置时播放（玩家拖拽确认后）")]
+    [Tooltip("电线放置时播放（玩家拖拽确认后）。当本次操作触发了 booster/amplifier 激活时，会被 suppress 跳过。")]
     public AudioClip wirePlaceClip;
     [Tooltip("电线销毁时播放（玩家擦除时）")]
     public AudioClip wireRemoveClip;
-    [Tooltip("信号补充球自我销毁时播放")]
+    [Tooltip("信号补充球（SignalBooster）自我销毁时播放")]
     public AudioClip boosterTriggerClip;
+    [Tooltip("电强补充格（SignalAmplifier）激活时播放")]
+    public AudioClip amplifierTriggerClip;
     [Tooltip("音效播放器；不指定时自动从同 GameObject 拿/创建一个 AudioSource")]
     public AudioSource audioSource;
+
+    /// <summary>下一次 PlayWirePlaceSound 时跳过（用于元件激活和 wire 放置同时发生时只响一次）</summary>
+    bool _suppressNextWireSound;
 
     Grid _tilemapGrid;
 
@@ -493,6 +498,7 @@ public class ElectricManager : ManagerBase<ElectricManager> {
             if (ps != null) {
                 ps.workIntensity += amp.boostValue;
                 Debug.Log($"SignalAmplifier 触发：电源 [{ps.name}] workIntensity +{amp.boostValue} → {ps.workIntensity}");
+                PlayAmplifierTriggerSound();
                 amp.hasBuffedPower = true;
                 anyAmplifierTriggered = true;
             } else {
@@ -653,8 +659,13 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         audioSource.playOnAwake = false;
     }
 
-    /// <summary>播放电线放置音效（玩家拖拽确认放置后调用）</summary>
+    /// <summary>播放电线放置音效（玩家拖拽确认放置后调用）。
+    /// 若上一次 BeginSimulate 触发了 booster/amplifier，则跳过本次（避免与元件激活音效重叠）。</summary>
     public void PlayWirePlaceSound() {
+        if (_suppressNextWireSound) {
+            _suppressNextWireSound = false;   // 消耗一次
+            return;
+        }
         if (wirePlaceClip == null) return;
         EnsureAudioSource();
         audioSource.PlayOneShot(wirePlaceClip);
@@ -667,11 +678,20 @@ public class ElectricManager : ManagerBase<ElectricManager> {
         audioSource.PlayOneShot(wireRemoveClip);
     }
 
-    /// <summary>播放信号补充球自我销毁音效</summary>
+    /// <summary>播放信号补充球自我销毁音效（同时设置 suppress 让本次操作的 wire 音效跳过）</summary>
     public void PlayBoosterTriggerSound() {
+        _suppressNextWireSound = true;
         if (boosterTriggerClip == null) return;
         EnsureAudioSource();
         audioSource.PlayOneShot(boosterTriggerClip);
+    }
+
+    /// <summary>播放电强补充格激活音效（同时设置 suppress 让本次操作的 wire 音效跳过）</summary>
+    public void PlayAmplifierTriggerSound() {
+        _suppressNextWireSound = true;
+        if (amplifierTriggerClip == null) return;
+        EnsureAudioSource();
+        audioSource.PlayOneShot(amplifierTriggerClip);
     }
 
     class UnionFind {
