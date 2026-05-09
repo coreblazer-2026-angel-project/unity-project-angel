@@ -49,7 +49,6 @@ namespace Game.Story {
                 return;
             }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
 
             InitializeComponents();
         }
@@ -59,20 +58,17 @@ namespace Game.Story {
         }
 
         void InitializeComponents() {
-            // 查找或创建子组件
             if (_storyPlayer == null) {
                 _storyPlayer = GetComponent<InkStoryPlayer>();
-                if (_storyPlayer == null) _storyPlayer = GetComponentInChildren<InkStoryPlayer>();
+                if (_storyPlayer == null) _storyPlayer = FindObjectOfType<InkStoryPlayer>();
             }
 
             if (_dialoguePanel == null) {
-                _dialoguePanel = GetComponent<StoryDialoguePanel>();
-                if (_dialoguePanel == null) _dialoguePanel = GetComponentInChildren<StoryDialoguePanel>();
+                _dialoguePanel = FindObjectOfType<StoryDialoguePanel>();
             }
 
             if (_choicePanel == null) {
-                _choicePanel = GetComponent<StoryChoicePanel>();
-                if (_choicePanel == null) _choicePanel = GetComponentInChildren<StoryChoicePanel>();
+                _choicePanel = FindObjectOfType<StoryChoicePanel>();
             }
 
             if (_characterManager == null) {
@@ -85,6 +81,31 @@ namespace Game.Story {
                 _storyPlayer.OnStoryStart += HandleStoryStart;
                 _storyPlayer.OnStoryEnd += HandleStoryEnd;
             }
+        }
+
+        void ResolveStoryPlayer() {
+            _storyPlayer = FindObjectOfType<InkStoryPlayer>();
+            if (_storyPlayer != null) {
+                WireStoryPlayer();
+                return;
+            }
+
+            // FindObjectOfType 找不到 inactive 物体，用 FindObjectsOfTypeAll
+            foreach (var sp in Resources.FindObjectsOfTypeAll<InkStoryPlayer>()) {
+                if (sp.hideFlags == HideFlags.None) {
+                    _storyPlayer = sp;
+                    WireStoryPlayer();
+                    return;
+                }
+            }
+        }
+
+        void WireStoryPlayer() {
+            if (_storyPlayer == null) return;
+            _storyPlayer.dialoguePanel = _dialoguePanel ?? FindObjectOfType<StoryDialoguePanel>();
+            _storyPlayer.choicePanel = _choicePanel ?? FindObjectOfType<StoryChoicePanel>();
+            _storyPlayer.OnStoryStart += HandleStoryStart;
+            _storyPlayer.OnStoryEnd += HandleStoryEnd;
         }
 
         // ==================== 静态便捷 API ====================
@@ -234,10 +255,16 @@ namespace Game.Story {
         // ==================== 实例方法（供静态方法调用） ====================
 
         void PlayStoryInternal(string storyFileName, string knot, Action onComplete, Action onStart = null) {
+            if (_storyPlayer == null) ResolveStoryPlayer();
             if (_storyPlayer == null) {
-                Debug.LogError("[StoryManager] InkStoryPlayer not found!");
+                Debug.LogError("[StoryManager] InkStoryPlayer not found! 确保 Dialog 面板在场景中且包含 InkStoryPlayer 组件。");
                 return;
             }
+
+            // 激活 Dialog 面板（InkStoryPlayer 所在的父物体）
+            Transform dialogRoot = _storyPlayer.transform.parent;
+            if (dialogRoot != null && !dialogRoot.gameObject.activeSelf)
+                dialogRoot.gameObject.SetActive(true);
 
             // 加载剧情文件
             TextAsset inkJson = StoryLoader.Instance.LoadInkJson(storyFileName);
@@ -245,6 +272,8 @@ namespace Game.Story {
                 Debug.LogError($"[StoryManager] Failed to load story: '{storyFileName}'");
                 return;
             }
+
+            Debug.Log($"[StoryManager] Loaded story '{storyFileName}' → asset name: '{inkJson.name}', length: {inkJson.text.Length}");
 
             // 设置回调
             _pendingOnStart = onStart;

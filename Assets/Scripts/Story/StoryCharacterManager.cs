@@ -33,7 +33,6 @@ namespace Game.Story {
                 return;
             }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
 
         void Start() {

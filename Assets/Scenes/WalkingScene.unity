@@ -358,7 +358,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2414196531590865887, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 44.666668
       objectReference: {fileID: 0}
     - target: {fileID: 2414196531590865887, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -366,7 +366,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2414196531590865887, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -145.24344
+      value: -145.33333
       objectReference: {fileID: 0}
     - target: {fileID: 2519894343969871408, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
       propertyPath: m_Pivot.x
@@ -452,13 +452,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Dialog
       objectReference: {fileID: 0}
-    - target: {fileID: 8762347281757878082, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
-      propertyPath: m_SizeDelta.x
+    - target: {fileID: 5469095664890936773, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8762347281757878082, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 8762347281757878082, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 182.66667
       objectReference: {fileID: 0}
     - target: {fileID: 8947627721754712373, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
       propertyPath: m_AnchorMax.y
@@ -775,7 +779,7 @@ MonoBehaviour:
   interactSound: {fileID: 8300000, guid: e58775e995f9d52469d5b7e6b03e3287, type: 3}
   audioSource: {fileID: 442667454}
   transitionDelay: 0.8
-  storyFile: 
+  storyFile: storyC1-2
   autoEnterAfterStory: 0
   player: {fileID: 1966512178}
   interactHorizontalRange: 3
@@ -825,6 +829,7 @@ MonoBehaviour:
   markerColor: {r: 1, g: 0.79607844, b: 0.15686275, a: 1}
   outlineColor: {r: 0.21176471, g: 0.14117648, b: 0.09803922, a: 1}
   outlineWidth: 0.24
+  dialogPanel: {fileID: 1416956575}
 --- !u!114 &442667453
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1629,7 +1634,7 @@ MonoBehaviour:
   interactSound: {fileID: 8300000, guid: e58775e995f9d52469d5b7e6b03e3287, type: 3}
   audioSource: {fileID: 721615484}
   transitionDelay: 0.4
-  storyFile: 
+  storyFile: stroyC2-1
   autoEnterAfterStory: 0
   player: {fileID: 1966512178}
   interactHorizontalRange: 3
@@ -1680,6 +1685,7 @@ MonoBehaviour:
   markerColor: {r: 1, g: 0.79607844, b: 0.15686275, a: 1}
   outlineColor: {r: 0.21176471, g: 0.14117648, b: 0.09803922, a: 1}
   outlineWidth: 0.24
+  dialogPanel: {fileID: 1416956575}
 --- !u!114 &721615483
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2682,6 +2688,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1367914442}
   m_CullTransparentMesh: 1
+--- !u!1 &1416956575 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5469095664890936773, guid: b18aae3503b6b8c41b5698d811291c7e, type: 3}
+  m_PrefabInstance: {fileID: 177187926}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1610580743
 GameObject:
   m_ObjectHideFlags: 0
@@ -2837,7 +2848,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 143d69ecdd56ad54d9f0e52e14d3765f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b6d1bc7c9508de04ebc269e868a6bb0f, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

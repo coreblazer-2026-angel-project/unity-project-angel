@@ -492,24 +492,33 @@ public class LevelSelectNpcOverlay : MonoBehaviour
 
     #region Story & Level Entry
 
+    [Header("Dialog 面板")]
+    public GameObject dialogPanel;
+
     void TryEnterLevel()
     {
-        if (_transitioning || StoryManager.Instance != null && StoryManager.Instance.IsPlaying) return;
-
+        if (_transitioning) return;
         if (!_lastUnlocked) return;
+        if (string.IsNullOrEmpty(storyFile)) return;
 
-        // 有剧情且未播放 → 先播放剧情
-        if (!_storyPlayed && !string.IsNullOrEmpty(storyFile))
-        {
-            PlaySound();
-            StoryManager.Play(storyFile);
-            return;
-        }
-
-        // 剧情已播完或无剧情 → 进入关卡
         _transitioning = true;
         PlaySound();
-        StartCoroutine(LoadSceneAfterDelay());
+
+        if (dialogPanel != null)
+            dialogPanel.SetActive(true);
+
+        var sm = StoryManager.Instance;
+        if (sm != null)
+        {
+            var inkJson = StoryLoader.Instance.LoadInkJson(storyFile);
+            if (inkJson == null)
+            {
+                Debug.LogError($"[NPC] StoryLoader 找不到文件: '{storyFile}'");
+                return;
+            }
+            Debug.Log($"[NPC] 加载剧情: '{inkJson.name}', 内容前50字: {inkJson.text.Substring(0, Mathf.Min(50, inkJson.text.Length))}");
+            sm.PlayStory(inkJson);
+        }
     }
 
     void OnStoryEnded()

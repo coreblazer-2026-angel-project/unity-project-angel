@@ -56,6 +56,11 @@ namespace Game.Story {
             Instance = this;
         }
 
+        void ResolveReferences() {
+            if (dialoguePanel == null) dialoguePanel = FindObjectOfType<StoryDialoguePanel>();
+            if (choicePanel == null) choicePanel = FindObjectOfType<StoryChoicePanel>();
+        }
+
         void Update() {
             if (!IsPlaying) return;
             if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) {
@@ -78,6 +83,7 @@ namespace Game.Story {
                 return;
             }
 
+            ResolveReferences();
             StopTypewriter();
 
             try {

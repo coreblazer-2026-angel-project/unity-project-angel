@@ -1,3 +1,5 @@
+=== start ===
+-> level_1_complete
 
 === level_1_complete ===
 // 第一关全部解谜面通关，解谜区退出屏幕

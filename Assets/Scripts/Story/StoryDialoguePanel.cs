@@ -24,10 +24,6 @@ namespace Game.Story {
         [Header("继续提示")]
         public Image continueIndicator;
 
-        void Start() {
-            Hide();
-        }
-
         /// <summary>显示面板</summary>
         public void Show() {
             if (root != null) root.SetActive(true);
