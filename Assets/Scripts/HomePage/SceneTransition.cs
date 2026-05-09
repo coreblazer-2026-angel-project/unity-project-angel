@@ -38,14 +38,17 @@ public class SceneTransition : MonoBehaviour
         image.raycastTarget = true;
     }
 
+    static void EnsureInstance()
+    {
+        if (Instance != null) return;
+
+        var go = new GameObject("SceneTransition");
+        go.AddComponent<SceneTransition>();
+    }
+
     public static void Load(string sceneName)
     {
-        if (Instance == null)
-        {
-            Debug.LogError("SceneTransition: 场景中没有 SceneTransition 实例");
-            SceneManager.LoadScene(sceneName);
-            return;
-        }
+        EnsureInstance();
 
         if (!Instance._transitioning)
             Instance.StartCoroutine(Instance.FadeAndLoad(sceneName));
