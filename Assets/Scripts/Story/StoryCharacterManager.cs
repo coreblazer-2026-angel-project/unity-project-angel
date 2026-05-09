@@ -89,6 +89,7 @@ namespace Game.Story {
                 float horizontalOffset = 0f) {
 
             var preset = presets.Find(p => p.characterId == characterId);
+            Debug.Log($"[StoryCharacterManager] ShowCharacter: id='{characterId}', found preset={(preset != null ? "yes" : "no")}, mount={(preset?.mount != null ? "yes" : "no")}");
             if (preset == null) return;
 
             if (preset.mount == null) return;
@@ -142,9 +143,11 @@ namespace Game.Story {
             }
 
             ApplySprite(preset, sprite);
+            Debug.Log($"[StoryCharacterManager] ShowCharacter done: image.enabled={preset.image.enabled}, image.gameObject.activeSelf={preset.image.gameObject.activeSelf}");
         }
 
         void ApplySprite(CharacterPreset preset, Sprite sprite) {
+            Debug.Log($"[StoryCharacterManager] ApplySprite: preset='{preset.characterId}', sprite='{sprite.name}', preset.image={(preset.image != null ? "exists" : "null")}");
             if (preset.image == null || sprite == null) return;
             preset.image.sprite = sprite;
             preset.image.enabled = true;
@@ -171,9 +174,11 @@ namespace Game.Story {
         public CharacterPreset GetActivePreset() {
             foreach (var p in presets) {
                 if (p.image != null && p.image.enabled) {
+                    Debug.Log($"[StoryCharacterManager] GetActivePreset: returning preset for '{p.characterId}', image.enabled={p.image.enabled}, image.gameObject.activeSelf={p.image.gameObject.activeSelf}");
                     return p;
                 }
             }
+            Debug.Log("[StoryCharacterManager] GetActivePreset: no active preset found");
             return null;
         }
 

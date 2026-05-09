@@ -51,6 +51,7 @@ namespace Game.Story {
         /// 执行动作
         /// </summary>
         public void Play(ActionParams action, Action onComplete = null) {
+            Debug.Log($"[StoryActionPlayer] Play called: type={action.type}, intensity={action.intensity}, targetImage={(targetImage != null ? "exists" : "null")}");
             if (_currentCoroutine != null) {
                 StopCoroutine(_currentCoroutine);
             }

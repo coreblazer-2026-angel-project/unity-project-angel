@@ -204,6 +204,7 @@ namespace Game.Story {
                 else if (tag.StartsWith("expr ")) exprName = tag.Substring(5).Trim();
                 else if (tag.StartsWith("action ")) {
                     string actionStr = tag.Substring(7).Trim();
+                    Debug.Log($"[InkStoryPlayer] ProcessLine: found action tag '{actionStr}'");
                     ProcessActionTag(actionStr);
                 }
                 else if (tag == "choice") {
@@ -243,6 +244,7 @@ namespace Game.Story {
 
             // 显示/切换角色
             if (!string.IsNullOrEmpty(characterId)) {
+                Debug.Log($"[InkStoryPlayer] ProcessLine: calling ShowCharacter('{characterId}', '{exprName}')");
                 StoryCharacterManager.Instance?.ShowCharacter(characterId, exprName, heightPercent, bottomOffset, horizontalOffset);
             }
 
@@ -328,13 +330,25 @@ namespace Game.Story {
             return false;
         }
 
+        string[] GetActiveCharacterIds() {
+            var ids = new System.Collections.Generic.List<string>();
+            if (StoryCharacterManager.Instance == null) return ids.ToArray();
+            foreach (var p in StoryCharacterManager.Instance.presets) {
+                if (p.image != null && p.image.enabled) ids.Add(p.characterId);
+            }
+            return ids.ToArray();
+        }
+
         /// <summary>
         /// 处理动作标签
         /// 格式: #action jump, #action jump_3, #action enter_left, #action flash_0.5
         /// 支持: jump, bounce, shake, flash, pulse, enter_left, enter_right, exit_left, exit_right, lean_left, lean_right, fadein, fadeout
         /// </summary>
         void ProcessActionTag(string actionStr) {
-            if (StoryCharacterManager.Instance == null) return;
+            if (StoryCharacterManager.Instance == null) {
+                Debug.LogWarning("[InkStoryPlayer] StoryCharacterManager.Instance is null!");
+                return;
+            }
 
             // 解析动作名称和参数
             string[] parts = actionStr.Split('_');
@@ -346,8 +360,10 @@ namespace Game.Story {
 
             // 获取当前显示的角色 preset
             var preset = StoryCharacterManager.Instance.GetActivePreset();
+            Debug.Log($"[InkStoryPlayer] ProcessActionTag: '{actionName}', preset={(preset != null ? preset.characterId : "null")}, image={(preset?.image != null ? "exists" : "null")}");
             if (preset?.image == null) {
-                Debug.LogWarning($"[InkStoryPlayer] No active character to perform action: {actionName}");
+                Debug.LogWarning($"[InkStoryPlayer] No active character to perform action: {actionName}. " +
+                    $"Active presets: {string.Join(", ", GetActiveCharacterIds())}");
                 return;
             }
 
